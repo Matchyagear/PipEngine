@@ -40,8 +40,8 @@ if not exist "backend\.env" (
     (
         echo FINNHUB_API_KEY=d2431dpr01qmb590bi10d2431dpr01qmb590bi1g
         echo GEMINI_API_KEY=AIzaSyBAEvD2LaQKLMkp-Bc5XQilwKL2y4f9VlA
-        echo OPENAI_API_KEY=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
-        echo DISCORD_TOKEN=MTM5OTEzODk5ODMzNjc1Mzc3NQ.GxegZp.gO3gEZ0j8-8IXmrMtph6Qdbqtx7SKGNcEt0Jjs
+        echo OPENAI_API_KEY=your_openai_api_key_here
+echo DISCORD_TOKEN=your_discord_token_here
         echo CHANNEL_ID=1398832733102542890
         echo NEWS_API_KEY=a95cbb6269564b19a4a3fbb239d0bb86
         echo VITE_API_KEY=AIzaSyBAEvD2LaQKLMkp-Bc5XQilwKL2y4f9VlA
