@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=ShadowBeta Financial Dashboard
+Comment=Professional Trading Analysis Platform
+Icon=applications-office
+Exec=/app/shadowbeta_launcher.py
+Terminal=false
+Type=Application
+Categories=Office;Finance;
+StartupNotify=true
