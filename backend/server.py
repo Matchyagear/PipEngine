@@ -44,8 +44,11 @@ app.add_middleware(
 MONGO_URL = os.environ.get('MONGO_URL')
 MONGODB_DISABLED = os.environ.get('MONGODB_DISABLED', 'false').lower() == 'true'
 
-if MONGODB_DISABLED:
-    print("⚠️  MongoDB disabled - using in-memory storage")
+print(f"🔍 Debug: MONGO_URL = {MONGO_URL}")
+print(f"🔍 Debug: MONGODB_DISABLED = {MONGODB_DISABLED}")
+
+if MONGODB_DISABLED or not MONGO_URL:
+    print("⚠️  MongoDB disabled or URL not set - using in-memory storage")
     client = None
     db = None
     watchlists_collection = None
