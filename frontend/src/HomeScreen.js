@@ -324,7 +324,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       )}
 
       {/* Morning Brief (collapsible) */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
             <Info className="w-5 h-5 text-blue-600" />
@@ -419,7 +419,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
 
         {/* Market News Section - Side by Side */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-full">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-full overflow-hidden">
             <div className="flex items-center space-x-2 mb-4">
               <Bell className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">

@@ -47,7 +47,7 @@ const ScreenerTab = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="h-screen flex flex-col"
+            className="h-screen flex flex-col overflow-hidden"
         >
             {/* Screener Header */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
