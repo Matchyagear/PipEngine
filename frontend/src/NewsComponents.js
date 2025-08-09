@@ -148,7 +148,7 @@ export const NewsTab = ({ news, loading, searchQuery }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 cursor-pointer"
+            className="panel p-6 cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => window.open(article.url, '_blank')}
           >
             {/* Article Image */}

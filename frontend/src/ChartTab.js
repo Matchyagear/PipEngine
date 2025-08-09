@@ -159,7 +159,7 @@ const ChartTab = ({ initialSymbol = 'AAPL' }) => {
             className="h-screen flex flex-col justify-center items-center p-4"
         >
             {/* Auto-Fit Chart Container */}
-            <div className="w-full max-w-6xl bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="w-full max-w-6xl panel overflow-hidden">
                 {/* TradingView Widget Container */}
                 <div
                     id="tradingview_chart"

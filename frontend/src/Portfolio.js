@@ -237,7 +237,7 @@ const Portfolio = () => {
 
       {/* Portfolio Overview */}
       {selectedPortfolio && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="panel p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {selectedPortfolio.name}
@@ -294,7 +294,7 @@ const Portfolio = () => {
 
       {/* Positions List */}
       {selectedPortfolio && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="panel p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Portfolio Positions

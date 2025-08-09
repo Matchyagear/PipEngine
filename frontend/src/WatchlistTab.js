@@ -298,7 +298,7 @@ const WatchlistTab = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header with Dropdown and Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+      <div className="panel p-6 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {/* Watchlist Dropdown */}
           <div className="flex items-center space-x-4">
@@ -396,7 +396,7 @@ const WatchlistTab = ({
       </div>
 
       {/* Watchlist Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="panel p-6">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
