@@ -538,6 +538,11 @@ def search_news(query, limit=20):
 def fetch_advanced_stock_data(ticker: str):
     """Fetch comprehensive stock data with advanced technical indicators"""
     try:
+        # Per-ticker in-memory cache to avoid recomputation
+        cached = _adv_cache_get(ticker)
+        if cached:
+            return cached
+
         # Get basic stock info from yfinance
         stock = yf.Ticker(ticker)
         info = stock.info
@@ -596,6 +601,7 @@ def fetch_advanced_stock_data(ticker: str):
         # Add stock-specific news
         stock_data['news'] = fetch_stock_news(ticker, limit=3)
 
+        _adv_cache_set(ticker, stock_data)
         return stock_data
 
     except Exception as e:
@@ -624,6 +630,7 @@ async def root():
 stock_cache = {}
 nyse_symbols_cache = {'data': None, 'timestamp': None}
 CACHE_DURATION = 300  # 5 minutes
+ADV_CACHE_DURATION = 300  # 5 minutes for per-ticker advanced data
 
 # Simple endpoint-level cache to reduce repeated external calls
 endpoint_cache = {}
@@ -639,6 +646,21 @@ def _cache_get(key: str):
 
 def _cache_set(key: str, data):
     endpoint_cache[key] = {
+        'data': data,
+        'timestamp': datetime.now().timestamp()
+    }
+
+def _adv_cache_get(ticker: str):
+    entry = stock_cache.get(ticker)
+    if not entry:
+        return None
+    ts = entry.get('timestamp')
+    if ts and (datetime.now().timestamp() - ts) < ADV_CACHE_DURATION:
+        return entry.get('data')
+    return None
+
+def _adv_cache_set(ticker: str, data):
+    stock_cache[ticker] = {
         'data': data,
         'timestamp': datetime.now().timestamp()
     }

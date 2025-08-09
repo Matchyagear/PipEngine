@@ -79,10 +79,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
     fetchMarketData();
 
     // Stagger heavier requests to reduce initial load burst
-    const t1 = setTimeout(() => fetchFullMovers(), 1500);
-    const t2 = setTimeout(() => fetchHighestVolumeStocks(), 2500);
-    const t3 = setTimeout(() => fetchVolatileStocks(), 3500);
-    const t4 = setTimeout(() => fetchFeaturedStocks(), 4500);
+    const t1 = setTimeout(() => fetchFullMovers(), 2500);
+    const t2 = setTimeout(() => fetchHighestVolumeStocks(), 4000);
+    const t3 = setTimeout(() => fetchVolatileStocks(), 5500);
+    const t4 = setTimeout(() => fetchFeaturedStocks(), 7000);
 
     // Refresh every 5 minutes (stagger inside the tick as well)
     const interval = setInterval(() => {
@@ -130,7 +130,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchFullMovers = async () => {
     try {
       setLoadingMovers(true);
-      const response = await fetch(`${API_BASE_URL}/api/market/full-movers`);
+      const response = await fetch(`${API_BASE_URL}/api/market/full-movers`, { cache: 'no-store' });
       const data = await response.json();
       setFullMovers(data);
     } catch (error) {
@@ -143,7 +143,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchHighestVolumeStocks = async () => {
     try {
       setLoadingVolume(true);
-      const response = await fetch(`${API_BASE_URL}/api/market/highest-volume`);
+      const response = await fetch(`${API_BASE_URL}/api/market/highest-volume`, { cache: 'no-store' });
       const data = await response.json();
       setHighestVolumeStocks(data.stocks?.slice(0, 5) || []);
     } catch (error) {
@@ -156,7 +156,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchVolatileStocks = async () => {
     try {
       setLoadingVolatile(true);
-      const response = await fetch(`${API_BASE_URL}/api/market/volatile-stocks?limit=10`);
+      const response = await fetch(`${API_BASE_URL}/api/market/volatile-stocks?limit=10`, { cache: 'no-store' });
       const data = await response.json();
       setVolatileStocks(data.volatile_stocks?.slice(0, 5) || []);
     } catch (error) {
