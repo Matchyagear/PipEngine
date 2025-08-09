@@ -158,6 +158,24 @@ const ScreenerTestTab = () => {
 
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
+  const openDetails = async (s) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/api/stocks/${(s.ticker || '').toUpperCase()}`);
+      const full = await res.json();
+      if (full && full.ticker) {
+        setSelected(full);
+        setShowModal(true);
+      }
+    } catch (e) {
+      // Fallback to minimal snapshot if detail fetch fails
+      setSelected(s);
+      setShowModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadSnapshot = async () => {
     try {
       setLoading(true);
@@ -286,7 +304,7 @@ const ScreenerTestTab = () => {
                 >
                   <button
                     className="flex-1 text-left cursor-pointer"
-                    onClick={() => { setSelected(s); setShowModal(true); }}
+                    onClick={() => openDetails(s)}
                   >
                     <div className="flex justify-between">
                       <span className="font-mono">{s.ticker}</span>
@@ -297,7 +315,7 @@ const ScreenerTestTab = () => {
                   </button>
                   <button
                     className="px-2 py-0.5 text-[10px] bg-blue-600 text-white rounded"
-                    onClick={() => { setSelected(s); setShowModal(true); }}
+                    onClick={() => openDetails(s)}
                   >
                     View
                   </button>
