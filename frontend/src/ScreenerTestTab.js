@@ -267,14 +267,26 @@ const ScreenerTestTab = () => {
               {filtered.slice(0, 50).map((s) => (
                 <div
                   key={s.ticker}
-                  className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40"
-                  onClick={() => { setSelected(s); setShowModal(true); }}
+                  className="flex items-center gap-2 py-1 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40"
                   title="Click to open details"
                 >
-                  <span className="font-mono">{s.ticker}</span>
-                  <span>${s.currentPrice.toFixed(2)}</span>
-                  <span>RSI {Math.round(s.RSI ?? 50)}</span>
-                  <span>Vol {s.averageVolume?.toLocaleString?.() || '-'}</span>
+                  <button
+                    className="flex-1 text-left cursor-pointer"
+                    onClick={() => { setSelected(s); setShowModal(true); }}
+                  >
+                    <div className="flex justify-between">
+                      <span className="font-mono">{s.ticker}</span>
+                      <span>${s.currentPrice.toFixed(2)}</span>
+                      <span>RSI {Math.round(s.RSI ?? 50)}</span>
+                      <span>Vol {s.averageVolume?.toLocaleString?.() || '-'}</span>
+                    </div>
+                  </button>
+                  <button
+                    className="px-2 py-0.5 text-[10px] bg-blue-600 text-white rounded"
+                    onClick={() => { setSelected(s); setShowModal(true); }}
+                  >
+                    View
+                  </button>
                 </div>
               ))}
               {filtered.length > 50 && (
