@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 // Lightweight, no-API custom screener UI with basic drag-and-drop to order criteria.
 // This only manages UI state; no backend calls are made.
@@ -117,6 +117,9 @@ const CriterionRow = ({ item, index, onDragStart, onDragOver, onDrop, onChange }
 const ScreenerTestTab = () => {
   const [criteria, setCriteria] = useState(defaultCriteria);
   const [dragIndex, setDragIndex] = useState(null);
+  const [snapshot, setSnapshot] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const onDragStart = useCallback((e, index) => {
     setDragIndex(index);
@@ -149,6 +152,66 @@ const ScreenerTestTab = () => {
     return criteria.map((c) => ({ id: c.id, value: c.value }));
   }, [criteria]);
 
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+
+  const loadSnapshot = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await fetch(`${API_BASE_URL}/api/screener/snapshot`, { cache: 'no-store' });
+      const data = await res.json();
+      setSnapshot(Array.isArray(data.snapshot) ? data.snapshot : []);
+    } catch (e) {
+      setError('Failed to load snapshot');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSnapshot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!snapshot.length) return [];
+    let out = snapshot;
+    for (const c of criteria) {
+      switch (c.id) {
+        case 'price': {
+          const [min, max] = c.value;
+          out = out.filter((s) => s.currentPrice >= min && s.currentPrice <= max);
+          break;
+        }
+        case 'volume': {
+          out = out.filter((s) => (s.averageVolume || 0) >= c.value);
+          break;
+        }
+        case 'marketCap': {
+          // Not available in snapshot; skip for now
+          break;
+        }
+        case 'sector': {
+          if (c.value.length) out = out.filter((s) => s.sector && c.value.includes(s.sector));
+          break;
+        }
+        case 'rsi': {
+          const [min, max] = c.value;
+          out = out.filter((s) => (s.RSI ?? 50) >= min && (s.RSI ?? 50) <= max);
+          break;
+        }
+        case 'smaCross': {
+          if (c.value) out = out.filter((s) => s.fiftyMA > s.twoHundredMA);
+          break;
+        }
+        default:
+          break;
+      }
+    }
+    // basic sorting: price asc
+    return out.slice().sort((a, b) => a.currentPrice - b.currentPrice);
+  }, [snapshot, criteria]);
+
   return (
     <div className="h-screen flex flex-col">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
@@ -170,6 +233,8 @@ const ScreenerTestTab = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
         <div className="lg:col-span-2 space-y-3 overflow-auto">
+          {loading && <div className="text-sm text-gray-500">Loading snapshot…</div>}
+          {error && <div className="text-sm text-red-600">{error}</div>}
           {criteria.map((item, idx) => (
             <CriterionRow
               key={item.id}
@@ -192,8 +257,23 @@ const ScreenerTestTab = () => {
           </div>
 
           <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Preview (coming soon)</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">We will wire this to a cached backend endpoint later to avoid extra API usage.</p>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold text-gray-900 dark:text-white">Preview ({filtered.length})</div>
+              <button className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded" onClick={loadSnapshot}>Reload Snapshot</button>
+            </div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 max-h-72 overflow-auto">
+              {filtered.slice(0, 50).map((s) => (
+                <div key={s.ticker} className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
+                  <span className="font-mono">{s.ticker}</span>
+                  <span>${s.currentPrice.toFixed(2)}</span>
+                  <span>RSI {Math.round(s.RSI ?? 50)}</span>
+                  <span>Vol {s.averageVolume?.toLocaleString?.() || '-'}</span>
+                </div>
+              ))}
+              {filtered.length > 50 && (
+                <div className="text-center py-2 text-gray-500">Showing first 50...</div>
+              )}
+            </div>
           </div>
         </div>
       </div>

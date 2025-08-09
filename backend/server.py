@@ -1358,6 +1358,46 @@ async def search_news_endpoint(q: str = Query(..., description="Search query"), 
 
 # ===== NEW HOME SCREEN MARKET DATA ENDPOINTS =====
 
+@app.get("/api/screener/snapshot")
+async def get_screener_snapshot():
+    """Return a cached lightweight snapshot for client-side screening to avoid extra API calls.
+    Fields: ticker, companyName, currentPrice, averageVolume, sector, RSI, fiftyMA, twoHundredMA
+    """
+    try:
+        cache_key = "screener_snapshot_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
+        # Build from a curated list to keep it fast and within limits
+        tickers = get_nyse_stock_symbols_optimized()[:120]
+        results = []
+
+        for t in tickers:
+            try:
+                data = fetch_advanced_stock_data(t)
+                if not data:
+                    continue
+                # sector may not be reliably available; set None
+                results.append({
+                    "ticker": data['ticker'],
+                    "companyName": data['companyName'],
+                    "currentPrice": data['currentPrice'],
+                    "averageVolume": data['averageVolume'],
+                    "RSI": data['RSI'],
+                    "fiftyMA": data['fiftyMA'],
+                    "twoHundredMA": data['twoHundredMA'],
+                    "sector": None
+                })
+            except Exception:
+                continue
+
+        payload = {"snapshot": results, "count": len(results), "timestamp": datetime.now().isoformat()}
+        _cache_set(cache_key, payload)
+        return payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building screener snapshot: {str(e)}")
+
 @app.get("/api/market/indices")
 async def get_market_indices():
     """Get major market indices data"""
