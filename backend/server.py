@@ -1385,8 +1385,14 @@ async def get_screener_snapshot():
                     "currentPrice": data['currentPrice'],
                     "averageVolume": data['averageVolume'],
                     "RSI": data['RSI'],
+                    "MACD": data['MACD'],
+                    "stochastic": data.get('stochastic'),
+                    "relativeVolume": data['relativeVolume'],
+                    "priceChangePercent": data.get('priceChangePercent', 0.0),
                     "fiftyMA": data['fiftyMA'],
                     "twoHundredMA": data['twoHundredMA'],
+                    "passes": data.get('passes', {}),
+                    "score": data.get('score', 0),
                     "sector": None
                 })
             except Exception:

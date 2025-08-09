@@ -159,20 +159,25 @@ const ScreenerTestTab = () => {
   const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
   const openDetails = async (s) => {
+    // If snapshot already has full fields, open immediately
+    if (s && s.passes && typeof s.score === 'number') {
+      setSelected(s);
+      setShowModal(true);
+      return;
+    }
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/stocks/${(s.ticker || '').toUpperCase()}`);
       const full = await res.json();
       if (full && full.ticker) {
         setSelected(full);
         setShowModal(true);
+      } else {
+        setSelected(s);
+        setShowModal(true);
       }
     } catch (e) {
-      // Fallback to minimal snapshot if detail fetch fails
       setSelected(s);
       setShowModal(true);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -285,7 +290,7 @@ const ScreenerTestTab = () => {
             </div>
             {showJson && (
               <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-auto max-h-64 bg-gray-50 dark:bg-gray-900/30 p-3 rounded-b-xl">
-{JSON.stringify(query, null, 2)}
+                {JSON.stringify(query, null, 2)}
               </pre>
             )}
           </div>
@@ -336,7 +341,7 @@ const ScreenerTestTab = () => {
         onOpenChart={(s) => {
           // Navigate to chart tab by setting location hash or open finviz as fallback
           // For now: open TradingView chart new tab for symbol
-          window.open(`https://www.tradingview.com/chart/?symbol=${(s.ticker || '').toUpperCase()}`,'_blank');
+          window.open(`https://www.tradingview.com/chart/?symbol=${(s.ticker || '').toUpperCase()}`, '_blank');
         }}
       />
     </div>
