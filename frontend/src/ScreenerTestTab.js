@@ -123,6 +123,7 @@ const ScreenerTestTab = () => {
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showJson, setShowJson] = useState(false); // collapsed by default
 
   const onDragStart = useCallback((e, index) => {
     setDragIndex(index);
@@ -234,7 +235,8 @@ const ScreenerTestTab = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-        <div className="lg:col-span-2 space-y-3 overflow-auto">
+        {/* Left: criteria (narrow) */}
+        <div className="lg:col-span-1 space-y-2 overflow-auto">
           {loading && <div className="text-sm text-gray-500">Loading snapshot…</div>}
           {error && <div className="text-sm text-red-600">{error}</div>}
           {criteria.map((item, idx) => (
@@ -250,20 +252,32 @@ const ScreenerTestTab = () => {
           ))}
         </div>
 
-        <div className="space-y-4">
-          <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Current Filter JSON</div>
-            <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-auto max-h-64 bg-gray-50 dark:bg-gray-900/30 p-3 rounded">
-              {JSON.stringify(query, null, 2)}
-            </pre>
+        {/* Right: preview (wide) */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Collapsible JSON box (collapsed by default) */}
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="flex items-center justify-between px-4 py-2">
+              <div className="text-sm font-semibold text-gray-900 dark:text-white">Current Filter JSON</div>
+              <button
+                className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700"
+                onClick={() => setShowJson(!showJson)}
+              >
+                {showJson ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {showJson && (
+              <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-auto max-h-64 bg-gray-50 dark:bg-gray-900/30 p-3 rounded-b-xl">
+{JSON.stringify(query, null, 2)}
+              </pre>
+            )}
           </div>
 
           <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-semibold text-gray-900 dark:text-white">Preview ({filtered.length})</div>
               <button className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded" onClick={loadSnapshot}>Reload Snapshot</button>
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400 max-h-72 overflow-auto">
+            <div className="text-sm text-gray-600 dark:text-gray-400 max-h-[70vh] overflow-auto">
               {filtered.slice(0, 50).map((s) => (
                 <div
                   key={s.ticker}
