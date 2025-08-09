@@ -123,6 +123,7 @@ const ScreenerTestTab = () => {
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [loadingTicker, setLoadingTicker] = useState(null);
   const [showJson, setShowJson] = useState(false); // collapsed by default
 
   const onDragStart = useCallback((e, index) => {
@@ -166,6 +167,7 @@ const ScreenerTestTab = () => {
       return;
     }
     try {
+      setLoadingTicker(s.ticker);
       const res = await fetch(`${API_BASE_URL}/api/stocks/${(s.ticker || '').toUpperCase()}`);
       const full = await res.json();
       if (full && full.ticker) {
@@ -178,6 +180,9 @@ const ScreenerTestTab = () => {
     } catch (e) {
       setSelected(s);
       setShowModal(true);
+    }
+    finally {
+      setLoadingTicker(null);
     }
   };
 
@@ -309,7 +314,8 @@ const ScreenerTestTab = () => {
                 >
                   <button
                     className="flex-1 text-left cursor-pointer"
-                    onClick={() => openDetails(s)}
+                    onClick={() => { if (loadingTicker !== s.ticker) openDetails(s); }}
+                    disabled={loadingTicker === s.ticker}
                   >
                     <div className="flex justify-between">
                       <span className="font-mono">{s.ticker}</span>
@@ -319,10 +325,14 @@ const ScreenerTestTab = () => {
                     </div>
                   </button>
                   <button
-                    className="px-2 py-0.5 text-[10px] bg-blue-600 text-white rounded"
-                    onClick={() => openDetails(s)}
+                    className={`px-2 py-0.5 text-[10px] rounded ${loadingTicker === s.ticker ? 'bg-gray-400 cursor-wait' : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'} text-white flex items-center gap-1`}
+                    onClick={() => { if (loadingTicker !== s.ticker) openDetails(s); }}
+                    disabled={loadingTicker === s.ticker}
                   >
-                    View
+                    {loadingTicker === s.ticker ? (
+                      <span className="inline-block w-3 h-3 border-2 border-white border-b-transparent rounded-full animate-spin"></span>
+                    ) : null}
+                    <span>{loadingTicker === s.ticker ? 'Loading' : 'View'}</span>
                   </button>
                 </div>
               ))}
