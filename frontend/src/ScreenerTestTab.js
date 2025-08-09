@@ -262,7 +262,16 @@ const ScreenerTestTab = () => {
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 max-h-72 overflow-auto">
               {filtered.slice(0, 50).map((s) => (
-                <div key={s.ticker} className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700">
+                <div
+                  key={s.ticker}
+                  className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40"
+                  onClick={() => {
+                    // Open a new window to the Chart tab route if available, otherwise fallback to finviz
+                    // Minimal: open finviz in new tab
+                    window.open(`https://finviz.com/quote.ashx?t=${s.ticker}`, '_blank');
+                  }}
+                  title="Click to open details"
+                >
                   <span className="font-mono">{s.ticker}</span>
                   <span>${s.currentPrice.toFixed(2)}</span>
                   <span>RSI {Math.round(s.RSI ?? 50)}</span>
