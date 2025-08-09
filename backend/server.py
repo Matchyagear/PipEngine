@@ -625,6 +625,24 @@ stock_cache = {}
 nyse_symbols_cache = {'data': None, 'timestamp': None}
 CACHE_DURATION = 300  # 5 minutes
 
+# Simple endpoint-level cache to reduce repeated external calls
+endpoint_cache = {}
+
+def _cache_get(key: str):
+    entry = endpoint_cache.get(key)
+    if not entry:
+        return None
+    ts = entry.get('timestamp')
+    if ts and (datetime.now().timestamp() - ts) < CACHE_DURATION:
+        return entry.get('data')
+    return None
+
+def _cache_set(key: str, data):
+    endpoint_cache[key] = {
+        'data': data,
+        'timestamp': datetime.now().timestamp()
+    }
+
 @lru_cache(maxsize=1000)
 def get_cached_stock_info(ticker: str):
     """Cached basic stock info to reduce API calls"""
@@ -1331,15 +1349,20 @@ async def get_market_indices():
         }
 
         indices_data = []
+        cache_key = "indices_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
         for symbol, name in indices.items():
             try:
                 ticker = yf.Ticker(symbol)
-                info = ticker.info
                 hist = ticker.history(period="1d")
 
                 if not hist.empty:
                     current_price = hist['Close'].iloc[-1]
-                    prev_close = info.get('previousClose', current_price)
+                    # Estimate previous close from history when possible to avoid slow info calls
+                    prev_close = hist['Close'].iloc[-2] if len(hist['Close']) >= 2 else current_price
                     change = current_price - prev_close
                     change_percent = (change / prev_close) * 100 if prev_close else 0
 
@@ -1355,7 +1378,9 @@ async def get_market_indices():
                 print(f"Error fetching {symbol}: {e}")
                 continue
 
-        return {"indices": indices_data, "timestamp": datetime.now().isoformat()}
+        result = {"indices": indices_data, "timestamp": datetime.now().isoformat()}
+        _cache_set(cache_key, result)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching market indices: {str(e)}")
 
@@ -1363,6 +1388,11 @@ async def get_market_indices():
 async def get_market_movers():
     """Get top gainers and losers"""
     try:
+        cache_key = "movers_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
         # Use a broader list of popular stocks for movers
         popular_tickers = [
             'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'AMD', 'NFLX', 'CRM',
@@ -1401,11 +1431,13 @@ async def get_market_movers():
         gainers = movers_data[:10]  # Top 10 gainers
         losers = sorted(movers_data, key=lambda x: x['changePercent'])[:10]  # Top 10 losers
 
-        return {
+        result = {
             "gainers": gainers,
             "losers": losers,
             "timestamp": datetime.now().isoformat()
         }
+        _cache_set(cache_key, result)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching market movers: {str(e)}")
 
@@ -1428,20 +1460,24 @@ async def get_market_heatmap():
             "XLC": "Communication Services"
         }
 
+        cache_key = "heatmap_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
         heatmap_data = []
         for symbol, sector in sector_etfs.items():
             try:
                 ticker = yf.Ticker(symbol)
                 hist = ticker.history(period="2d")
-                info = ticker.info
 
                 if len(hist) >= 2:
                     current_price = hist['Close'].iloc[-1]
                     prev_close = hist['Close'].iloc[-2]
                     change_percent = ((current_price - prev_close) / prev_close) * 100 if prev_close else 0
 
-                    # Use market cap or volume as size metric
-                    market_cap = info.get('totalAssets', 1000000000)  # Default size for ETFs
+                    # Fixed size metric to avoid slow info calls
+                    market_cap = 1_000_000_000
 
                     heatmap_data.append({
                         "symbol": symbol,
@@ -1454,7 +1490,9 @@ async def get_market_heatmap():
                 print(f"Error fetching heatmap data for {symbol}: {e}")
                 continue
 
-        return {"heatmap": heatmap_data, "timestamp": datetime.now().isoformat()}
+        result = {"heatmap": heatmap_data, "timestamp": datetime.now().isoformat()}
+        _cache_set(cache_key, result)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching heatmap data: {str(e)}")
 
@@ -1605,6 +1643,11 @@ async def get_market_full_movers():
 async def get_highest_volume_stocks():
     """Get highest volume stocks with full technical analysis"""
     try:
+        cache_key = "highvol_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
         # Popular high-volume stocks to check
         high_volume_tickers = [
             'AAPL', 'MSFT', 'TSLA', 'NVDA', 'AMZN', 'META', 'GOOGL', 'AMD', 'NFLX', 'UBER',
@@ -1644,10 +1687,12 @@ async def get_highest_volume_stocks():
                 print(f"Error analyzing high-volume stock {ticker}: {e}")
                 continue
 
-        return {
+        result = {
             "stocks": highest_volume_stocks,
             "timestamp": datetime.now().isoformat()
         }
+        _cache_set(cache_key, result)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching highest volume stocks: {str(e)}")
 
@@ -1655,7 +1700,13 @@ async def get_highest_volume_stocks():
 async def get_market_overview():
     """Get comprehensive market overview combining all data"""
     try:
-        # Get all market data in one call for efficiency
+        # Cache wrapper for overview
+        cache_key = "overview_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
+        # Get all market data (each call internally cached for 5 minutes)
         indices_data = await get_market_indices()
         movers_data = await get_market_movers()
         heatmap_data = await get_market_heatmap()
@@ -1667,13 +1718,15 @@ async def get_market_overview():
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        return {
+        result = {
             "indices": indices_data["indices"],
             "gainers": movers_data["gainers"][:5],  # Top 5 gainers for overview
             "losers": movers_data["losers"][:5],    # Top 5 losers for overview
             "sectors": heatmap_data["heatmap"],
             "stats": market_stats
         }
+        _cache_set(cache_key, result)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching market overview: {str(e)}")
 
@@ -2013,11 +2066,11 @@ async def add_manual_position(position_data: dict):
             raise HTTPException(status_code=404, detail=f"Stock symbol {symbol} not found")
 
         current_price = hist['Close'].iloc[-1]
-        info = ticker.info
 
         # Calculate position metrics
         quantity = float(position_data['quantity'])
         avg_cost = float(position_data['avgCost'])
+        # Avoid slow info calls; compute from inputs and history only
         market_value = quantity * current_price
         unrealized_pnl = (current_price - avg_cost) * quantity
         unrealized_pnl_percent = (unrealized_pnl / (avg_cost * quantity)) * 100 if avg_cost > 0 else 0
@@ -2112,6 +2165,11 @@ async def import_webull_portfolio(credentials: dict):
 async def get_volatile_stocks(limit: int = Query(10, ge=1, le=50)):
     """Get the most volatile stocks based on price volatility and volume"""
     try:
+        cache_key = f"volatile_v1_{limit}"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
         # Get NYSE symbols for scanning
         symbols = get_nyse_stock_symbols_optimized()
         if not symbols:
@@ -2143,11 +2201,13 @@ async def get_volatile_stocks(limit: int = Query(10, ge=1, le=50)):
         # Return top volatile stocks
         top_volatile = volatile_stocks[:limit]
 
-        return {
+        result = {
             "volatile_stocks": top_volatile,
             "total_analyzed": len(volatile_stocks),
             "timestamp": datetime.now().isoformat()
         }
+        _cache_set(cache_key, result)
+        return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching volatile stocks: {str(e)}")

@@ -75,20 +75,28 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const [showStockModal, setShowStockModal] = useState(false);
 
   useEffect(() => {
+    // Load only lightweight overview first for fast first paint
     fetchMarketData();
-    fetchFeaturedStocks();
-    fetchFullMovers();
-    fetchHighestVolumeStocks();
-    fetchVolatileStocks();
-    // Refresh market data every 5 minutes (increased from 2)
+
+    // Stagger heavier requests to reduce initial load burst
+    const t1 = setTimeout(() => fetchFullMovers(), 1500);
+    const t2 = setTimeout(() => fetchHighestVolumeStocks(), 2500);
+    const t3 = setTimeout(() => fetchVolatileStocks(), 3500);
+    const t4 = setTimeout(() => fetchFeaturedStocks(), 4500);
+
+    // Refresh every 5 minutes (stagger inside the tick as well)
     const interval = setInterval(() => {
       fetchMarketData();
-      fetchFeaturedStocks();
-      fetchFullMovers();
-      fetchHighestVolumeStocks();
-      fetchVolatileStocks();
+      setTimeout(() => fetchFullMovers(), 500);
+      setTimeout(() => fetchHighestVolumeStocks(), 1000);
+      setTimeout(() => fetchVolatileStocks(), 1500);
+      setTimeout(() => fetchFeaturedStocks(), 2000);
     }, 300000); // 5 minutes
-    return () => clearInterval(interval);
+
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchMarketData = async () => {
