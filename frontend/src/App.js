@@ -637,8 +637,8 @@ function App() {
               </button>
 
               <button
-              
-              onClick={() => {
+
+                onClick={() => {
                   setActiveTab('screenerTest');
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
@@ -649,7 +649,7 @@ function App() {
                   }`}
               >
                 <Filter className="w-4 h-4" />
-                <span>Screener Test</span>
+                <span>Screener Test (beta)</span>
               </button>
 
               <button
