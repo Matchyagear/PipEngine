@@ -217,7 +217,7 @@ const ScreenerTestTab = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Custom Screener (Test)</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Custom Screener (Test v2)</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">Reorder criteria by dragging. Adjust values below. No API calls are made yet.</p>
           </div>
           <div className="flex items-center gap-2">
