@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import StockCard from './StockCard';
 
-const StockCardModal = ({ isOpen, onClose, stock, aiProvider = 'gemini' }) => {
+const StockCardModal = ({ isOpen, onClose, stock, aiProvider = 'gemini', onOpenChart }) => {
   if (!isOpen || !stock) return null;
 
   return (
@@ -38,6 +38,7 @@ const StockCardModal = ({ isOpen, onClose, stock, aiProvider = 'gemini' }) => {
             <StockCard 
               stock={stock} 
               aiProvider={aiProvider}
+              onOpenChart={onOpenChart}
             />
           </div>
         </motion.div>

@@ -310,7 +310,17 @@ const ScreenerTestTab = () => {
           </div>
         </div>
       </div>
-      <StockCardModal isOpen={showModal} onClose={() => setShowModal(false)} stock={selected} aiProvider="gemini" />
+      <StockCardModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        stock={selected}
+        aiProvider="gemini"
+        onOpenChart={(s) => {
+          // Navigate to chart tab by setting location hash or open finviz as fallback
+          // For now: open TradingView chart new tab for symbol
+          window.open(`https://www.tradingview.com/chart/?symbol=${(s.ticker || '').toUpperCase()}`,'_blank');
+        }}
+      />
     </div>
   );
 };
