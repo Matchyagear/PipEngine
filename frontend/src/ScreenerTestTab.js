@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import StockCardModal from './StockCardModal';
 
 // Lightweight, no-API custom screener UI with basic drag-and-drop to order criteria.
 // This only manages UI state; no backend calls are made.
@@ -7,7 +8,7 @@ const defaultCriteria = [
   { id: 'price', label: 'Price ($)', type: 'range', value: [5, 200], min: 0, max: 1000, step: 1 },
   { id: 'volume', label: 'Avg Volume (min)', type: 'number', value: 500000, min: 0, step: 1000 },
   { id: 'marketCap', label: 'Market Cap (min, $B)', type: 'number', value: 2, min: 0, step: 0.1 },
-  { id: 'sector', label: 'Sector', type: 'multiselect', value: [], options: ['Technology','Healthcare','Financial Services','Energy','Industrials','Consumer Discretionary','Consumer Staples','Utilities','Materials','Real Estate','Communication Services'] },
+  { id: 'sector', label: 'Sector', type: 'multiselect', value: [], options: ['Technology', 'Healthcare', 'Financial Services', 'Energy', 'Industrials', 'Consumer Discretionary', 'Consumer Staples', 'Utilities', 'Materials', 'Real Estate', 'Communication Services'] },
   { id: 'rsi', label: 'RSI', type: 'range', value: [20, 80], min: 0, max: 100, step: 1 },
   { id: 'smaCross', label: '50MA > 200MA', type: 'boolean', value: false },
 ];
@@ -120,6 +121,8 @@ const ScreenerTestTab = () => {
   const [snapshot, setSnapshot] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selected, setSelected] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const onDragStart = useCallback((e, index) => {
     setDragIndex(index);
@@ -251,7 +254,7 @@ const ScreenerTestTab = () => {
           <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Current Filter JSON</div>
             <pre className="text-xs text-gray-700 dark:text-gray-300 overflow-auto max-h-64 bg-gray-50 dark:bg-gray-900/30 p-3 rounded">
-{JSON.stringify(query, null, 2)}
+              {JSON.stringify(query, null, 2)}
             </pre>
           </div>
 
@@ -265,11 +268,7 @@ const ScreenerTestTab = () => {
                 <div
                   key={s.ticker}
                   className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40"
-                  onClick={() => {
-                    // Open a new window to the Chart tab route if available, otherwise fallback to finviz
-                    // Minimal: open finviz in new tab
-                    window.open(`https://finviz.com/quote.ashx?t=${s.ticker}`, '_blank');
-                  }}
+                  onClick={() => { setSelected(s); setShowModal(true); }}
                   title="Click to open details"
                 >
                   <span className="font-mono">{s.ticker}</span>
@@ -285,10 +284,9 @@ const ScreenerTestTab = () => {
           </div>
         </div>
       </div>
+      <StockCardModal isOpen={showModal} onClose={() => setShowModal(false)} stock={selected} aiProvider="gemini" />
     </div>
   );
 };
 
 export default ScreenerTestTab;
-
-
