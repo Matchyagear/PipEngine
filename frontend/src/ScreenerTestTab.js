@@ -170,8 +170,9 @@ const ScreenerTestTab = () => {
 
   useEffect(() => {
     loadSnapshot();
+    // we intentionally only run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [API_BASE_URL]);
 
   const filtered = useMemo(() => {
     if (!snapshot.length) return [];
