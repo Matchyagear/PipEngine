@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import StockCard from './StockCard';
 import IndexCard from './IndexCard';
 import { NewsSidebar } from './NewsComponents';
+import TradingViewHeatmap from './components/TradingViewHeatmap';
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -742,40 +743,9 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
         )}
       </div>
 
-      {/* Sector Performance Heatmap */}
-      <div className="panel p-6">
-        <div className="flex items-center space-x-2 mb-4">
-          <Activity className="w-5 h-5 text-purple-600" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Sector Performance
-          </h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {marketData?.sectors?.map((sector, index) => (
-            <motion.div
-              key={sector.symbol}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              className={`p-4 rounded-lg border-2 ${sector.changePercent > 0
-                ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700'
-                : sector.changePercent < 0
-                  ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'
-                  : 'bg-gray-50 border-gray-200 dark:bg-gray-700 dark:border-gray-600'
-                }`}
-            >
-              <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                {sector.sector}
-              </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                {sector.symbol}
-              </div>
-              <div className={`text-sm font-bold ${getChangeColor(sector.changePercent)}`}>
-                {sector.changePercent >= 0 ? '+' : ''}{sector.changePercent?.toFixed(2)}%
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      {/* Sector Performance Heatmap (TradingView) */}
+      <div className="panel p-3">
+        <TradingViewHeatmap height={360} dataSource="SPX500" grouping="sector" />
       </div>
 
       {/* Market Stats */}
