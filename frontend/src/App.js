@@ -955,60 +955,60 @@ function App() {
                   </>
                 )}
               </>
-            )}
+            ) : null}
             {isShadowbotRoute && <ShadowbotPage />}
-              </div>
-          </div>
-        </div>
-
-        {/* Modals */}
-        <SettingsModal />
-        <WatchlistModal
-          isOpen={showWatchlistModal}
-          onClose={() => setShowWatchlistModal(false)}
-          onSubmit={createWatchlist}
-          newWatchlistName={newWatchlistName}
-          setNewWatchlistName={setNewWatchlistName}
-          newWatchlistTickers={newWatchlistTickers}
-          setNewWatchlistTickers={setNewWatchlistTickers}
-        />
-
-        {/* Stock Detail Modal */}
-        <StockDetailModal
-          stock={selectedStock}
-          isOpen={showStockDetail}
-          onClose={() => setShowStockDetail(false)}
-          aiProvider={aiProvider}
-          API_BASE_URL={API_BASE_URL}
-        />
-
-        {/* Shadow's Picks Stock Card Modal (universal StockCard) */}
-        <StockCardModal
-          isOpen={showShadowModal}
-          onClose={() => { setShowShadowModal(false); setSelectedShadowStock(null); }}
-          stock={selectedShadowStock}
-          aiProvider={aiProvider}
-          onOpenChart={openChartForStock}
-        />
-
-        {/* AI Chat Component - Controlled by Header Button */}
-        <AIChat isOpen={showAIChat} setIsOpen={setShowAIChat} />
-
-        {/* Fixed Export Menu - Smaller and Semi-transparent */}
-        <div className="fixed bottom-6 right-6 z-40">
-          <div className="flex flex-col space-y-3">
-            <button
-              onClick={() => exportData('csv')}
-              className="flex items-center space-x-1 py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-lg btn-success transition-all opacity-60 hover:opacity-80 text-xs"
-              title="Export CSV"
-            >
-              <Download className="w-3 h-3" />
-              <span className="text-xs font-medium">CSV</span>
-            </button>
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <SettingsModal />
+      <WatchlistModal
+        isOpen={showWatchlistModal}
+        onClose={() => setShowWatchlistModal(false)}
+        onSubmit={createWatchlist}
+        newWatchlistName={newWatchlistName}
+        setNewWatchlistName={setNewWatchlistName}
+        newWatchlistTickers={newWatchlistTickers}
+        setNewWatchlistTickers={setNewWatchlistTickers}
+      />
+
+      {/* Stock Detail Modal */}
+      <StockDetailModal
+        stock={selectedStock}
+        isOpen={showStockDetail}
+        onClose={() => setShowStockDetail(false)}
+        aiProvider={aiProvider}
+        API_BASE_URL={API_BASE_URL}
+      />
+
+      {/* Shadow's Picks Stock Card Modal (universal StockCard) */}
+      <StockCardModal
+        isOpen={showShadowModal}
+        onClose={() => { setShowShadowModal(false); setSelectedShadowStock(null); }}
+        stock={selectedShadowStock}
+        aiProvider={aiProvider}
+        onOpenChart={openChartForStock}
+      />
+
+      {/* AI Chat Component - Controlled by Header Button */}
+      <AIChat isOpen={showAIChat} setIsOpen={setShowAIChat} />
+
+      {/* Fixed Export Menu - Smaller and Semi-transparent */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <div className="flex flex-col space-y-3">
+          <button
+            onClick={() => exportData('csv')}
+            className="flex items-center space-x-1 py-1.5 px-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-lg btn-success transition-all opacity-60 hover:opacity-80 text-xs"
+            title="Export CSV"
+          >
+            <Download className="w-3 h-3" />
+            <span className="text-xs font-medium">CSV</span>
+          </button>
+        </div>
+      </div>
     </div>
+    </div >
   );
 }
 
