@@ -954,7 +954,9 @@ function App() {
                     </div>
                   </>
                 )}
+              </>
             )}
+            {isShadowbotRoute && <ShadowbotPage />}
               </div>
           </div>
         </div>
