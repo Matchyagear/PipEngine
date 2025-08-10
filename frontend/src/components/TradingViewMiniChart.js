@@ -3,22 +3,25 @@ import React, { useEffect, useMemo, useRef } from 'react';
 // Lightweight wrapper that embeds TradingView's Mini Symbol Overview widget
 // Docs: https://www.tradingview.com/widget/mini-symbol-overview/
 // Usage: <TradingViewMiniChart symbol="AAPL" height={80} />
-const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1M', theme = 'dark' }) => {
+const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1M', theme = 'dark', scale = 1 }) => {
     const containerRef = useRef(null);
 
-    const config = useMemo(() => ({
+  // Render the widget at a larger internal height, then scale down to target height
+  const internalHeight = Math.max(40, Math.round(height / Math.max(0.1, scale)));
+
+  const config = useMemo(() => ({
         symbol: (symbol || 'AAPL').toUpperCase(),
         width: '100%',
-        height: height,
+    height: internalHeight,
         locale: 'en',
         dateRange,
         colorTheme: theme,
         isTransparent: true,
         autosize: true,
         // Optional fine-tuning colors
-    trendLineColor: '#22c55e',
-    underLineColor: theme === 'dark' ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.15)',
-    lineColor: '#22c55e',
+        trendLineColor: '#22c55e',
+        underLineColor: theme === 'dark' ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.15)',
+        lineColor: '#22c55e',
         // Hide extras for minimal footprint
         // No explicit settings needed; widget is minimal by default
     }), [symbol, height, dateRange, theme]);
@@ -45,9 +48,11 @@ const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1M', theme = '
 
   return (
     <div className="w-full overflow-hidden rounded" style={{ height }}>
-            <div ref={containerRef} className="w-full h-full" />
-        </div>
-    );
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <div ref={containerRef} style={{ width: '100%', height: internalHeight }} />
+      </div>
+    </div>
+  );
 };
 
 export default TradingViewMiniChart;
