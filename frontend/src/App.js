@@ -76,7 +76,7 @@ function App() {
   const [chartSymbol, setChartSymbol] = useState('AAPL');
   const [showLogoMenu, setShowLogoMenu] = useState(false);
   const logoMenuRef = useRef(null);
-  const isShadowbotPage = typeof window !== 'undefined' && (window.location.pathname === '/shadowbot' || new URLSearchParams(window.location.search).get('shadowbot') === '1');
+  
 
   // Search functionality
   const [searchTicker, setSearchTicker] = useState('');
@@ -881,9 +881,7 @@ function App() {
       {/* Main Content */}
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        {isShadowbotRoute && (
-          <ShadowbotPage />
-        )}
+        
 
         {/* News Search Box (only show on news tab) */}
         {!isShadowbotRoute && activeTab === 'news' && (
@@ -961,7 +959,6 @@ function App() {
           <div className="flex-1">
             {/* Content Based on Active Tab */}
             {!isShadowbotRoute ? renderContent() : <ShadowbotPage />}
-            {isShadowbotRoute && <ShadowbotPage />}
           </div>
         </div>
       </div>
@@ -1012,7 +1009,7 @@ function App() {
           </button>
         </div>
       </div>
-      </div>
+    </div>
   );
 }
 
