@@ -449,7 +449,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   <h3 className="font-medium mb-2">Market Score (1–100)</h3>
                   <div className="flex items-center gap-3">
                     <div className="text-2xl font-semibold">{morning.market_score}</div>
-                    <div className="text-xs text-gray-400">Bearish > 50 · Bullish < 50</div>
+                    <div className="text-xs text-gray-400">Bearish &gt; 50 · Bullish &lt; 50</div>
                   </div>
                 </div>
               </>
