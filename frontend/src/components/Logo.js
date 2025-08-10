@@ -2,9 +2,9 @@ import React from 'react';
 
 const Logo = ({ size = "md", showText = true, src = "/logo512.png" }) => {
   const sizeClasses = {
-    sm: "w-24 h-10",
-    md: "w-28 h-12",
-    lg: "w-40 h-14"
+    sm: "w-28 h-12",
+    md: "w-44 h-16",
+    lg: "w-56 h-20"
   };
 
   return (
