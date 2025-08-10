@@ -126,14 +126,19 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showWatchlistDropdown]);
 
+  const score = typeof stock.score === 'number' ? stock.score : 0;
+  const ringClass = score === 4 ? 'ring-green-500' : score === 3 ? 'ring-yellow-400' : score === 2 ? 'ring-orange-500' : score === 1 ? 'ring-red-600' : 'ring-red-900';
+  const shiny = (score === 4 && (stock.setupFit || 0) >= 80);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="panel p-3 hover:shadow-lg transition-all cursor-pointer hover:scale-105 relative group"
-      onClick={() => onClick && onClick(stock)}
-    >
+    <div className={shiny ? 'p-[2px] rounded-xl bg-gradient-to-r from-emerald-400 via-green-300 to-cyan-400 shadow-[0_0_14px_rgba(34,197,94,0.45)]' : `rounded-xl ring-2 ${ringClass}`}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="panel p-3 hover:shadow-lg transition-all cursor-pointer hover:scale-105 relative group"
+        onClick={() => onClick && onClick(stock)}
+      >
       {/* Action Buttons - Top Right Corner on Hover */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
         {/* Add Chart Button */}
@@ -284,7 +289,8 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
           Click for details
         </p>
       </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

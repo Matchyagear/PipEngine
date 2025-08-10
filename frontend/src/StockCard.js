@@ -143,6 +143,16 @@ const StockCard = ({
     return 'text-gray-600 dark:text-gray-400';
   };
 
+  const getScoreRingClass = (score) => {
+    switch (score) {
+      case 4: return 'ring-green-500';
+      case 3: return 'ring-yellow-400';
+      case 2: return 'ring-orange-500';
+      case 1: return 'ring-red-600';
+      default: return 'ring-red-900';
+    }
+  };
+
   const computeSwingScore = (s) => {
     // Defensive defaults
     const baseScore = typeof s.score === 'number' ? s.score : 2; // 0-4
@@ -335,13 +345,19 @@ const StockCard = ({
 
   // Always use the full Shadow's Picks stock card format - no compact versions
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="panel rounded-2xl p-6 hover:shadow-xl transition-all stock-card cursor-pointer hover:scale-105 relative group overflow-hidden"
-      onClick={onClick}
-    >
+    (() => {
+      const setupScore = computeSwingScore(stock);
+      const shiny = (stock.score === 4 && setupScore >= 80);
+      const ringClass = getScoreRingClass(stock.score);
+      return (
+        <div className={shiny ? 'p-[2px] rounded-2xl bg-gradient-to-r from-emerald-400 via-green-300 to-cyan-400 shadow-[0_0_18px_rgba(34,197,94,0.45)]' : `rounded-2xl ring-2 ${ringClass}`}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="panel rounded-2xl p-6 hover:shadow-xl transition-all stock-card cursor-pointer hover:scale-105 relative group overflow-hidden"
+            onClick={onClick}
+          >
       {/* Action Buttons - Top Right Corner on Hover */}
       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
         {/* Add Chart Button */}
@@ -539,7 +555,7 @@ const StockCard = ({
       {/* Composite 1-100 Setup Score */}
       <div className="mb-4">
         {(() => {
-          const composite = computeSwingScore(stock);
+          const composite = setupScore;
           return (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -556,7 +572,10 @@ const StockCard = ({
           );
         })()}
       </div>
-
+          </motion.div>
+        </div>
+      );
+    })()
       {/* Technical Indicators with Tooltips */}
       {stock.RSI && (
         <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
