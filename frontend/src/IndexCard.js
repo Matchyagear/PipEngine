@@ -6,6 +6,7 @@ import {
   BarChart3,
   ExternalLink
 } from 'lucide-react';
+import TradingViewSymbolOverview from './components/TradingViewSymbolOverview';
 
 const IndexCard = ({ index, onClick }) => {
   const getChangeColor = (change) => {
@@ -21,16 +22,22 @@ const IndexCard = ({ index, onClick }) => {
     return num?.toFixed(2) || '0.00';
   };
 
-  const getFinvizUrl = (symbol) => {
-    // Map index symbols to their Finviz equivalents
-    const symbolMap = {
-      '^GSPC': 'SPX',
-      '^DJI': 'DJI',
-      '^IXIC': 'NDX',
-      '^RUT': 'RUT',
-      '^VIX': 'VIX'
-    };
-    return symbolMap[symbol] || symbol.replace('^', '');
+  const getDisplayAndTvSymbols = (rawSymbol) => {
+    const s = (rawSymbol || '').toUpperCase();
+    switch (s) {
+      case '^GSPC':
+        return { display: 'SPX', tv: 'SP:SPX' };
+      case '^DJI':
+        return { display: 'DJI', tv: 'DJ:DJI' };
+      case '^IXIC':
+        return { display: 'NDQ', tv: 'NASDAQ:IXIC' };
+      case '^RUT':
+        return { display: 'BTCUSD', tv: 'BTCUSD' };
+      case '^VIX':
+        return { display: 'ETHUSD', tv: 'ETHUSD' };
+      default:
+        return { display: s.replace('^', ''), tv: s.replace('^', '') };
+    }
   };
 
   return (
@@ -38,14 +45,14 @@ const IndexCard = ({ index, onClick }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="panel p-6 hover:shadow-xl transition-all stock-card cursor-pointer hover:scale-105"
+      className="panel card-panel p-6 hover:shadow-xl transition-all stock-card cursor-pointer hover:scale-105"
       onClick={onClick}
     >
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            {index.symbol.replace('^', '')}
+            {getDisplayAndTvSymbols(index.symbol).display}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
             {index.name}
@@ -103,29 +110,22 @@ const IndexCard = ({ index, onClick }) => {
         </div>
       </div>
 
-      {/* Index Chart */}
-      <div className="mb-4 chart-container">
-        <img
-          src={`https://finviz.com/chart.ashx?t=${getFinvizUrl(index.symbol)}&ty=c&ta=1&p=d&s=l`}
-          alt={`${index.name} chart`}
-          className="w-full h-32 object-cover rounded-lg border"
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
+      {/* Index Chart - TradingView Symbol Overview */}
+      <div className="mb-4">
+        <TradingViewSymbolOverview symbol={getDisplayAndTvSymbols(index.symbol).tv} height={80} />
       </div>
 
       {/* Action Buttons */}
       <div className="flex space-x-2">
         <a
-          href={`https://finviz.com/quote.ashx?t=${getFinvizUrl(index.symbol)}`}
+          href={`https://www.tradingview.com/symbols/${getDisplayAndTvSymbols(index.symbol).display}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center space-x-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           <ExternalLink className="w-4 h-4" />
-          <span className="text-sm">View Details</span>
+          <span className="text-sm">View on TradingView</span>
         </a>
       </div>
 
