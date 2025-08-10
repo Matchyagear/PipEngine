@@ -75,6 +75,7 @@ function App() {
   const [chartSymbol, setChartSymbol] = useState('AAPL');
   const [showLogoMenu, setShowLogoMenu] = useState(false);
   const logoMenuRef = useRef(null);
+  const isShadowbotPage = typeof window !== 'undefined' && (window.location.pathname === '/shadowbot' || new URLSearchParams(window.location.search).get('shadowbot') === '1');
 
   // Search functionality
   const [searchTicker, setSearchTicker] = useState('');
@@ -520,6 +521,13 @@ function App() {
 
   const filteredStocks = getFilteredAndSortedStocks();
 
+  // If loaded via shadowbot landing, auto-open AI chat
+  useEffect(() => {
+    if (window.location.hash === '#shadowbot') {
+      setShowAIChat(true);
+    }
+  }, []);
+
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''} bg-carbon-900 text-gray-100 transition-colors carbon`}>
       {/* Enhanced Header - Made Sticky/Floating */}
@@ -546,7 +554,7 @@ function App() {
                 <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
                   <div className="py-1">
                     <button
-                      onClick={() => { setShowAIChat(true); setShowLogoMenu(false); }}
+                      onClick={() => { setShowLogoMenu(false); window.open('/shadowbot', '_blank', 'noopener'); }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-800"
                     >
                       Shadowbot
