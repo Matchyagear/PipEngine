@@ -125,7 +125,7 @@ const ScreenerTestTab = ({ onOpenChart }) => {
   const [showModal, setShowModal] = useState(false);
   const [loadingTicker, setLoadingTicker] = useState(null);
   const [showJson, setShowJson] = useState(false); // collapsed by default
-  const [sortKey, setSortKey] = useState('ticker'); // ticker | price | rsi | score | volume
+  const [sortKey, setSortKey] = useState('ticker'); // ticker | price | rsi | score | setup | volume
   const [sortDir, setSortDir] = useState('asc');
 
   const toggleSort = (key) => {
@@ -135,6 +135,58 @@ const ScreenerTestTab = ({ onOpenChart }) => {
       setSortKey(key);
       setSortDir('asc');
     }
+  };
+
+  const computeSwingScore = (s) => {
+    const baseScore = typeof s.score === 'number' ? s.score : 2;
+    const rsi = typeof s.RSI === 'number' ? s.RSI : null;
+    const macd = typeof s.MACD === 'number' ? s.MACD : null;
+    const relVol = typeof s.relativeVolume === 'number' ? s.relativeVolume : null;
+    const stoch = typeof s.stochastic === 'number' ? s.stochastic : null;
+    const price = typeof s.currentPrice === 'number' ? s.currentPrice : null;
+    const ma50 = typeof s.fiftyMA === 'number' ? s.fiftyMA : null;
+    const ma200 = typeof s.twoHundredMA === 'number' ? s.twoHundredMA : null;
+    const marketChg = typeof s.marketChangePercent === 'number' ? s.marketChangePercent : null;
+    const sectorChg = typeof s.sectorChangePercent === 'number' ? s.sectorChangePercent : null;
+    const stockChg = typeof s.priceChangePercent === 'number' ? s.priceChangePercent : null;
+
+    const W_BASE = 38;
+    const W_OVERSOLD = 10;
+    const W_BREAKOUT = 8;
+    const W_TREND = 16;
+    const W_MACD = 8;
+    const W_RSI = 14;
+    const W_VOLUME = 4;
+    const W_STOCH = 2;
+    const W_MARKET = 6;
+    const W_SECTOR = 4;
+    const total = W_BASE + W_OVERSOLD + W_BREAKOUT + W_TREND + W_MACD + W_RSI + W_VOLUME + W_STOCH + W_MARKET + W_SECTOR;
+
+    let pts = 0;
+    pts += (Math.max(0, Math.min(4, baseScore)) / 4) * W_BASE;
+    if (s.passes?.oversold) pts += W_OVERSOLD;
+    if (s.passes?.breakout) pts += W_BREAKOUT;
+    if (ma50 !== null && ma200 !== null) {
+      if (ma50 > ma200) pts += W_TREND * 0.6;
+      if (price !== null && price > ma50 && price > ma200) pts += W_TREND * 0.4;
+    }
+    if (macd !== null && macd > 0) pts += W_MACD;
+    if (rsi !== null) {
+      if (rsi >= 35 && rsi <= 55) pts += W_RSI;
+      else if ((rsi >= 30 && rsi < 35) || (rsi > 55 && rsi <= 60)) pts += W_RSI * 0.5;
+    }
+    if (relVol !== null) {
+      if (relVol >= 1.5) pts += W_VOLUME;
+      else if (relVol >= 1.2) pts += W_VOLUME * 0.5;
+    }
+    if (stoch !== null && stoch >= 20 && stoch <= 80) pts += W_STOCH;
+    if (marketChg !== null && stockChg !== null) {
+      if ((marketChg >= 0 && stockChg >= 0) || (marketChg < 0 && stockChg < 0)) pts += W_MARKET;
+    }
+    if (sectorChg !== null && stockChg !== null) {
+      if ((sectorChg >= 0 && stockChg >= 0) || (sectorChg < 0 && stockChg < 0)) pts += W_SECTOR;
+    }
+    return Math.max(1, Math.min(100, Math.round((pts / total) * 100)));
   };
 
   const onDragStart = useCallback((e, index) => {
@@ -268,6 +320,11 @@ const ScreenerTestTab = ({ onOpenChart }) => {
           const bs = (typeof b.score === 'number') ? b.score : (sortDir === 'asc' ? -Infinity : Infinity);
           return dir * (as - bs);
         }
+        case 'setup': {
+          const as = computeSwingScore(a);
+          const bs = computeSwingScore(b);
+          return dir * (as - bs);
+        }
         case 'volume':
           return dir * (getNum(a.averageVolume) - getNum(b.averageVolume));
         default:
@@ -340,7 +397,7 @@ const ScreenerTestTab = ({ onOpenChart }) => {
               <button className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded" onClick={loadSnapshot}>Reload Snapshot</button>
             </div>
             {/* Sortable header */}
-            <div className="grid grid-cols-5 gap-2 items-center text-xs font-semibold text-gray-300 border-b border-gray-700/60 py-1 mb-1">
+            <div className="grid grid-cols-6 gap-2 items-center text-xs font-semibold text-gray-300 border-b border-gray-700/60 py-1 mb-1">
               <button className="text-left" onClick={() => toggleSort('ticker')}>
                 Ticker {sortKey === 'ticker' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
               </button>
@@ -352,6 +409,9 @@ const ScreenerTestTab = ({ onOpenChart }) => {
               </button>
               <button className="text-center" onClick={() => toggleSort('score')}>
                 Score {sortKey === 'score' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+              <button className="text-center" onClick={() => toggleSort('setup')}>
+                Setup {sortKey === 'setup' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
               </button>
               <button className="text-right" onClick={() => toggleSort('volume')}>
                 Volume {sortKey === 'volume' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
@@ -369,11 +429,12 @@ const ScreenerTestTab = ({ onOpenChart }) => {
                     onClick={() => { if (loadingTicker !== s.ticker) openDetails(s); }}
                     disabled={loadingTicker === s.ticker}
                   >
-                    <div className="grid grid-cols-5 gap-2 items-center text-sm">
+                    <div className="grid grid-cols-6 gap-2 items-center text-sm">
                       <span className="font-mono">{s.ticker}</span>
                       <span className="text-right">${s.currentPrice.toFixed(2)}</span>
                       <span className="text-center">RSI {Math.round(s.RSI ?? 50)}</span>
                       <span className="text-center">Score {typeof s.score === 'number' ? `${s.score}/4` : '-'}</span>
+                      <span className="text-center">{computeSwingScore(s)}</span>
                       <span className="text-right">Vol {s.averageVolume?.toLocaleString?.() || '-'}</span>
                     </div>
                   </button>
