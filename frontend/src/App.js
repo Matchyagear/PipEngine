@@ -38,6 +38,8 @@ import StockDetailModal from './StockDetailModal';
 import HomeScreen from './HomeScreen';
 import WatchlistModal from './WatchlistModal';
 import StockCard from './StockCard';
+import MiniStockCard from './MiniStockCard';
+import StockCardModal from './StockCardModal';
 import Portfolio from './Portfolio';
 import AIChat from './AIChat';
 import WatchlistTab from './WatchlistTab';
@@ -86,6 +88,8 @@ function App() {
   const [isSearchingNews, setIsSearchingNews] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [showStockDetail, setShowStockDetail] = useState(false);
+  const [showShadowModal, setShowShadowModal] = useState(false);
+  const [selectedShadowStock, setSelectedShadowStock] = useState(null);
 
   // Auto-refresh effect
   useEffect(() => {
@@ -927,14 +931,13 @@ function App() {
                       </div>
                     )}
 
-                    <div className={showMobileView ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 grid-responsive'}>
+                    <div className={showMobileView ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
                       {filteredStocks.length > 0 ? (
                         filteredStocks.map((stock) => (
-                          <StockCard
+                          <MiniStockCard
                             key={stock.ticker}
                             stock={stock}
-                            aiProvider={aiProvider}
-                            onClick={() => openStockDetail(stock)}
+                            onClick={(s) => { setSelectedShadowStock(s); setShowShadowModal(true); }}
                             onOpenChart={() => openChartForStock(stock)}
                           />
                         ))
@@ -973,6 +976,15 @@ function App() {
         onClose={() => setShowStockDetail(false)}
         aiProvider={aiProvider}
         API_BASE_URL={API_BASE_URL}
+      />
+
+      {/* Shadow's Picks Stock Card Modal (universal StockCard) */}
+      <StockCardModal
+        isOpen={showShadowModal}
+        onClose={() => { setShowShadowModal(false); setSelectedShadowStock(null); }}
+        stock={selectedShadowStock}
+        aiProvider={aiProvider}
+        onOpenChart={openChartForStock}
       />
 
       {/* AI Chat Component - Controlled by Header Button */}
