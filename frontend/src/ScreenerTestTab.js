@@ -317,11 +317,12 @@ const ScreenerTestTab = ({ onOpenChart }) => {
                     onClick={() => { if (loadingTicker !== s.ticker) openDetails(s); }}
                     disabled={loadingTicker === s.ticker}
                   >
-                    <div className="flex justify-between">
+                    <div className="grid grid-cols-5 gap-2 items-center text-sm">
                       <span className="font-mono">{s.ticker}</span>
-                      <span>${s.currentPrice.toFixed(2)}</span>
-                      <span>RSI {Math.round(s.RSI ?? 50)}</span>
-                      <span>Vol {s.averageVolume?.toLocaleString?.() || '-'}</span>
+                      <span className="text-right">${s.currentPrice.toFixed(2)}</span>
+                      <span className="text-center">RSI {Math.round(s.RSI ?? 50)}</span>
+                      <span className="text-center">Score {typeof s.score === 'number' ? `${s.score}/4` : '-'}</span>
+                      <span className="text-right">Vol {s.averageVolume?.toLocaleString?.() || '-'}</span>
                     </div>
                   </button>
                   <button
