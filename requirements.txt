@@ -36,3 +36,4 @@ openai>=1.51.2
 anthropic
 newsapi-python>=0.2.7
 feedparser>=6.0.11
+alpaca-py>=0.21.0
