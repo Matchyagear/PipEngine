@@ -44,7 +44,6 @@ import Portfolio from './Portfolio';
 import AIChat from './AIChat';
 import WatchlistTab from './WatchlistTab';
 import ChartTab from './ChartTab';
-import ScreenerTab from "./ScreenerTab";
 import ScreenerTestTab from "./ScreenerTestTab";
 import Logo from "./components/Logo";
 import "./App.css";
@@ -641,22 +640,6 @@ function App() {
               </button>
 
               <button
-
-                onClick={() => {
-                  setActiveTab('screenerTest');
-                  setCurrentWatchlist(null);
-                  setShowSearchResult(false);
-                }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'screenerTest'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-              >
-                <Filter className="w-4 h-4" />
-                <span>Screener Test (beta)</span>
-              </button>
-
-              <button
                 onClick={() => {
                   setActiveTab("screener");
                   setCurrentWatchlist(null);
@@ -667,9 +650,7 @@ function App() {
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
+                <Filter className="w-4 h-4" />
                 <span>Screener</span>
               </button>
             </div>
@@ -847,8 +828,6 @@ function App() {
             ) : activeTab === 'chart' ? (
               <ChartTab initialSymbol={chartSymbol} />
             ) : activeTab === "screener" ? (
-              <ScreenerTab />
-            ) : activeTab === 'screenerTest' ? (
               <ScreenerTestTab onOpenChart={openChartForStock} />
             ) : (
               <>
