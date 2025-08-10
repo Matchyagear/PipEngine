@@ -11,7 +11,7 @@ export const NewsSidebar = ({ news, loading }) => {
       const diffMs = now - date;
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffMins = Math.floor(diffMs / (1000 * 60));
-      
+
       if (diffHours > 24) {
         return `${Math.floor(diffHours / 24)}d ago`;
       } else if (diffHours > 0) {
@@ -28,7 +28,7 @@ export const NewsSidebar = ({ news, loading }) => {
 
   if (loading) {
     return (
-      <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4">
+      <div className="w-80 panel p-4 border-l border-carbon-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📰 Market News</h3>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
@@ -43,12 +43,12 @@ export const NewsSidebar = ({ news, loading }) => {
   }
 
   return (
-    <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4 max-h-screen overflow-y-auto">
+    <div className="w-80 panel p-4 max-h-screen overflow-y-auto border-l border-carbon-700">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
         <Globe className="w-5 h-5 mr-2" />
         Market News
       </h3>
-      
+
       <div className="space-y-3">
         {news.slice(0, 12).map((article, index) => (
           <motion.div
@@ -56,13 +56,13 @@ export const NewsSidebar = ({ news, loading }) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+            className="p-3 bg-carbon-700 rounded-lg hover:bg-carbon-600 transition-colors cursor-pointer"
             onClick={() => window.open(article.url, '_blank')}
           >
             <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 mb-2">
               {article.title}
             </h4>
-            
+
             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
               <span className="truncate mr-2">{article.source}</span>
               <div className="flex items-center">
@@ -73,7 +73,7 @@ export const NewsSidebar = ({ news, loading }) => {
           </motion.div>
         ))}
       </div>
-      
+
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
           Click any article to read more
@@ -92,7 +92,7 @@ export const NewsTab = ({ news, loading, searchQuery }) => {
       const diffMs = now - date;
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffMins = Math.floor(diffMs / (1000 * 60));
-      
+
       if (diffHours > 24) {
         return `${Math.floor(diffHours / 24)} days ago`;
       } else if (diffHours > 0) {
@@ -113,7 +113,7 @@ export const NewsTab = ({ news, loading, searchQuery }) => {
         <div className="flex items-center">
           <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-48 animate-pulse"></div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(9)].map((_, i) => (
             <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
@@ -180,7 +180,7 @@ export const NewsTab = ({ news, loading, searchQuery }) => {
                     {article.source}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                   <Clock className="w-3 h-3 mr-1" />
                   <span>{formatTimeAgo(article.published_at)}</span>
@@ -239,7 +239,7 @@ export const StockNews = ({ news, ticker }) => {
       <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
         Recent News
       </h4>
-      
+
       {news.slice(0, 3).map((article, index) => (
         <div
           key={index}

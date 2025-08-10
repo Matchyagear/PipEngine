@@ -129,7 +129,7 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 hover:shadow-lg transition-all cursor-pointer hover:scale-105 border border-gray-200 dark:border-gray-700 relative group"
+      className="panel p-3 hover:shadow-lg transition-all cursor-pointer hover:scale-105 relative group"
       onClick={() => onClick && onClick(stock)}
     >
       {/* Action Buttons - Top Right Corner on Hover */}

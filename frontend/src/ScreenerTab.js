@@ -50,7 +50,7 @@ const ScreenerTab = () => {
             className="h-screen flex flex-col overflow-hidden"
         >
             {/* Screener Header */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
+            <div className="panel p-4 mb-4">
                 <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,9 +69,9 @@ const ScreenerTab = () => {
             </div>
 
             {/* TradingView Screener Widget */}
-            <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden relative">
+            <div className="flex-1 panel overflow-hidden relative">
                 {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 z-10">
+                    <div className="absolute inset-0 flex items-center justify-center bg-carbon-800/90 z-10">
                         <div className="text-center">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                             <p className="text-gray-600 dark:text-gray-400">Loading TradingView Screener...</p>

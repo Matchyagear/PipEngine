@@ -114,7 +114,7 @@ const AIChat = ({ isOpen, setIsOpen }) => {
           height: isMinimized ? 60 : 500
         }}
         exit={{ opacity: 0, scale: 0.8, y: 100 }}
-        className="fixed bottom-6 right-6 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+        className="fixed bottom-6 right-6 w-96 panel shadow-2xl z-50 overflow-hidden"
       >
         {/* Header */}
         <div className="bg-blue-600 text-white p-4 flex items-center justify-between">

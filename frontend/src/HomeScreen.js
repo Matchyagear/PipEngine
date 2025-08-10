@@ -300,7 +300,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
 
       {/* Watchlists Display */}
       {watchlists && watchlists.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="panel p-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Your Watchlists
           </h2>
@@ -324,7 +324,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       )}
 
       {/* Morning Brief (collapsible) */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 overflow-hidden">
+      <div className="panel p-6 overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
             <Info className="w-5 h-5 text-blue-600" />
@@ -366,7 +366,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       </div>
 
       {/* Market Indices with Stock Cards */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="panel p-6">
         <div className="flex items-center space-x-2 mb-4">
           <BarChart3 className="w-5 h-5 text-blue-600" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -384,7 +384,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Featured Stocks Section with Loading and Expand */}
         <div className="lg:col-span-3">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          <div className="panel p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <Zap className="w-5 h-5 text-yellow-600" />
@@ -419,7 +419,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
 
         {/* Market News Section - Side by Side */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-full overflow-hidden">
+          <div className="panel p-6 h-full overflow-hidden">
             <div className="flex items-center space-x-2 mb-4">
               <Bell className="w-5 h-5 text-blue-600" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -436,7 +436,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       {/* Market Movers with Full StockCard Format */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Gainers with Expand Feature */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="panel p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-green-600" />
@@ -571,7 +571,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       </div>
 
       {/* Highest Volume Stocks with Expand Feature */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+      <div className="panel p-6 border-l-4 border-purple-500">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Volume2 className="w-5 h-5 text-purple-600" />
@@ -647,7 +647,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       </div>
 
       {/* Most Volatile Stocks with Expand Feature */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+      <div className="panel p-6 border-l-4 border-orange-500">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Zap className="w-5 h-5 text-orange-600" />
@@ -743,7 +743,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       </div>
 
       {/* Sector Performance Heatmap */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="panel p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Activity className="w-5 h-5 text-purple-600" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -779,8 +779,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       </div>
 
       {/* Market Stats */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-        <div className="flex items-center space-x-2 mb-4">
+      <div className="panel p-6">
+        <div className="flex items-center space-x-2 mb-4 text-gray-100">
           <Globe className="w-5 h-5" />
           <h2 className="text-xl font-semibold">Market Status</h2>
         </div>

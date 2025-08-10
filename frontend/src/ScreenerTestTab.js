@@ -245,7 +245,7 @@ const ScreenerTestTab = ({ onOpenChart }) => {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-4">
+      <div className="panel p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Custom Screener (Test v2)</h1>
@@ -283,7 +283,7 @@ const ScreenerTestTab = ({ onOpenChart }) => {
         {/* Right: preview (wide) */}
         <div className="lg:col-span-2 space-y-4">
           {/* Collapsible JSON box (collapsed by default) */}
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="panel p-0">
             <div className="flex items-center justify-between px-4 py-2">
               <div className="text-sm font-semibold text-gray-900 dark:text-white">Current Filter JSON</div>
               <button
@@ -300,7 +300,7 @@ const ScreenerTestTab = ({ onOpenChart }) => {
             )}
           </div>
 
-          <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="panel p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-semibold text-gray-900 dark:text-white">Preview ({filtered.length})</div>
               <button className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded" onClick={loadSnapshot}>Reload Snapshot</button>
