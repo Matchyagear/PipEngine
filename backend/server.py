@@ -1,7 +1,7 @@
 import os
 import asyncio
 import aiohttp
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 from typing import List, Dict, Optional
@@ -57,6 +57,7 @@ if MONGODB_DISABLED or not MONGO_URL:
     watchlists_collection = None
     alerts_collection = None
     user_preferences_collection = None
+    strategies_collection = None
 else:
     try:
         client = MongoClient(MONGO_URL)
@@ -65,6 +66,7 @@ else:
         watchlists_collection = db.watchlists
         alerts_collection = db.alerts
         user_preferences_collection = db.user_preferences
+        strategies_collection = db.shadowbot_strategies
         print("✅ MongoDB connected successfully")
     except Exception as e:
         print(f"⚠️  MongoDB connection failed: {e}")
@@ -74,6 +76,7 @@ else:
         watchlists_collection = None
         alerts_collection = None
         user_preferences_collection = None
+        strategies_collection = None
 
 # Initialize API clients
 FINNHUB_API_KEY = os.environ.get('FINNHUB_API_KEY')
@@ -1318,6 +1321,79 @@ async def alpaca_place_order(order: PlaceOrder):
         return {"id": result.id, "symbol": result.symbol, "qty": str(result.qty), "side": result.side.value, "status": result.status}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Alpaca order error: {e}")
+
+@app.get("/api/alpaca/orders")
+async def alpaca_list_orders(limit: int = 20):
+    """List recent Alpaca orders (best effort)."""
+    if not alpaca_client:
+        raise HTTPException(status_code=503, detail="Alpaca not configured on server")
+    try:
+        orders = alpaca_client.get_orders()  # default recent/open
+        result = []
+        for o in list(orders)[:limit]:
+            try:
+                side_val = o.side.value if hasattr(o.side, 'value') else str(o.side)
+                status_val = o.status.value if hasattr(o.status, 'value') else getattr(o, 'status', 'unknown')
+                qty_val = str(getattr(o, 'qty', getattr(o, 'quantity', '1')))
+                result.append({
+                    "id": getattr(o, 'id', None),
+                    "symbol": getattr(o, 'symbol', None),
+                    "qty": qty_val,
+                    "side": side_val,
+                    "status": status_val,
+                    "submitted_at": str(getattr(o, 'submitted_at', ''))
+                })
+            except Exception:
+                continue
+        return {"orders": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Alpaca orders error: {e}")
+
+# ===== SHADOWBOT STRATEGIES (CRUD) =====
+
+class Strategy(BaseModel):
+    id: Optional[str] = None
+    name: str
+    enabled: bool = False
+    max_positions: int = 3
+    max_notional_per_trade: float = 5000
+    stop_loss_pct: float = 3.0
+    take_profit_pct: float = 6.0
+    entry_rules: Dict[str, bool] = {}
+    symbols: List[str] = []
+
+@app.get("/api/shadowbot/strategies")
+async def list_strategies():
+    if strategies_collection is None:
+        return {"strategies": []}
+    items = []
+    for doc in strategies_collection.find():
+        doc['_id'] = str(doc['_id'])
+        items.append(doc)
+    return {"strategies": items}
+
+@app.post("/api/shadowbot/strategies")
+async def upsert_strategy(strategy: Strategy):
+    if strategies_collection is None:
+        raise HTTPException(status_code=503, detail="DB not available for strategies")
+    data = strategy.dict()
+    _id = data.pop('id', None)
+    if _id:
+        strategies_collection.update_one({"id": _id}, {"$set": data}, upsert=True)
+        data['id'] = _id
+        return {"strategy": data}
+    else:
+        data['id'] = str(uuid.uuid4())
+        strategies_collection.insert_one(data)
+        return {"strategy": data}
+
+@app.delete("/api/shadowbot/strategies/{strategy_id}")
+async def delete_strategy(strategy_id: str):
+    if strategies_collection is None:
+        raise HTTPException(status_code=503, detail="DB not available for strategies")
+    strategies_collection.delete_one({"id": strategy_id})
+    return {"deleted": True}
+
 
 # Alert system
 @app.post("/api/alerts")
