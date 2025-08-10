@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, BarChart3 } from 'lucide-react';
-import TradingViewSymbolOverview from './components/TradingViewSymbolOverview';
+import TradingViewMiniChart from './components/TradingViewMiniChart';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -272,9 +272,9 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         </p>
       </div>
 
-      {/* TradingView Symbol Overview (more compact) */}
+      {/* TradingView Mini Chart (requested) */}
       <div className="mt-2">
-        <TradingViewSymbolOverview symbol={stock.ticker} height={64} />
+        <TradingViewMiniChart symbol={stock.ticker} height={64} />
       </div>
 
       {/* Click indicator */}
