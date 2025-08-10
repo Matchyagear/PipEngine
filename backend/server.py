@@ -116,6 +116,23 @@ if ALPACA_API_KEY and ALPACA_API_SECRET:
     except Exception as e:
         print(f"⚠️  Alpaca client init failed: {e}")
 
+# Websocket clients for Shadowbot live updates
+shadowbot_clients = set()
+
+async def broadcast_shadowbot(payload: dict):
+    """Broadcast a JSON message to all connected Shadowbot websocket clients."""
+    dead = []
+    for ws in list(shadowbot_clients):
+        try:
+            await ws.send_json(payload)
+        except Exception:
+            dead.append(ws)
+    for ws in dead:
+        try:
+            shadowbot_clients.remove(ws)
+        except KeyError:
+            pass
+
 # Data models
 class Stock(BaseModel):
     ticker: str
@@ -1318,6 +1335,14 @@ async def alpaca_place_order(order: PlaceOrder):
             time_in_force=TimeInForce.DAY if order.tif.lower() == 'day' else TimeInForce.GTC
         )
         result = alpaca_client.submit_order(req)
+        # Broadcast minimal order event
+        try:
+            await broadcast_shadowbot({
+                "type": "order_submitted",
+                "order": {"id": getattr(result, 'id', None), "symbol": getattr(result, 'symbol', None), "qty": str(getattr(result,'qty','')), "side": getattr(result,'side',None).value if getattr(result,'side',None) else None, "status": getattr(result,'status',None)}
+            })
+        except Exception:
+            pass
         return {"id": result.id, "symbol": result.symbol, "qty": str(result.qty), "side": result.side.value, "status": result.status}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Alpaca order error: {e}")
@@ -1348,6 +1373,25 @@ async def alpaca_list_orders(limit: int = 20):
         return {"orders": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Alpaca orders error: {e}")
+
+@app.websocket("/ws/shadowbot")
+async def shadowbot_ws(ws: WebSocket):
+    await ws.accept()
+    shadowbot_clients.add(ws)
+    try:
+        await ws.send_json({"type": "hello", "message": "connected"})
+        while True:
+            # We don't expect incoming messages yet; keep connection open
+            await asyncio.sleep(30)
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        try:
+            shadowbot_clients.remove(ws)
+        except KeyError:
+            pass
 
 # ===== SHADOWBOT STRATEGIES (CRUD) =====
 

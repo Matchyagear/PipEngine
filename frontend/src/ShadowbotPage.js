@@ -8,36 +8,57 @@ export default function ShadowbotPage() {
     const [form, setForm] = useState({ symbol: 'AAPL', qty: 1, side: 'buy', tif: 'day' });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
-  const [strategies, setStrategies] = useState([]);
-  const [strategyForm, setStrategyForm] = useState({
-    id: '',
-    name: 'Default Strategy',
-    enabled: false,
-    max_positions: 3,
-    max_notional_per_trade: 5000,
-    stop_loss_pct: 3,
-    take_profit_pct: 6,
-    entry_rules: { rsi_oversold: true, ma50_above_ma200: true },
-    symbols: ['AAPL','MSFT','NVDA']
-  });
+    const [strategies, setStrategies] = useState([]);
+  const [liveEvents, setLiveEvents] = useState([]);
+  const wsRef = React.useRef(null);
+    const [strategyForm, setStrategyForm] = useState({
+        id: '',
+        name: 'Default Strategy',
+        enabled: false,
+        max_positions: 3,
+        max_notional_per_trade: 5000,
+        stop_loss_pct: 3,
+        take_profit_pct: 6,
+        entry_rules: { rsi_oversold: true, ma50_above_ma200: true },
+        symbols: ['AAPL', 'MSFT', 'NVDA']
+    });
 
-  const load = async () => {
+    const load = async () => {
         try {
             setError('');
-      const [acctRes, ordRes, stratRes] = await Promise.all([
+            const [acctRes, ordRes, stratRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/api/alpaca/account`),
                 fetch(`${API_BASE_URL}/api/alpaca/orders?limit=20`),
-        fetch(`${API_BASE_URL}/api/shadowbot/strategies`),
+                fetch(`${API_BASE_URL}/api/shadowbot/strategies`),
             ]);
             if (acctRes.ok) setAccount(await acctRes.json());
-      if (ordRes.ok) setOrders((await ordRes.json()).orders || []);
-      if (stratRes.ok) setStrategies((await stratRes.json()).strategies || []);
+            if (ordRes.ok) setOrders((await ordRes.json()).orders || []);
+            if (stratRes.ok) setStrategies((await stratRes.json()).strategies || []);
         } catch (e) {
             setError('Unable to reach trading API.');
         }
     };
 
     useEffect(() => { load(); }, []);
+
+  // Websocket live updates
+  useEffect(() => {
+    try {
+      const loc = window.location;
+      const wsProto = loc.protocol === 'https:' ? 'wss' : 'ws';
+      const base = API_BASE_URL?.replace('http', 'ws');
+      const url = base ? `${base}/ws/shadowbot` : `${wsProto}://${loc.host.replace(/\/$/, '')}/ws/shadowbot`;
+      wsRef.current = new WebSocket(url);
+      wsRef.current.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          setLiveEvents((prev) => [msg, ...prev].slice(0, 50));
+        } catch {}
+      };
+      wsRef.current.onclose = () => {};
+    } catch {}
+    return () => { try { wsRef.current && wsRef.current.close(); } catch {} };
+  }, []);
 
     const placeOrder = async () => {
         if (!form.symbol || form.qty <= 0) return;
@@ -66,24 +87,24 @@ export default function ShadowbotPage() {
         }
     };
 
-  const saveStrategy = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/shadowbot/strategies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(strategyForm)
-      });
-      if (!res.ok) throw new Error('Save failed');
-      await load();
-    } catch (e) { setError('Could not save strategy'); }
-  };
+    const saveStrategy = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/shadowbot/strategies`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(strategyForm)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            await load();
+        } catch (e) { setError('Could not save strategy'); }
+    };
 
-  const deleteStrategy = async (id) => {
-    try {
-      await fetch(`${API_BASE_URL}/api/shadowbot/strategies/${id}`, { method: 'DELETE' });
-      await load();
-    } catch (e) { /* noop */ }
-  };
+    const deleteStrategy = async (id) => {
+        try {
+            await fetch(`${API_BASE_URL}/api/shadowbot/strategies/${id}`, { method: 'DELETE' });
+            await load();
+        } catch (e) { /* noop */ }
+    };
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-6">
@@ -94,7 +115,7 @@ export default function ShadowbotPage() {
                 <div className="mb-4 p-3 border border-red-700 bg-red-900/20 rounded-lg text-red-300">{error}</div>
             )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="panel p-4 lg:col-span-1">
                     <h2 className="font-medium mb-3">Account</h2>
                     {account ? (
@@ -109,7 +130,7 @@ export default function ShadowbotPage() {
                     )}
                 </div>
 
-        <div className="panel p-4 lg:col-span-1">
+                <div className="panel p-4 lg:col-span-1">
                     <h2 className="font-medium mb-3">Place Market Order</h2>
                     <div className="space-y-3">
                         <input className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Symbol" value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} />
@@ -128,7 +149,7 @@ export default function ShadowbotPage() {
                     </div>
                 </div>
 
-        <div className="panel p-4 lg:col-span-1">
+                <div className="panel p-4 lg:col-span-1">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="font-medium">Recent Orders</h2>
                         <button onClick={load} className="text-sm text-blue-400 hover:text-blue-300">Refresh</button>
@@ -146,42 +167,52 @@ export default function ShadowbotPage() {
                             </div>
                         ))}
                     </div>
-        </div>
-      </div>
+                </div>
+            </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-        <div className="panel p-4">
-          <h2 className="font-medium mb-3">Strategy Editor</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Name" value={strategyForm.name} onChange={e=>setStrategyForm({...strategyForm, name: e.target.value})} />
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={strategyForm.enabled} onChange={e=>setStrategyForm({...strategyForm, enabled: e.target.checked})} /> Enabled</label>
-            <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Positions" value={strategyForm.max_positions} onChange={e=>setStrategyForm({...strategyForm, max_positions:Number(e.target.value)})} />
-            <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Notional" value={strategyForm.max_notional_per_trade} onChange={e=>setStrategyForm({...strategyForm, max_notional_per_trade:Number(e.target.value)})} />
-            <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Stop %" value={strategyForm.stop_loss_pct} onChange={e=>setStrategyForm({...strategyForm, stop_loss_pct:Number(e.target.value)})} />
-            <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Target %" value={strategyForm.take_profit_pct} onChange={e=>setStrategyForm({...strategyForm, take_profit_pct:Number(e.target.value)})} />
-            <textarea className="col-span-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm" rows={2} value={strategyForm.symbols.join(',')} onChange={e=>setStrategyForm({...strategyForm, symbols: e.target.value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean)})} />
-          </div>
-          <div className="flex gap-2 mt-3">
-            <button className="btn-primary px-4 py-2 rounded-md" onClick={saveStrategy}>Save Strategy</button>
-          </div>
-        </div>
-        <div className="panel p-4">
-          <h2 className="font-medium mb-3">Saved Strategies</h2>
-          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-            {strategies.length === 0 ? <p className="text-sm text-gray-500">No strategies yet.</p> : strategies.map(s => (
-              <div key={s.id} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2 text-sm flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{s.name} {s.enabled ? <span className="text-green-400">(enabled)</span> : <span className="text-gray-400">(disabled)</span>}</div>
-                  <div className="text-xs text-gray-400">max {s.max_positions} pos · ${s.max_notional_per_trade} notional · SL {s.stop_loss_pct}% · TP {s.take_profit_pct}%</div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                <div className="panel p-4">
+                    <h2 className="font-medium mb-3">Strategy Editor</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Name" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} />
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={strategyForm.enabled} onChange={e => setStrategyForm({ ...strategyForm, enabled: e.target.checked })} /> Enabled</label>
+                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Positions" value={strategyForm.max_positions} onChange={e => setStrategyForm({ ...strategyForm, max_positions: Number(e.target.value) })} />
+                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Notional" value={strategyForm.max_notional_per_trade} onChange={e => setStrategyForm({ ...strategyForm, max_notional_per_trade: Number(e.target.value) })} />
+                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Stop %" value={strategyForm.stop_loss_pct} onChange={e => setStrategyForm({ ...strategyForm, stop_loss_pct: Number(e.target.value) })} />
+                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Target %" value={strategyForm.take_profit_pct} onChange={e => setStrategyForm({ ...strategyForm, take_profit_pct: Number(e.target.value) })} />
+                        <textarea className="col-span-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm" rows={2} value={strategyForm.symbols.join(',')} onChange={e => setStrategyForm({ ...strategyForm, symbols: e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean) })} />
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                        <button className="btn-primary px-4 py-2 rounded-md" onClick={saveStrategy}>Save Strategy</button>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="text-blue-400" onClick={()=>setStrategyForm(s)}>Edit</button>
-                  <button className="text-red-400" onClick={()=>deleteStrategy(s.id)}>Delete</button>
-                </div>
-              </div>
+                <div className="panel p-4">
+                    <h2 className="font-medium mb-3">Saved Strategies</h2>
+                    <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                        {strategies.length === 0 ? <p className="text-sm text-gray-500">No strategies yet.</p> : strategies.map(s => (
+                            <div key={s.id} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2 text-sm flex items-center justify-between">
+                                <div>
+                                    <div className="font-medium">{s.name} {s.enabled ? <span className="text-green-400">(enabled)</span> : <span className="text-gray-400">(disabled)</span>}</div>
+                                    <div className="text-xs text-gray-400">max {s.max_positions} pos · ${s.max_notional_per_trade} notional · SL {s.stop_loss_pct}% · TP {s.take_profit_pct}%</div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button className="text-blue-400" onClick={() => setStrategyForm(s)}>Edit</button>
+                                    <button className="text-red-400" onClick={() => deleteStrategy(s.id)}>Delete</button>
+                                </div>
+        <div className="panel p-4 lg:col-span-2">
+          <h2 className="font-medium mb-3">Live Events</h2>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-sm">
+            {liveEvents.length === 0 ? (
+              <p className="text-gray-500">No events yet.</p>
+            ) : liveEvents.map((e, idx) => (
+              <pre key={idx} className="bg-gray-800/40 border border-gray-700 rounded-md p-2 overflow-x-auto">{JSON.stringify(e, null, 2)}</pre>
             ))}
           </div>
         </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );
