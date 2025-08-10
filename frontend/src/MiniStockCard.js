@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, BarChart3 } from 'lucide-react';
-import TradingViewMiniChart from './components/TradingViewMiniChart';
+// Using Finviz static mini chart image for crisp, tiny inline chart
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -272,9 +272,14 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         </p>
       </div>
 
-      {/* TradingView Mini Chart (requested) */}
+      {/* Compact Finviz mini chart (crisp static image) */}
       <div className="mt-2">
-        <TradingViewMiniChart symbol={stock.ticker} height={36} scale={0.7} />
+        <img
+          src={`https://finviz.com/chart.ashx?t=${stock.ticker}&ty=c&ta=1&p=d&s=l`}
+          alt={`${stock.ticker} chart`}
+          className="w-full h-12 object-cover rounded"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
       </div>
 
       {/* Click indicator */}
