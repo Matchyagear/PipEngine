@@ -9,8 +9,10 @@ export default function ShadowbotPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [strategies, setStrategies] = useState([]);
-  const [liveEvents, setLiveEvents] = useState([]);
-  const wsRef = React.useRef(null);
+    const [liveEvents, setLiveEvents] = useState([]);
+    const [backtest, setBacktest] = useState(null);
+    const [runnerStatus, setRunnerStatus] = useState(null);
+    const wsRef = React.useRef(null);
     const [strategyForm, setStrategyForm] = useState({
         id: '',
         name: 'Default Strategy',
@@ -41,24 +43,24 @@ export default function ShadowbotPage() {
 
     useEffect(() => { load(); }, []);
 
-  // Websocket live updates
-  useEffect(() => {
-    try {
-      const loc = window.location;
-      const wsProto = loc.protocol === 'https:' ? 'wss' : 'ws';
-      const base = API_BASE_URL?.replace('http', 'ws');
-      const url = base ? `${base}/ws/shadowbot` : `${wsProto}://${loc.host.replace(/\/$/, '')}/ws/shadowbot`;
-      wsRef.current = new WebSocket(url);
-      wsRef.current.onmessage = (ev) => {
+    // Websocket live updates
+    useEffect(() => {
         try {
-          const msg = JSON.parse(ev.data);
-          setLiveEvents((prev) => [msg, ...prev].slice(0, 50));
-        } catch {}
-      };
-      wsRef.current.onclose = () => {};
-    } catch {}
-    return () => { try { wsRef.current && wsRef.current.close(); } catch {} };
-  }, []);
+            const loc = window.location;
+            const wsProto = loc.protocol === 'https:' ? 'wss' : 'ws';
+            const base = API_BASE_URL?.replace('http', 'ws');
+            const url = base ? `${base}/ws/shadowbot` : `${wsProto}://${loc.host.replace(/\/$/, '')}/ws/shadowbot`;
+            wsRef.current = new WebSocket(url);
+            wsRef.current.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data);
+                    setLiveEvents((prev) => [msg, ...prev].slice(0, 50));
+                } catch { }
+            };
+            wsRef.current.onclose = () => { };
+        } catch { }
+        return () => { try { wsRef.current && wsRef.current.close(); } catch { } };
+    }, []);
 
     const placeOrder = async () => {
         if (!form.symbol || form.qty <= 0) return;
@@ -105,6 +107,28 @@ export default function ShadowbotPage() {
             await load();
         } catch (e) { /* noop */ }
     };
+
+    const runBacktest = async () => {
+        try {
+            setBacktest(null);
+            const res = await fetch(`${API_BASE_URL}/api/shadowbot/backtest`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(strategyForm)
+            });
+            if (!res.ok) throw new Error('Backtest failed');
+            setBacktest(await res.json());
+        } catch (e) { setError('Backtest error'); }
+    };
+
+    const refreshRunner = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/shadowbot/runner/status`);
+            if (res.ok) setRunnerStatus(await res.json());
+        } catch {}
+    };
+    const startRunner = async () => { await fetch(`${API_BASE_URL}/api/shadowbot/runner/start`, { method: 'POST' }); refreshRunner(); };
+    const stopRunner = async () => { await fetch(`${API_BASE_URL}/api/shadowbot/runner/stop`, { method: 'POST' }); refreshRunner(); };
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-6">
@@ -184,7 +208,11 @@ export default function ShadowbotPage() {
                     </div>
                     <div className="flex gap-2 mt-3">
                         <button className="btn-primary px-4 py-2 rounded-md" onClick={saveStrategy}>Save Strategy</button>
+                        <button className="px-4 py-2 rounded-md border border-gray-700" onClick={runBacktest}>Run Backtest</button>
+                        <button className="px-4 py-2 rounded-md border border-gray-700" onClick={startRunner}>Start Runner</button>
+                        <button className="px-4 py-2 rounded-md border border-gray-700" onClick={stopRunner}>Stop Runner</button>
                     </div>
+                    <div className="text-xs text-gray-400 mt-2">Runner: {runnerStatus?.active ? 'Active' : 'Stopped'} <button className="ml-2 text-blue-400" onClick={refreshRunner}>Refresh</button></div>
                 </div>
                 <div className="panel p-4">
                     <h2 className="font-medium mb-3">Saved Strategies</h2>
@@ -199,21 +227,30 @@ export default function ShadowbotPage() {
                                     <button className="text-blue-400" onClick={() => setStrategyForm(s)}>Edit</button>
                                     <button className="text-red-400" onClick={() => deleteStrategy(s.id)}>Delete</button>
                                 </div>
-        <div className="panel p-4 lg:col-span-2">
-          <h2 className="font-medium mb-3">Live Events</h2>
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-sm">
-            {liveEvents.length === 0 ? (
-              <p className="text-gray-500">No events yet.</p>
-            ) : liveEvents.map((e, idx) => (
-              <pre key={idx} className="bg-gray-800/40 border border-gray-700 rounded-md p-2 overflow-x-auto">{JSON.stringify(e, null, 2)}</pre>
-            ))}
-          </div>
-        </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
+
+            <div className="panel p-4 mt-4">
+                <h2 className="font-medium mb-3">Live Events</h2>
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-sm">
+                    {liveEvents.length === 0 ? (
+                        <p className="text-gray-500">No events yet.</p>
+                    ) : liveEvents.map((e, idx) => (
+                        <pre key={idx} className="bg-gray-800/40 border border-gray-700 rounded-md p-2 overflow-x-auto">{JSON.stringify(e, null, 2)}</pre>
+                    ))}
+                </div>
+            </div>
+
+            {backtest && (
+                <div className="panel p-4 mt-4">
+                    <h2 className="font-medium mb-3">Backtest Result</h2>
+                    <div className="text-sm text-gray-300 mb-2">ROI: {backtest.roi}% · Trades: {backtest.trades} · Winrate: {backtest.winrate}%</div>
+                    <div className="text-xs text-gray-400">Start: ${backtest.start} → End: ${backtest.end}</div>
+                </div>
+            )}
         </div>
     );
 }

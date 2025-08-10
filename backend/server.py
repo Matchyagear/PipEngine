@@ -133,6 +133,111 @@ async def broadcast_shadowbot(payload: dict):
         except KeyError:
             pass
 
+# ===== Strategy Runner (Polling loop) =====
+runner_task = None
+runner_active = False
+
+def _calc_rsi(series, window=14):
+    delta = series.diff()
+    up = delta.where(delta > 0, 0).rolling(window).mean()
+    down = (-delta.where(delta < 0, 0)).rolling(window).mean()
+    rs = up / down
+    rsi = 100 - (100 / (1 + rs))
+    return rsi.iloc[-1] if not rsi.empty else 50
+
+async def _evaluate_strategy_and_trade(strategy: dict):
+    if not strategy.get('enabled'):
+        return
+    symbols: list = strategy.get('symbols', [])
+    max_positions = int(strategy.get('max_positions', 3))
+    max_notional = float(strategy.get('max_notional_per_trade', 5000))
+    rules = strategy.get('entry_rules', {})
+
+    for sym in symbols:
+        try:
+            ticker = yf.Ticker(sym)
+            hist = ticker.history(period="200d")
+            if hist.empty or len(hist) < 50:
+                continue
+            close = hist['Close']
+            ma50 = close.rolling(50).mean().iloc[-1]
+            ma200 = close.rolling(200).mean().iloc[-1] if len(close) >= 200 else close.mean()
+            rsi = _calc_rsi(close)
+            vol = hist['Volume']
+            rel_vol = vol.iloc[-1] / (vol.mean() if vol.mean() else vol.iloc[-1])
+            price = float(close.iloc[-1])
+
+            passes = True
+            if rules.get('rsi_oversold'):
+                passes &= (rsi <= 35)
+            if rules.get('ma50_above_ma200'):
+                passes &= (ma50 >= ma200)
+            if rules.get('price_above_ma50'):
+                passes &= (price >= ma50)
+            if rules.get('rel_volume_strong'):
+                passes &= (rel_vol >= 1.5)
+
+            if not passes:
+                continue
+
+            qty = max(1, int(max_notional // max(price, 0.01)))
+            event = {"type": "signal", "symbol": sym, "rsi": round(rsi,1), "price": round(price,2), "qty": qty}
+            await broadcast_shadowbot(event)
+
+            if alpaca_client:
+                try:
+                    req = MarketOrderRequest(symbol=sym, qty=qty, side=OrderSide.BUY, time_in_force=TimeInForce.DAY)
+                    order = alpaca_client.submit_order(req)
+                    await broadcast_shadowbot({"type": "order_submitted", "order": {"id": getattr(order,'id',None), "symbol": sym, "qty": str(qty), "side": "buy"}})
+                except Exception as e:
+                    await broadcast_shadowbot({"type": "order_error", "symbol": sym, "error": str(e)})
+            else:
+                await broadcast_shadowbot({"type": "paper_trade", "symbol": sym, "qty": qty, "price": round(price,2)})
+        except Exception as e:
+            await broadcast_shadowbot({"type": "eval_error", "symbol": sym, "error": str(e)})
+
+async def _runner_loop():
+    global runner_active
+    await broadcast_shadowbot({"type": "runner", "status": "started"})
+    while runner_active:
+        try:
+            # fetch enabled strategies
+            enabled = []
+            if strategies_collection is not None:
+                enabled = list(strategies_collection.find({"enabled": True}))
+            # fallback: none
+            for strat in enabled:
+                await _evaluate_strategy_and_trade(strat)
+            await asyncio.sleep(60)
+        except Exception as e:
+            await broadcast_shadowbot({"type": "runner_error", "error": str(e)})
+            await asyncio.sleep(60)
+    await broadcast_shadowbot({"type": "runner", "status": "stopped"})
+
+@app.post("/api/shadowbot/runner/start")
+async def start_runner():
+    global runner_task, runner_active
+    if runner_active:
+        return {"status": "already_running"}
+    runner_active = True
+    runner_task = asyncio.create_task(_runner_loop())
+    return {"status": "started"}
+
+@app.post("/api/shadowbot/runner/stop")
+async def stop_runner():
+    global runner_task, runner_active
+    runner_active = False
+    try:
+        if runner_task:
+            runner_task.cancel()
+    except Exception:
+        pass
+    return {"status": "stopping"}
+
+@app.get("/api/shadowbot/runner/status")
+async def runner_status():
+    return {"active": runner_active}
+
 # Data models
 class Stock(BaseModel):
     ticker: str
@@ -2264,6 +2369,75 @@ async def ai_chat(request: dict):
         }
 
 # ===== END AI CHAT ENDPOINT =====
+
+# ===== SIMPLE BACKTEST ENDPOINT =====
+
+@app.post("/api/shadowbot/backtest")
+async def backtest(strategy: dict):
+    """Simple daily bar backtest for a strategy's symbol list using RSI/MA rules.
+    Returns equity curve and summary metrics. This is a basic scaffold to iterate later."""
+    try:
+        symbols = strategy.get('symbols', [])[:10]
+        rules = strategy.get('entry_rules', {})
+        stop_pct = float(strategy.get('stop_loss_pct', 3.0)) / 100.0
+        take_pct = float(strategy.get('take_profit_pct', 6.0)) / 100.0
+        start_equity = 10000.0
+        equity = start_equity
+        trades = 0
+        wins = 0
+        equity_curve = []
+
+        for sym in symbols:
+            try:
+                hist = yf.Ticker(sym).history(period="1y")
+                if hist.empty:
+                    continue
+                close = hist['Close']
+                ma50 = close.rolling(50).mean()
+                ma200 = close.rolling(200).mean().fillna(ma50)
+                rsi_series = close.rolling(14).apply(lambda _: _calc_rsi(close.loc[_].index and close.loc[_])) if False else close
+                # Simple traversal
+                position = 0
+                entry = 0
+                for i in range(len(close)):
+                    price = float(close.iloc[i])
+                    ma50v = float(ma50.iloc[i]) if not pd.isna(ma50.iloc[i]) else price
+                    ma200v = float(ma200.iloc[i]) if not pd.isna(ma200.iloc[i]) else price
+                    # Entry
+                    passes = True
+                    if rules.get('ma50_above_ma200'):
+                        passes &= (ma50v >= ma200v)
+                    if rules.get('price_above_ma50'):
+                        passes &= (price >= ma50v)
+                    # very rough RSI gate using last 14 price momentum
+                    if rules.get('rsi_oversold') and i >= 14:
+                        rsi = _calc_rsi(close.iloc[:i])
+                        passes &= (rsi <= 35)
+                    if position == 0 and passes:
+                        position = 1
+                        entry = price
+                        trades += 1
+                    # Exit via stops/takes
+                    if position == 1:
+                        if price <= entry * (1 - stop_pct):
+                            equity *= (price / entry)
+                            position = 0
+                        elif price >= entry * (1 + take_pct):
+                            equity *= (price / entry)
+                            wins += 1
+                            position = 0
+                # Close open position at end
+                if position == 1 and entry > 0:
+                    equity *= (float(close.iloc[-1]) / entry)
+            except Exception:
+                continue
+            equity_curve.append(equity)
+
+        roi = (equity - start_equity) / start_equity * 100.0
+        winrate = (wins / trades * 100.0) if trades > 0 else 0.0
+        return {"start": start_equity, "end": equity, "roi": round(roi,2), "trades": trades, "wins": wins, "winrate": round(winrate,2), "equity_curve": equity_curve}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Backtest error: {e}")
 
 # ===== PORTFOLIO MANAGEMENT ENDPOINTS =====
 
