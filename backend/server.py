@@ -23,6 +23,9 @@ from newsapi import NewsApiClient
 import feedparser
 import concurrent.futures
 from functools import lru_cache
+from alpaca.trading.client import TradingClient
+from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.enums import OrderSide, TimeInForce
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -79,6 +82,9 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
 CHANNEL_ID = os.environ.get('CHANNEL_ID')
 NEWS_API_KEY = os.environ.get('NEWS_API_KEY', 'demo')  # Free tier available
+ALPACA_API_KEY = os.environ.get('ALPACA_API_KEY')
+ALPACA_API_SECRET = os.environ.get('ALPACA_API_SECRET')
+ALPACA_PAPER = os.environ.get('ALPACA_PAPER', 'true').lower() == 'true'
 
 # Configure AI clients
 genai.configure(api_key=GEMINI_API_KEY)
@@ -97,6 +103,15 @@ if NEWS_API_KEY != 'demo':
     newsapi = NewsApiClient(api_key=NEWS_API_KEY)
 else:
     newsapi = None
+
+# Initialize Alpaca Trading client (optional)
+alpaca_client = None
+if ALPACA_API_KEY and ALPACA_API_SECRET:
+    try:
+        alpaca_client = TradingClient(ALPACA_API_KEY, ALPACA_API_SECRET, paper=ALPACA_PAPER)
+        print("✅ Alpaca client initialized (paper mode)" if ALPACA_PAPER else "✅ Alpaca client initialized (live mode)")
+    except Exception as e:
+        print(f"⚠️  Alpaca client init failed: {e}")
 
 # Data models
 class Stock(BaseModel):
@@ -1267,6 +1282,42 @@ async def export_stocks(format: str = "json"):
         "exported_at": datetime.now().isoformat(),
         "total_stocks": len(stocks)
     }
+
+# ===== ALPACA TRADING ENDPOINTS (INITIAL STUBS) =====
+
+@app.get("/api/alpaca/account")
+async def alpaca_account():
+    """Get Alpaca account information (paper or live depending on env)."""
+    if not alpaca_client:
+        raise HTTPException(status_code=503, detail="Alpaca not configured on server")
+    try:
+        account = alpaca_client.get_account()
+        return {"status": account.status, "buying_power": str(account.buying_power), "equity": str(account.equity), "paper": ALPACA_PAPER}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Alpaca account error: {e}")
+
+class PlaceOrder(BaseModel):
+    symbol: str
+    qty: float
+    side: str  # 'buy' or 'sell'
+    tif: str = "day"  # time in force
+
+@app.post("/api/alpaca/order")
+async def alpaca_place_order(order: PlaceOrder):
+    """Place a simple market order via Alpaca (paper by default)."""
+    if not alpaca_client:
+        raise HTTPException(status_code=503, detail="Alpaca not configured on server")
+    try:
+        req = MarketOrderRequest(
+            symbol=order.symbol.upper(),
+            qty=order.qty,
+            side=OrderSide.BUY if order.side.lower() == 'buy' else OrderSide.SELL,
+            time_in_force=TimeInForce.DAY if order.tif.lower() == 'day' else TimeInForce.GTC
+        )
+        result = alpaca_client.submit_order(req)
+        return {"id": result.id, "symbol": result.symbol, "qty": str(result.qty), "side": result.side.value, "status": result.status}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Alpaca order error: {e}")
 
 # Alert system
 @app.post("/api/alerts")
