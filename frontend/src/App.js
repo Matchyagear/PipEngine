@@ -522,6 +522,150 @@ function App() {
 
   const filteredStocks = getFilteredAndSortedStocks();
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <HomeScreen
+            onNewWatchlist={() => setShowWatchlistModal(true)}
+            watchlists={watchlists}
+            onDeleteWatchlist={deleteWatchlist}
+            news={news}
+            newsLoading={newsLoading}
+            onOpenChart={openChartForStock}
+          />
+        );
+      case 'portfolio':
+        return <Portfolio />;
+      case 'watchlist':
+        return (
+          <WatchlistTab
+            watchlists={watchlists}
+            setWatchlists={setWatchlists}
+            onNewWatchlist={(importedTickers = '') => {
+              if (importedTickers) {
+                setNewWatchlistTickers(importedTickers);
+                setNewWatchlistName('Imported Watchlist');
+              }
+              setShowWatchlistModal(true);
+            }}
+            onDeleteWatchlist={deleteWatchlist}
+            fetchStocks={fetchStocks}
+            aiProvider={aiProvider}
+            onOpenChart={openChartForStock}
+          />
+        );
+      case 'news':
+        return <NewsTab news={news} loading={newsLoading} searchQuery={newsSearchQuery} />;
+      case 'chart':
+        return <ChartTab initialSymbol={chartSymbol} />;
+      case 'screener':
+        return <ScreenerTestTab onOpenChart={openChartForStock} />;
+      default:
+        return (
+          <>
+            {/* Enhanced Controls */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex items-center space-x-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                >
+                  <option value="score">Sort by Score</option>
+                  <option value="ticker">Sort by Ticker</option>
+                  <option value="volume">Sort by Volume</option>
+                  <option value="change">Sort by Change</option>
+                  <option value="rsi">Sort by RSI</option>
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-4 h-4 text-gray-500" />
+                <select
+                  value={filterBy}
+                  onChange={(e) => setFilterBy(e.target.value)}
+                  className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                >
+                  <option value="all">All Stocks</option>
+                  <option value="4out4">4/4 Only</option>
+                  <option value="3plus">3+ Score</option>
+                  <option value="oversold">Oversold</option>
+                  <option value="breakout">Breakout</option>
+                </select>
+              </div>
+
+              {/* Auto-refresh indicator */}
+              <div className="flex items-center space-x-2">
+                {autoRefresh ? (
+                  <PlayCircle className="w-4 h-4 text-green-500" />
+                ) : (
+                  <PauseCircle className="w-4 h-4 text-red-500" />
+                )}
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
+                </span>
+              </div>
+            </div>
+
+            {/* Stock Grid */}
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <>
+                {/* Search Result Header */}
+                {showSearchResult && searchResult && (
+                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">
+                          Search Result for "{searchResult.ticker}"
+                        </h3>
+                        <p className="text-sm text-blue-600 dark:text-blue-400">{searchResult.companyName}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowSearchResult(false);
+                          setSearchResult(null);
+                          setSearchTicker('');
+                          setActiveTab('shadow');
+                        }}
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className={showMobileView ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
+                  {filteredStocks.length > 0 ? (
+                    filteredStocks.map((stock) => (
+                      <MiniStockCard
+                        key={stock.ticker}
+                        stock={stock}
+                        onClick={(s) => { setSelectedShadowStock(s); setShowShadowModal(true); }}
+                        onOpenChart={() => openChartForStock(stock)}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-gray-500 dark:text-gray-400 text-lg">
+                        {showSearchResult ? 'Stock not found or error occurred.' : 'No stocks match your current filters.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </>
+        );
+    }
+  };
+
   // Shadowbot route: show dedicated page
   const isShadowbotRoute = typeof window !== 'undefined' && window.location.pathname === '/shadowbot';
   useEffect(() => {
@@ -816,146 +960,7 @@ function App() {
           {/* Main Content Area */}
           <div className="flex-1">
             {/* Content Based on Active Tab */}
-            {!isShadowbotRoute && (activeTab === 'home' ? (
-              <HomeScreen
-                onNewWatchlist={() => setShowWatchlistModal(true)}
-                watchlists={watchlists}
-                onDeleteWatchlist={deleteWatchlist}
-                news={news}
-                newsLoading={newsLoading}
-                onOpenChart={openChartForStock}
-              />
-            ) : activeTab === 'portfolio' ? (
-              <Portfolio />
-            ) : activeTab === 'watchlist' ? (
-              <WatchlistTab
-                watchlists={watchlists}
-                setWatchlists={setWatchlists}
-                onNewWatchlist={(importedTickers = '') => {
-                  if (importedTickers) {
-                    setNewWatchlistTickers(importedTickers);
-                    setNewWatchlistName('Imported Watchlist');
-                  }
-                  setShowWatchlistModal(true);
-                }}
-                onDeleteWatchlist={deleteWatchlist}
-                fetchStocks={fetchStocks}
-                aiProvider={aiProvider}
-                onOpenChart={openChartForStock}
-              />
-            ) : activeTab === 'news' ? (
-              <NewsTab
-                news={news}
-                loading={newsLoading}
-                searchQuery={newsSearchQuery}
-              />
-            ) : activeTab === 'chart' ? (
-              <ChartTab initialSymbol={chartSymbol} />
-            ) : activeTab === "screener" ? (
-              <ScreenerTestTab onOpenChart={openChartForStock} />
-            ) : (
-              <>
-                {/* Enhanced Controls */}
-                <div className="flex flex-wrap gap-4 mb-6">
-                  <div className="flex items-center space-x-2">
-                    <Filter className="w-4 h-4 text-gray-500" />
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    >
-                      <option value="score">Sort by Score</option>
-                      <option value="ticker">Sort by Ticker</option>
-                      <option value="volume">Sort by Volume</option>
-                      <option value="change">Sort by Change</option>
-                      <option value="rsi">Sort by RSI</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <BarChart3 className="w-4 h-4 text-gray-500" />
-                    <select
-                      value={filterBy}
-                      onChange={(e) => setFilterBy(e.target.value)}
-                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    >
-                      <option value="all">All Stocks</option>
-                      <option value="4out4">4/4 Only</option>
-                      <option value="3plus">3+ Score</option>
-                      <option value="oversold">Oversold</option>
-                      <option value="breakout">Breakout</option>
-                    </select>
-                  </div>
-
-                  {/* Auto-refresh indicator */}
-                  <div className="flex items-center space-x-2">
-                    {autoRefresh ? (
-                      <PlayCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <PauseCircle className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Stock Grid */}
-                {loading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Search Result Header */}
-                    {showSearchResult && searchResult && (
-                      <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">
-                              Search Result for "{searchResult.ticker}"
-                            </h3>
-                            <p className="text-sm text-blue-600 dark:text-blue-400">
-                              {searchResult.companyName}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setShowSearchResult(false);
-                              setSearchResult(null);
-                              setSearchTicker('');
-                              setActiveTab('shadow');
-                            }}
-                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className={showMobileView ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
-                      {filteredStocks.length > 0 ? (
-                        filteredStocks.map((stock) => (
-                          <MiniStockCard
-                            key={stock.ticker}
-                            stock={stock}
-                            onClick={(s) => { setSelectedShadowStock(s); setShowShadowModal(true); }}
-                            onOpenChart={() => openChartForStock(stock)}
-                          />
-                        ))
-                      ) : (
-                        <div className="col-span-full text-center py-12">
-                          <p className="text-gray-500 dark:text-gray-400 text-lg">
-                            {showSearchResult ? 'Stock not found or error occurred.' : 'No stocks match your current filters.'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </>
-            )}
+            {!isShadowbotRoute ? renderContent() : <ShadowbotPage />}
             {isShadowbotRoute && <ShadowbotPage />}
           </div>
         </div>
