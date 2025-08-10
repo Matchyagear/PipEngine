@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, BarChart3 } from 'lucide-react';
-// Using Finviz static mini chart image for crisp, tiny inline chart
+// Using a lightweight inline SVG sparkline for perfect fit
+import Sparkline from './components/Sparkline';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -272,14 +273,9 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         </p>
       </div>
 
-      {/* Compact Finviz mini chart (crisp static image) */}
+      {/* Sparkline */}
       <div className="mt-2">
-        <img
-          src={`https://finviz.com/chart.ashx?t=${stock.ticker}&ty=c&ta=1&p=d&s=l`}
-          alt={`${stock.ticker} chart`}
-          className="w-full h-12 object-cover rounded"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-        />
+        <Sparkline data={(stock.spark || stock.history || []).slice(-40)} width={200} height={14} stroke={stock.priceChangePercent >= 0 ? '#22c55e' : '#ef4444'} strokeWidth={1.75} />
       </div>
 
       {/* Click indicator */}
