@@ -152,16 +152,18 @@ const StockCard = ({
     const ma50 = typeof s.fiftyMA === 'number' ? s.fiftyMA : null;
     const ma200 = typeof s.twoHundredMA === 'number' ? s.twoHundredMA : null;
 
-    // Weights (sum ~100)
-    const W_BASE = 40;
-    const W_OVERSOLD = 12;
-    const W_BREAKOUT = 12;
+    // Weights (sum ~100). Per user: RSI > Breakout; keep 35-55 sweet spot; add market/sector context
+    const W_BASE = 38;
+    const W_OVERSOLD = 10;
+    const W_BREAKOUT = 8;
     const W_TREND = 16; // MA trend + price location
     const W_MACD = 8;
-    const W_RSI = 6;
+    const W_RSI = 14;   // Heavier than breakout
     const W_VOLUME = 4;
     const W_STOCH = 2;
-    const totalWeight = W_BASE + W_OVERSOLD + W_BREAKOUT + W_TREND + W_MACD + W_RSI + W_VOLUME + W_STOCH;
+    const W_MARKET = 6; // Context alignment with market/sector
+    const W_SECTOR = 4;
+    const totalWeight = W_BASE + W_OVERSOLD + W_BREAKOUT + W_TREND + W_MACD + W_RSI + W_VOLUME + W_STOCH + W_MARKET + W_SECTOR;
 
     let pts = 0;
 
@@ -195,6 +197,17 @@ const StockCard = ({
 
     // Stochastic in healthy zone 20-80
     if (stoch !== null && stoch >= 20 && stoch <= 80) pts += W_STOCH;
+
+    // Market/Sector context (optional inputs). Favor alignment with market & sector direction if provided
+    const marketChg = typeof s.marketChangePercent === 'number' ? s.marketChangePercent : null;
+    const sectorChg = typeof s.sectorChangePercent === 'number' ? s.sectorChangePercent : null;
+    const stockChg = typeof s.priceChangePercent === 'number' ? s.priceChangePercent : null;
+    if (marketChg !== null && stockChg !== null) {
+      if ((marketChg >= 0 && stockChg >= 0) || (marketChg < 0 && stockChg < 0)) pts += W_MARKET;
+    }
+    if (sectorChg !== null && stockChg !== null) {
+      if ((sectorChg >= 0 && stockChg >= 0) || (sectorChg < 0 && stockChg < 0)) pts += W_SECTOR;
+    }
 
     const score100 = Math.max(1, Math.min(100, Math.round((pts / totalWeight) * 100)));
     return score100;
