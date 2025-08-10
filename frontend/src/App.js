@@ -543,7 +543,16 @@ function App() {
                 </p>
               )}
               {showLogoMenu && (
-                <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50" />
+                <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setShowAIChat(true); setShowLogoMenu(false); }}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-800"
+                    >
+                      Shadowbot
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
