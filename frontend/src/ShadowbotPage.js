@@ -125,7 +125,7 @@ export default function ShadowbotPage() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/shadowbot/runner/status`);
             if (res.ok) setRunnerStatus(await res.json());
-        } catch {}
+        } catch { }
     };
     const startRunner = async () => { await fetch(`${API_BASE_URL}/api/shadowbot/runner/start`, { method: 'POST' }); refreshRunner(); };
     const stopRunner = async () => { await fetch(`${API_BASE_URL}/api/shadowbot/runner/stop`, { method: 'POST' }); refreshRunner(); };
@@ -239,7 +239,23 @@ export default function ShadowbotPage() {
                     {liveEvents.length === 0 ? (
                         <p className="text-gray-500">No events yet.</p>
                     ) : liveEvents.map((e, idx) => (
-                        <pre key={idx} className="bg-gray-800/40 border border-gray-700 rounded-md p-2 overflow-x-auto">{JSON.stringify(e, null, 2)}</pre>
+                        <div key={idx} className="bg-gray-800/40 border border-gray-700 rounded-md p-2">
+                            {e.type === 'signal' && (
+                                <div><span className="text-green-400">Signal:</span> {e.symbol} qty {e.qty} @ ${e.price} (RSI {e.rsi})</div>
+                            )}
+                            {e.type === 'order_submitted' && (
+                                <div><span className="text-blue-400">Order:</span> {e.order.symbol} {e.order.side} {e.order.qty}</div>
+                            )}
+                            {e.type === 'paper_trade' && (
+                                <div><span className="text-yellow-400">Paper:</span> {e.symbol} buy {e.qty} @ ${e.price}</div>
+                            )}
+                            {e.type === 'paper_exit' && (
+                                <div><span className="text-yellow-400">Exit:</span> {e.symbol} sell {e.qty} @ ${e.price}</div>
+                            )}
+                            {!['signal','order_submitted','paper_trade','paper_exit'].includes(e.type || '') && (
+                                <pre className="text-xs overflow-x-auto">{JSON.stringify(e, null, 2)}</pre>
+                            )}
+                        </div>
                     ))}
                 </div>
             </div>
@@ -248,7 +264,28 @@ export default function ShadowbotPage() {
                 <div className="panel p-4 mt-4">
                     <h2 className="font-medium mb-3">Backtest Result</h2>
                     <div className="text-sm text-gray-300 mb-2">ROI: {backtest.roi}% · Trades: {backtest.trades} · Winrate: {backtest.winrate}%</div>
-                    <div className="text-xs text-gray-400">Start: ${backtest.start} → End: ${backtest.end}</div>
+                    <div className="text-xs text-gray-400 mb-3">Start: ${backtest.start} → End: ${backtest.end}</div>
+                    {Array.isArray(backtest.equity_curve) && backtest.equity_curve.length > 1 && (
+                        <svg width="100%" height="160" viewBox="0 0 600 160">
+                            {(() => {
+                                const data = backtest.equity_curve;
+                                const min = Math.min(...data);
+                                const max = Math.max(...data);
+                                const w = 600, h = 140, ox = 0, oy = 10;
+                                const points = data.map((v, i) => {
+                                    const x = (i / (data.length - 1)) * w + ox;
+                                    const y = h - ((v - min) / Math.max(max - min, 1)) * h + oy;
+                                    return `${x},${y}`;
+                                }).join(' ');
+                                return (
+                                    <>
+                                        <polyline fill="none" stroke="#33a2ff" strokeWidth="2" points={points} />
+                                        <rect x="0" y="10" width="600" height="140" fill="none" stroke="#374151" />
+                                    </>
+                                );
+                            })()}
+                        </svg>
+                    )}
                 </div>
             )}
         </div>

@@ -136,6 +136,7 @@ async def broadcast_shadowbot(payload: dict):
 # ===== Strategy Runner (Polling loop) =====
 runner_task = None
 runner_active = False
+runner_positions: dict = {}
 
 def _calc_rsi(series, window=14):
     delta = series.diff()
@@ -152,6 +153,8 @@ async def _evaluate_strategy_and_trade(strategy: dict):
     max_positions = int(strategy.get('max_positions', 3))
     max_notional = float(strategy.get('max_notional_per_trade', 5000))
     rules = strategy.get('entry_rules', {})
+    stop_pct = float(strategy.get('stop_loss_pct', 3.0)) / 100.0
+    take_pct = float(strategy.get('take_profit_pct', 6.0)) / 100.0
 
     for sym in symbols:
         try:
@@ -167,6 +170,30 @@ async def _evaluate_strategy_and_trade(strategy: dict):
             rel_vol = vol.iloc[-1] / (vol.mean() if vol.mean() else vol.iloc[-1])
             price = float(close.iloc[-1])
 
+            # First, manage exits if we have an open position
+            if sym in runner_positions:
+                pos = runner_positions[sym]
+                entry = pos['entry']
+                qty = pos['qty']
+                # Exit rules
+                if price <= entry * (1 - stop_pct) or price >= entry * (1 + take_pct):
+                    try:
+                        if alpaca_client:
+                            req = MarketOrderRequest(symbol=sym, qty=qty, side=OrderSide.SELL, time_in_force=TimeInForce.DAY)
+                            order = alpaca_client.submit_order(req)
+                            await broadcast_shadowbot({"type": "exit_order", "symbol": sym, "qty": qty, "price": round(price,2), "status": getattr(order,'status','submitted')})
+                        else:
+                            await broadcast_shadowbot({"type": "paper_exit", "symbol": sym, "qty": qty, "price": round(price,2)})
+                    except Exception as e:
+                        await broadcast_shadowbot({"type": "exit_error", "symbol": sym, "error": str(e)})
+                    finally:
+                        try:
+                            del runner_positions[sym]
+                        except KeyError:
+                            pass
+                    # Skip further processing for this symbol this cycle
+                    continue
+
             passes = True
             if rules.get('rsi_oversold'):
                 passes &= (rsi <= 35)
@@ -178,6 +205,10 @@ async def _evaluate_strategy_and_trade(strategy: dict):
                 passes &= (rel_vol >= 1.5)
 
             if not passes:
+                continue
+
+            # Enforce position limits and avoid duplicate entries
+            if len(runner_positions) >= max_positions or sym in runner_positions:
                 continue
 
             qty = max(1, int(max_notional // max(price, 0.01)))
@@ -193,6 +224,9 @@ async def _evaluate_strategy_and_trade(strategy: dict):
                     await broadcast_shadowbot({"type": "order_error", "symbol": sym, "error": str(e)})
             else:
                 await broadcast_shadowbot({"type": "paper_trade", "symbol": sym, "qty": qty, "price": round(price,2)})
+
+            # Track open position for exit management
+            runner_positions[sym] = {"entry": price, "qty": qty, "strategy": strategy.get('name','Unnamed'), "stop_pct": stop_pct, "take_pct": take_pct}
         except Exception as e:
             await broadcast_shadowbot({"type": "eval_error", "symbol": sym, "error": str(e)})
 
