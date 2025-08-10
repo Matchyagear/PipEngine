@@ -374,7 +374,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     {morning.global_indices?.map((i) => (
                       <div key={i.symbol} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2">
                         <div className="text-xs text-gray-400">{i.name}</div>
-                        <div className="text-sm">{i.price ?? '-'} <span className={i.changePercent>=0? 'text-green-400':'text-red-400'}>({i.changePercent}%)</span></div>
+                        <div className="text-sm">{i.price ?? '-'} <span className={i.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}>({i.changePercent}%)</span></div>
                       </div>
                     ))}
                   </div>
@@ -385,7 +385,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     {morning.futures?.map((f) => (
                       <div key={f.symbol} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2">
                         <div className="text-xs text-gray-400">{f.name}</div>
-                        <div className="text-sm">{f.price ?? '-'} <span className={f.changePercent>=0? 'text-green-400':'text-red-400'}>({f.changePercent}%)</span></div>
+                        <div className="text-sm">{f.price ?? '-'} <span className={f.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}>({f.changePercent}%)</span></div>
                       </div>
                     ))}
                   </div>
@@ -402,7 +402,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   <div>
                     <h3 className="font-medium mb-2">Earnings Today</h3>
                     <ul className="text-sm space-y-1">
-                      {morning.earnings_today?.map((e, idx)=> (
+                      {morning.earnings_today?.map((e, idx) => (
                         <li key={idx} className="text-gray-300">{e.symbol || ''} <span className="text-gray-500">{e.time || ''}</span></li>
                       ))}
                     </ul>
@@ -410,7 +410,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   <div>
                     <h3 className="font-medium mb-2">Economic Calendar</h3>
                     <ul className="text-sm space-y-1">
-                      {morning.economic_today?.map((e, idx)=> (
+                      {morning.economic_today?.map((e, idx) => (
                         <li key={idx} className="text-gray-300">{e.event || ''} <span className="text-gray-500">{e.time || ''}</span></li>
                       ))}
                     </ul>
@@ -422,7 +422,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     <div>
                       <div className="text-xs text-gray-400 mb-1">Gainers</div>
                       <ul className="text-sm space-y-1">
-                        {morning.movers?.gainers?.slice(0,5).map((s)=> (
+                        {morning.movers?.gainers?.slice(0, 5).map((s) => (
                           <li key={s.ticker}>{s.ticker} <span className="text-green-400">{s.changePercent}%</span></li>
                         ))}
                       </ul>
@@ -430,7 +430,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     <div>
                       <div className="text-xs text-gray-400 mb-1">Losers</div>
                       <ul className="text-sm space-y-1">
-                        {morning.movers?.losers?.slice(0,5).map((s)=> (
+                        {morning.movers?.losers?.slice(0, 5).map((s) => (
                           <li key={s.ticker}>{s.ticker} <span className="text-red-400">{s.changePercent}%</span></li>
                         ))}
                       </ul>
@@ -440,8 +440,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 <div>
                   <h3 className="font-medium mb-2">Most Talked About (From Headlines)</h3>
                   <div className="flex flex-wrap gap-2">
-                    {morning.trending?.map((t)=> (
-                      <span key={t.ticker} className="px-2 py-1 text-xs rounded-md border border-gray-700">{t.ticker} · {t.mentions}</span>
+                    {morning.trending?.map((t) => (
+                      <span key={t.ticker} className="px-2 py-1 text-xs rounded-md border border-gray-700">{t.ticker} · news {t.mentions}{typeof t.twitter === 'number' ? ` · tw ${t.twitter}` : ''}</span>
                     ))}
                   </div>
                 </div>

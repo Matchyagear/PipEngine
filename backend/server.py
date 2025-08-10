@@ -85,6 +85,7 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 DISCORD_TOKEN = os.environ.get('DISCORD_TOKEN')
 CHANNEL_ID = os.environ.get('CHANNEL_ID')
 NEWS_API_KEY = os.environ.get('NEWS_API_KEY', 'demo')  # Free tier available
+TWITTER_BEARER_TOKEN = os.environ.get('TWITTER_BEARER_TOKEN')
 ALPACA_API_KEY = os.environ.get('ALPACA_API_KEY')
 ALPACA_API_SECRET = os.environ.get('ALPACA_API_SECRET')
 ALPACA_PAPER = os.environ.get('ALPACA_PAPER', 'true').lower() == 'true'
@@ -570,6 +571,33 @@ def fetch_general_financial_news(limit=20):
         print(f"Error fetching general news: {e}")
         return []
 
+def fetch_twitter_trending_counts(candidate_tickers: list, per_ticker_max: int = 10) -> list:
+    """Fetch rough Twitter mention counts for a list of tickers using Twitter API v2 recent search.
+    Requires TWITTER_BEARER_TOKEN. Falls back to empty list if not configured or on errors.
+    """
+    try:
+        if not TWITTER_BEARER_TOKEN:
+            return []
+        headers = {"Authorization": f"Bearer {TWITTER_BEARER_TOKEN}"}
+        base_url = "https://api.twitter.com/2/tweets/search/recent"
+        results = []
+        for ticker in candidate_tickers[:30]:  # cap to avoid rate issues
+            try:
+                # Search for cashtag or hashtag; filter retweets, English
+                q = f"(${ticker} OR #{ticker}) lang:en -is:retweet"
+                params = {"query": q, "max_results": str(max(10, per_ticker_max))}
+                resp = requests.get(base_url, headers=headers, params=params, timeout=8)
+                if resp.status_code != 200:
+                    continue
+                data = resp.json().get("data", [])
+                results.append({"ticker": ticker, "count": len(data)})
+            except Exception:
+                continue
+        results.sort(key=lambda x: x["count"], reverse=True)
+        return results
+    except Exception:
+        return []
+
 def _pct_change_from_hist(hist):
     try:
         if len(hist['Close']) >= 2:
@@ -815,6 +843,12 @@ async def get_morning_brief():
                 if len(m) <= 5 and m.isalpha():
                     counts[m] = counts.get(m, 0) + 1
         trending = sorted([{ "ticker": k, "mentions": v } for k, v in counts.items()], key=lambda x: x['mentions'], reverse=True)[:10]
+        # Twitter overlay (if configured): fetch mention counts for top 20 headline tickers
+        twitter_counts = fetch_twitter_trending_counts([t['ticker'] for t in trending[:20]]) if trending else []
+        twitter_map = {t['ticker']: t['count'] for t in twitter_counts}
+        for t in trending:
+            if t['ticker'] in twitter_map:
+                t['twitter'] = twitter_map[t['ticker']]
 
         # Market score (bearish > 50, bullish < 50)
         fut_avg = 0.0
@@ -847,6 +881,7 @@ async def get_morning_brief():
             "economic_today": economic,
             "movers": movers,
             "trending": trending,
+            "twitter_trending": twitter_counts,
             "market_score": score,
             "timestamp": datetime.now().isoformat()
         }
