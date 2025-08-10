@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, BarChart3 } from 'lucide-react';
+import TradingViewMiniChart from './components/TradingViewMiniChart';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -271,16 +272,9 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         </p>
       </div>
 
-      {/* Mini Finviz Chart */}
-      <div className="chart-container">
-        <img
-          src={`https://finviz.com/chart.ashx?t=${stock.ticker}&ty=c&ta=1&p=d&s=l`}
-          alt={`${stock.ticker} chart`}
-          className="w-full h-16 object-cover rounded border"
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
+      {/* TradingView Mini Chart */}
+      <div className="mt-2">
+        <TradingViewMiniChart symbol={stock.ticker} height={70} />
       </div>
 
       {/* Click indicator */}

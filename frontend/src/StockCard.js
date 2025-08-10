@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TradingViewMiniChart from './components/TradingViewMiniChart';
 import {
   TrendingUp,
   TrendingDown,
@@ -656,17 +657,10 @@ const StockCard = ({
         )}
       </div>
 
-      {/* Finviz Chart - Always show */}
+      {/* TradingView Mini Chart (inline) */}
       {stock.ticker && (
-        <div className="mb-4 chart-container">
-          <img
-            src={`https://finviz.com/chart.ashx?t=${stock.ticker}&ty=c&ta=1&p=d&s=l`}
-            alt={`${stock.ticker} chart`}
-            className="w-full h-32 object-cover rounded-lg border"
-            onError={(e) => {
-              e.target.style.display = 'none';
-            }}
-          />
+        <div className="mb-4">
+          <TradingViewMiniChart symbol={stock.ticker} height={120} />
         </div>
       )}
 
