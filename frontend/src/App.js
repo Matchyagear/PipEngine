@@ -515,7 +515,7 @@ function App() {
           <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-start">
             {/* Left Side - Logo and Title */}
             <div className="flex items-center space-x-2">
-              <Logo size="md" showText={false} src="/pipengine_logo.png" />
+              <Logo size="lg" showText={false} src="/pipengine_logo.png" />
               {autoRefresh && (
                 <p className="text-xs text-green-600 dark:text-green-400">
                   Auto-refreshing every {refreshInterval / 60} minutes
