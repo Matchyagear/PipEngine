@@ -125,6 +125,17 @@ const ScreenerTestTab = ({ onOpenChart }) => {
   const [showModal, setShowModal] = useState(false);
   const [loadingTicker, setLoadingTicker] = useState(null);
   const [showJson, setShowJson] = useState(false); // collapsed by default
+  const [sortKey, setSortKey] = useState('ticker'); // ticker | price | rsi | score | volume
+  const [sortDir, setSortDir] = useState('asc');
+
+  const toggleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
 
   const onDragStart = useCallback((e, index) => {
     setDragIndex(index);
@@ -239,9 +250,32 @@ const ScreenerTestTab = ({ onOpenChart }) => {
           break;
       }
     }
-    // basic sorting: price asc
-    return out.slice().sort((a, b) => a.currentPrice - b.currentPrice);
-  }, [snapshot, criteria]);
+    // sorting by selected column
+    const dir = sortDir === 'asc' ? 1 : -1;
+    const getNum = (v, d = 0) => (typeof v === 'number' && !Number.isNaN(v) ? v : d);
+    const getStr = (v) => (v ? String(v) : '');
+    const sorted = out.slice().sort((a, b) => {
+      switch (sortKey) {
+        case 'ticker':
+          return dir * getStr(a.ticker).localeCompare(getStr(b.ticker));
+        case 'price':
+          return dir * (getNum(a.currentPrice) - getNum(b.currentPrice));
+        case 'rsi':
+          return dir * (getNum(a.RSI) - getNum(b.RSI));
+        case 'score': {
+          // Put undefined scores at the end for asc; start for desc
+          const as = (typeof a.score === 'number') ? a.score : (sortDir === 'asc' ? -Infinity : Infinity);
+          const bs = (typeof b.score === 'number') ? b.score : (sortDir === 'asc' ? -Infinity : Infinity);
+          return dir * (as - bs);
+        }
+        case 'volume':
+          return dir * (getNum(a.averageVolume) - getNum(b.averageVolume));
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [snapshot, criteria, sortKey, sortDir]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -304,6 +338,24 @@ const ScreenerTestTab = ({ onOpenChart }) => {
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm font-semibold text-gray-900 dark:text-white">Preview ({filtered.length})</div>
               <button className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded" onClick={loadSnapshot}>Reload Snapshot</button>
+            </div>
+            {/* Sortable header */}
+            <div className="grid grid-cols-5 gap-2 items-center text-xs font-semibold text-gray-300 border-b border-gray-700/60 py-1 mb-1">
+              <button className="text-left" onClick={() => toggleSort('ticker')}>
+                Ticker {sortKey === 'ticker' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+              <button className="text-right" onClick={() => toggleSort('price')}>
+                Price {sortKey === 'price' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+              <button className="text-center" onClick={() => toggleSort('rsi')}>
+                RSI {sortKey === 'rsi' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+              <button className="text-center" onClick={() => toggleSort('score')}>
+                Score {sortKey === 'score' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
+              <button className="text-right" onClick={() => toggleSort('volume')}>
+                Volume {sortKey === 'volume' ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+              </button>
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 max-h-[70vh] overflow-auto">
               {filtered.slice(0, 50).map((s) => (
