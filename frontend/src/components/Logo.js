@@ -8,7 +8,7 @@ const Logo = ({ size = "md", showText = true, src = "/logo512.png" }) => {
   };
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-3 ml-2 sm:ml-3">
       <div className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center`}>
         <img src={src} alt="PipEngine Logo" className="object-contain w-full h-full" />
       </div>
