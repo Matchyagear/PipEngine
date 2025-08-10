@@ -2,15 +2,15 @@ import React from 'react';
 
 const Logo = ({ size = "md", showText = true, src = "/logo512.png" }) => {
   const sizeClasses = {
-    sm: "w-28 h-12",
-    md: "w-44 h-16",
-    lg: "w-56 h-20"
+    sm: "w-16 h-16",
+    md: "w-20 h-20",
+    lg: "w-24 h-24"
   };
 
   return (
     <div className="flex items-center space-x-2 ml-1 sm:ml-2">
-      <div className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center`}>
-        <img src={src} alt="PipEngine Logo" className="object-contain w-full h-full" />
+      <div className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center justify-center`}>
+        <img src={src} alt="PipEngine Logo" className="object-cover w-full h-full" />
       </div>
       {showText && (
         <div className="hidden sm:block">
