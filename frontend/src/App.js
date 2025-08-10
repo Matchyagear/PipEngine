@@ -46,6 +46,7 @@ import WatchlistTab from './WatchlistTab';
 import ChartTab from './ChartTab';
 import ScreenerTestTab from "./ScreenerTestTab";
 import Logo from "./components/Logo";
+import ShadowbotPage from "./ShadowbotPage";
 import "./App.css";
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -521,9 +522,11 @@ function App() {
 
   const filteredStocks = getFilteredAndSortedStocks();
 
-  // If loaded via shadowbot landing, auto-open AI chat
+  // Shadowbot route: show dedicated page
+  const isShadowbotRoute = typeof window !== 'undefined' && window.location.pathname === '/shadowbot';
   useEffect(() => {
     if (window.location.hash === '#shadowbot') {
+      // preserve original behavior for old link
       setShowAIChat(true);
     }
   }, []);
@@ -734,8 +737,12 @@ function App() {
       {/* Main Content */}
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
+        {isShadowbotRoute && (
+          <ShadowbotPage />
+        )}
+
         {/* News Search Box (only show on news tab) */}
-        {activeTab === 'news' && (
+        {!isShadowbotRoute && activeTab === 'news' && (
           <div className="flex items-center justify-center mb-6">
             <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2">
               <input
@@ -765,7 +772,7 @@ function App() {
         )}
 
         {/* Watchlist Tabs (only show on stocks tab) */}
-        {activeTab !== 'news' && activeTab !== 'home' && activeTab !== 'portfolio' && (
+        {!isShadowbotRoute && activeTab !== 'news' && activeTab !== 'home' && activeTab !== 'portfolio' && (
           <div className="flex items-center space-x-2">
             {watchlists.map((watchlist) => (
               <button
@@ -809,7 +816,7 @@ function App() {
           {/* Main Content Area */}
           <div className="flex-1">
             {/* Content Based on Active Tab */}
-            {activeTab === 'home' ? (
+            {!isShadowbotRoute && (activeTab === 'home' ? (
               <HomeScreen
                 onNewWatchlist={() => setShowWatchlistModal(true)}
                 watchlists={watchlists}
