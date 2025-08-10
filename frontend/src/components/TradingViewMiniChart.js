@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 // Lightweight wrapper that embeds TradingView's Mini Symbol Overview widget
 // Docs: https://www.tradingview.com/widget/mini-symbol-overview/
 // Usage: <TradingViewMiniChart symbol="AAPL" height={80} />
-const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1M', theme = 'dark', scale = 1 }) => {
+const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1D', theme = 'dark', scale = 1 }) => {
     const containerRef = useRef(null);
 
     // Render the widget at a larger internal height, then scale down to target height

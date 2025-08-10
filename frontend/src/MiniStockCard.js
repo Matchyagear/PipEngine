@@ -279,9 +279,9 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         </div>
 
         {/* Sparkline */}
-        <div className="mt-2">
-          <Sparkline data={(stock.spark || stock.history || []).slice(-40)} width={200} height={14} stroke={stock.priceChangePercent >= 0 ? '#22c55e' : '#ef4444'} strokeWidth={1.75} />
-        </div>
+      <div className="mt-2">
+        <Sparkline data={(stock.intraday || stock.spark || stock.history || []).slice(-40)} width={200} height={14} stroke={stock.priceChangePercent >= 0 ? '#22c55e' : '#ef4444'} strokeWidth={1.75} />
+      </div>
 
         {/* Click indicator */}
         <div className="mt-2 text-center">

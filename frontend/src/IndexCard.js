@@ -43,7 +43,7 @@ const IndexCard = ({ index, onClick }) => {
       onClick={onClick}
       style={{ height: 140 }}
     >
-      <TradingViewMiniChart symbol={getDisplayAndTvSymbols(index.symbol).tv} height={140} />
+      <TradingViewMiniChart symbol={getDisplayAndTvSymbols(index.symbol).tv} height={140} dateRange="1D" />
     </motion.div>
   );
 };
