@@ -850,28 +850,51 @@ async def get_morning_brief():
             if t['ticker'] in twitter_map:
                 t['twitter'] = twitter_map[t['ticker']]
 
-        # Market score (bearish > 50, bullish < 50)
-        fut_avg = 0.0
-        if futures:
-            fut_avg = sum(f.get('changePercent', 0.0) for f in futures if isinstance(f.get('changePercent'), (int, float))) / max(len(futures), 1)
-        # Movers polarity
+        # Market score (bearish > 50, bullish < 50) — refined blend
+        def clamp01(x: float) -> float:
+            return max(0.0, min(1.0, x))
+
+        # Futures contribution: average of ES/NQ/YM if present, fallback to all
+        core_fut_syms = {"ES=F", "NQ=F", "YM=F"}
+        fut_changes = [f.get('changePercent', 0.0) for f in futures if isinstance(f.get('changePercent'), (int, float))]
+        core_fut_changes = [f.get('changePercent', 0.0) for f in futures if f.get('symbol') in core_fut_syms and isinstance(f.get('changePercent'), (int, float))]
+        fut_avg = (sum(core_fut_changes)/len(core_fut_changes)) if core_fut_changes else (sum(fut_changes)/len(fut_changes) if fut_changes else 0.0)
+        # Normalize futures: -2% to +2% mapped to [0..1] where 0 bullish, 1 bearish
+        fut_norm = clamp01((0 - fut_avg) / 4.0 + 0.5)
+
+        # Movers breadth contribution
         g = movers.get('gainers', []) if isinstance(movers, dict) else []
         l = movers.get('losers', []) if isinstance(movers, dict) else []
         total = max(len(g) + len(l), 1)
-        losers_share = len(l) / total
+        losers_share = len(l) / total  # already 0..1 (0 bullish, 1 bearish)
+        breadth_norm = losers_share
+
+        # Global indices avg change
+        gi_changes = [i.get('changePercent', 0.0) for i in global_indices if isinstance(i.get('changePercent'), (int, float))]
+        gi_avg = (sum(gi_changes)/len(gi_changes)) if gi_changes else 0.0
+        gi_norm = clamp01((0 - gi_avg) / 4.0 + 0.5)
+
         # Headline sentiment proxy via keyword hits
-        neg_words = ['miss', 'cut', 'down', 'drop', 'loss', 'bear', 'layoff', 'warn']
-        pos_words = ['beat', 'up', 'gain', 'growth', 'bull', 'record', 'raise']
+        neg_words = ['miss', 'cut', 'down', 'drop', 'loss', 'bear', 'layoff', 'warn', 'lawsuit', 'default', 'bankrupt']
+        pos_words = ['beat', 'up', 'gain', 'growth', 'bull', 'record', 'raise', 'upgrade', 'surge']
         neg = sum(1 for n in news if any(w in (n.get('title','') + ' ' + (n.get('description','') or '')).lower() for w in neg_words))
         pos = sum(1 for n in news if any(w in (n.get('title','') + ' ' + (n.get('description','') or '')).lower() for w in pos_words))
         total_news = max(neg + pos, 1)
-        neg_ratio = neg / total_news
+        neg_ratio = neg / total_news  # 0..1
+        news_norm = neg_ratio
 
-        score = 50.0
-        score += (-fut_avg) * 6.0  # red futures increase score (bearish)
-        score += (losers_share - 0.5) * 50.0
-        score += (neg_ratio - 0.5) * 30.0
-        score = max(0, min(100, round(score, 1)))
+        # Combine with weights (sum to 1)
+        w_fut, w_breadth, w_global, w_news = 0.35, 0.30, 0.20, 0.15
+        combined = (w_fut * fut_norm) + (w_breadth * breadth_norm) + (w_global * gi_norm) + (w_news * news_norm)
+        score = round(combined * 100.0, 1)
+
+        score_components = {
+            "futures": round(fut_norm*100, 1),
+            "breadth": round(breadth_norm*100, 1),
+            "global": round(gi_norm*100, 1),
+            "news": round(news_norm*100, 1),
+            "weights": {"futures": w_fut, "breadth": w_breadth, "global": w_global, "news": w_news}
+        }
 
         payload = {
             "futures": futures,
@@ -883,6 +906,7 @@ async def get_morning_brief():
             "trending": trending,
             "twitter_trending": twitter_counts,
             "market_score": score,
+            "score_components": score_components,
             "timestamp": datetime.now().isoformat()
         }
         _cache_set(cache_key, payload)

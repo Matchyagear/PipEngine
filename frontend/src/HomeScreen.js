@@ -447,9 +447,23 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">Market Score (1–100)</h3>
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl font-semibold">{morning.market_score}</div>
-                    <div className="text-xs text-gray-400">Bearish &gt; 50 · Bullish &lt; 50</div>
+                  <div className="space-y-2">
+                    <div className="w-full h-3 rounded-full overflow-hidden" style={{background: 'linear-gradient(90deg, #16a34a 0%, #84cc16 20%, #facc15 50%, #f97316 80%, #dc2626 100%)'}}>
+                      <div className="h-full bg-white/80" style={{ width: `${Math.max(0, Math.min(100, morning.market_score))}%` }}></div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-400">
+                      <span>Bullish</span>
+                      <span className="text-sm text-gray-200 font-semibold">{morning.market_score}</span>
+                      <span>Bearish</span>
+                    </div>
+                    {morning.score_components && (
+                      <div className="text-xs text-gray-400">
+                        <span className="mr-3">Fut: {morning.score_components.futures}%</span>
+                        <span className="mr-3">Breadth: {morning.score_components.breadth}%</span>
+                        <span className="mr-3">Global: {morning.score_components.global}%</span>
+                        <span>News: {morning.score_components.news}%</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
