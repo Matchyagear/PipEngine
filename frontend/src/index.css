@@ -35,6 +35,27 @@ body {
     background-size: 6px 6px, 6px 6px;
 }
 
+/* Gunmetal gradient header */
+.header-gunmetal {
+    background: linear-gradient(180deg, #151b23 0%, #0e141b 100%);
+}
+
+/* Sleek tab buttons */
+.tab-button {
+    @apply flex items-center justify-center space-x-2 py-2 px-3 text-sm rounded-md border border-gray-700/60 bg-gray-800/30 text-gray-300 transition-colors;
+}
+.tab-button:hover {
+    @apply border-gray-500 bg-gray-800/60 text-gray-100;
+}
+.tab-button-active {
+    @apply bg-gray-900 text-white border-gray-500 shadow-sm;
+}
+
+/* Sleek icon buttons on the right */
+.sleek-icon-btn {
+    @apply p-2 rounded-md border border-gray-700/60 text-gray-400 hover:text-gray-200 hover:border-gray-500 bg-transparent transition-colors;
+}
+
 /* Buttons */
 .btn-primary {
     @apply bg-gradient-to-r from-accent-blue to-accent-purple text-white;

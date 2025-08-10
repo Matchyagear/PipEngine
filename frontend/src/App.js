@@ -523,7 +523,7 @@ function App() {
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''} bg-carbon-900 text-gray-100 transition-colors carbon`}>
       {/* Enhanced Header - Made Sticky/Floating */}
-      <header className="sticky top-0 z-50 bg-carbon-800/90 border-b border-carbon-700 shadow-sm backdrop-blur-sm">
+      <header className="sticky top-0 z-50 header-gunmetal border-b border-carbon-700 shadow-sm backdrop-blur-sm">
         <div className="w-full px-0 py-3">
           <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-start">
             {/* Left Side - Logo and Title with dropdown */}
@@ -570,17 +570,14 @@ function App() {
             </div>
 
             {/* Navigation Tabs in Header Center */}
-            <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+            <div className="flex items-center space-x-1 bg-gray-800/30 p-1 rounded-lg border border-gray-700/60">
               <button
                 onClick={() => {
                   setActiveTab('home');
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'home'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`tab-button ${activeTab === 'home' ? 'tab-button-active' : ''}`}
               >
                 <Home className="w-4 h-4" />
                 <span>Home</span>
@@ -593,10 +590,7 @@ function App() {
                   setShowSearchResult(false);
                   fetchStocks();
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'shadow' && !currentWatchlist && !showSearchResult
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`tab-button ${activeTab === 'shadow' && !currentWatchlist && !showSearchResult ? 'tab-button-active' : ''}`}
               >
                 <Eye className="w-4 h-4" />
                 <span>Shadow's Picks</span>
@@ -608,10 +602,7 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'portfolio'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`tab-button ${activeTab === 'portfolio' ? 'tab-button-active' : ''}`}
               >
                 <PieChart className="w-4 h-4" />
                 <span>Portfolio</span>
@@ -623,10 +614,7 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'watchlist'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`tab-button ${activeTab === 'watchlist' ? 'tab-button-active' : ''}`}
               >
                 <Star className="w-4 h-4" />
                 <span>Watchlist</span>
@@ -639,10 +627,7 @@ function App() {
                   setShowSearchResult(false);
                   fetchNews();
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'news'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`tab-button ${activeTab === 'news' ? 'tab-button-active' : ''}`}
               >
                 <Bell className="w-4 h-4" />
                 <span>News</span>
@@ -654,10 +639,7 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === 'chart'
-                  ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`tab-button ${activeTab === 'chart' ? 'tab-button-active' : ''}`}
               >
                 <BarChart3 className="w-4 h-4" />
                 <span>Chart</span>
@@ -669,10 +651,7 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-colors text-sm ${activeTab === "screener"
-                  ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                  }`}
+                className={`tab-button ${activeTab === 'screener' ? 'tab-button-active' : ''}`}
               >
                 <Filter className="w-4 h-4" />
                 <span>Screener</span>
@@ -684,10 +663,7 @@ function App() {
               {/* AI Chat Button */}
               <button
                 onClick={() => setShowAIChat(!showAIChat)}
-                className={`p-2 transition-colors rounded-lg ${showAIChat
-                  ? "text-blue-700 bg-blue-200 dark:text-blue-300 dark:bg-blue-700"
-                  : "text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-100 dark:bg-blue-900/20 hover:bg-blue-200 dark:hover:bg-blue-800/30"
-                  }`}
+                className={`sleek-icon-btn ${showAIChat ? 'border-blue-500 text-blue-300' : ''}`}
                 title="AI Chat"
               >
                 <Brain className="w-5 h-5" />
@@ -696,7 +672,7 @@ function App() {
               {/* Mobile/Desktop Toggle */}
               <button
                 onClick={() => setShowMobileView(!showMobileView)}
-                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                className="sleek-icon-btn"
               >
                 {showMobileView ? <Monitor className="w-5 h-5" /> : <Smartphone className="w-5 h-5" />}
               </button>
@@ -704,7 +680,7 @@ function App() {
               {/* Dark Mode Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                className="sleek-icon-btn"
               >
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
@@ -712,7 +688,7 @@ function App() {
               {/* Settings */}
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                className="sleek-icon-btn"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -729,7 +705,7 @@ function App() {
               <button
                 onClick={refreshStocks}
                 disabled={isRefreshing}
-                className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50"
+                className="sleek-icon-btn disabled:opacity-50"
               >
                 <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
               </button>
