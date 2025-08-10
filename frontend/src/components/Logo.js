@@ -3,12 +3,12 @@ import React from 'react';
 const Logo = ({ size = "md", showText = true, src = "/logo512.png" }) => {
   const sizeClasses = {
     sm: "w-24 h-10",
-    md: "w-36 h-14",
-    lg: "w-48 h-16"
+    md: "w-28 h-12",
+    lg: "w-40 h-14"
   };
 
   return (
-    <div className="flex items-center space-x-3 ml-2 sm:ml-3">
+    <div className="flex items-center space-x-2 ml-1 sm:ml-2">
       <div className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center`}>
         <img src={src} alt="PipEngine Logo" className="object-contain w-full h-full" />
       </div>

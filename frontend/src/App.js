@@ -512,10 +512,10 @@ function App() {
       {/* Enhanced Header - Made Sticky/Floating */}
       <header className="sticky top-0 z-50 bg-carbon-800/90 border-b border-carbon-700 shadow-sm backdrop-blur-sm">
         <div className="w-full px-0 py-3">
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-start">
+          <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-start">
             {/* Left Side - Logo and Title */}
-            <div className="flex items-center space-x-3">
-              <Logo size="lg" showText={true} src="/pipengine_logo.png" />
+            <div className="flex items-center space-x-2">
+              <Logo size="md" showText={false} src="/pipengine_logo.png" />
               {autoRefresh && (
                 <p className="text-xs text-green-600 dark:text-green-400">
                   Auto-refreshing every {refreshInterval / 60} minutes
@@ -524,7 +524,7 @@ function App() {
             </div>
 
             {/* Center - Global Search */}
-            <div className="max-w-md ml-0 lg:ml-2">
+            <div className="max-w-md ml-0">
               <div className="relative">
                 <input
                   type="text"
