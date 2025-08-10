@@ -62,6 +62,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
 
   // Expandable section states
   const [showMorningBrief, setShowMorningBrief] = useState(true);
+  const [morning, setMorning] = useState(null);
+  const [mbLoading, setMbLoading] = useState(false);
   const [showAllGainers, setShowAllGainers] = useState(false);
   const [showAllLosers, setShowAllLosers] = useState(false);
   const [showAllVolume, setShowAllVolume] = useState(false);
@@ -98,6 +100,18 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
       clearInterval(interval);
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchMB = async () => {
+      try {
+        setMbLoading(true);
+        const res = await fetch(`${API_BASE_URL}/api/morning/brief`);
+        if (res.ok) setMorning(await res.json());
+      } catch (e) {
+      } finally { setMbLoading(false); }
+    };
+    fetchMB();
   }, []);
 
   const fetchMarketData = async () => {
@@ -350,18 +364,96 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
           </button>
         </div>
         {showMorningBrief && (
-          <div id="morning-brief-content" className="pt-2 text-sm text-gray-700 dark:text-gray-300 space-y-2">
-            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
-              <div className="flex items-start space-x-3">
-                <Info className="w-4 h-4 mt-0.5 text-gray-500" />
+          <div id="morning-brief-content" className="pt-2 text-sm text-gray-300 space-y-4">
+            {mbLoading && <div className="text-gray-500">Loading...</div>}
+            {morning && (
+              <>
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Coming soon</div>
-                  <div className="text-gray-600 dark:text-gray-400">
-                    Your curated pre-market summary will appear here. We will add data in the next step.
+                  <h3 className="font-medium mb-2">Global Market Overview</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {morning.global_indices?.map((i) => (
+                      <div key={i.symbol} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2">
+                        <div className="text-xs text-gray-400">{i.name}</div>
+                        <div className="text-sm">{i.price ?? '-'} <span className={i.changePercent>=0? 'text-green-400':'text-red-400'}>({i.changePercent}%)</span></div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            </div>
+                <div>
+                  <h3 className="font-medium mb-2">Futures (Pre-Market)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {morning.futures?.map((f) => (
+                      <div key={f.symbol} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2">
+                        <div className="text-xs text-gray-400">{f.name}</div>
+                        <div className="text-sm">{f.price ?? '-'} <span className={f.changePercent>=0? 'text-green-400':'text-red-400'}>({f.changePercent}%)</span></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">Overnight/Early Headlines</h3>
+                  <ul className="space-y-1 list-disc list-inside">
+                    {morning.early_news?.map((n, idx) => (
+                      <li key={idx}><a href={n.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{n.title}</a> <span className="text-gray-500">— {n.source}</span></li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Earnings Today</h3>
+                    <ul className="text-sm space-y-1">
+                      {morning.earnings_today?.map((e, idx)=> (
+                        <li key={idx} className="text-gray-300">{e.symbol || ''} <span className="text-gray-500">{e.time || ''}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">Economic Calendar</h3>
+                    <ul className="text-sm space-y-1">
+                      {morning.economic_today?.map((e, idx)=> (
+                        <li key={idx} className="text-gray-300">{e.event || ''} <span className="text-gray-500">{e.time || ''}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">Top Gainers/Losers (Pre/Post)</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-gray-400 mb-1">Gainers</div>
+                      <ul className="text-sm space-y-1">
+                        {morning.movers?.gainers?.slice(0,5).map((s)=> (
+                          <li key={s.ticker}>{s.ticker} <span className="text-green-400">{s.changePercent}%</span></li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400 mb-1">Losers</div>
+                      <ul className="text-sm space-y-1">
+                        {morning.movers?.losers?.slice(0,5).map((s)=> (
+                          <li key={s.ticker}>{s.ticker} <span className="text-red-400">{s.changePercent}%</span></li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">Most Talked About (From Headlines)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {morning.trending?.map((t)=> (
+                      <span key={t.ticker} className="px-2 py-1 text-xs rounded-md border border-gray-700">{t.ticker} · {t.mentions}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">Market Score (1–100)</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl font-semibold">{morning.market_score}</div>
+                    <div className="text-xs text-gray-400">Bearish > 50 · Bullish < 50</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

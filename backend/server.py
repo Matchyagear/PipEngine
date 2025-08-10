@@ -570,6 +570,19 @@ def fetch_general_financial_news(limit=20):
         print(f"Error fetching general news: {e}")
         return []
 
+def _pct_change_from_hist(hist):
+    try:
+        if len(hist['Close']) >= 2:
+            cur = float(hist['Close'].iloc[-1])
+            prev = float(hist['Close'].iloc[-2])
+            return (cur - prev) / prev * 100.0 if prev else 0.0
+    except Exception:
+        pass
+    return 0.0
+
+def _recent_hours_iso(hours: int = 12):
+    return (datetime.now() - timedelta(hours=hours)).isoformat()
+
 def fetch_stock_news(ticker, limit=5):
     """Fetch news specific to a stock ticker from multiple sources"""
     try:
@@ -708,6 +721,139 @@ def search_news(query, limit=20):
     except Exception as e:
         print(f"Error searching news: {e}")
         return []
+
+@app.get("/api/morning/brief")
+async def get_morning_brief():
+    """Aggregate data for Morning Brief section: futures, global indices, early news, calendars,
+    movers, trending tickers derived from news, and a 1-100 market score (bearish > 50, bullish < 50)."""
+    try:
+        cache_key = "morning_brief_v1"
+        cached = _cache_get(cache_key)
+        if cached:
+            return cached
+
+        # Futures snapshot
+        futures_map = {
+            "ES=F": "S&P 500 Futures",
+            "NQ=F": "Nasdaq 100 Futures",
+            "YM=F": "Dow Futures",
+            "CL=F": "Crude Oil",
+            "GC=F": "Gold",
+            "DX-Y.NYB": "US Dollar Index",
+            "BTC-USD": "Bitcoin"
+        }
+        futures = []
+        for symbol, name in futures_map.items():
+            try:
+                t = yf.Ticker(symbol)
+                h = t.history(period="2d")
+                change = _pct_change_from_hist(h)
+                price = float(h['Close'].iloc[-1]) if not h.empty else None
+                futures.append({"symbol": symbol, "name": name, "price": price, "changePercent": round(change, 2)})
+            except Exception:
+                continue
+
+        # Global indices
+        global_syms = {
+            "^GSPC": "S&P 500",
+            "^IXIC": "NASDAQ",
+            "^DJI": "Dow",
+            "^FTSE": "FTSE 100",
+            "^GDAXI": "DAX",
+            "^N225": "Nikkei 225",
+            "^HSI": "Hang Seng"
+        }
+        global_indices = []
+        for sym, name in global_syms.items():
+            try:
+                t = yf.Ticker(sym)
+                h = t.history(period="2d")
+                change = _pct_change_from_hist(h)
+                price = float(h['Close'].iloc[-1]) if not h.empty else None
+                global_indices.append({"symbol": sym, "name": name, "price": price, "changePercent": round(change, 2)})
+            except Exception:
+                continue
+
+        # Early headlines (last 12 hours when timestamps available)
+        news = fetch_general_financial_news(limit=30)
+        twelve_hours_ago = datetime.now() - timedelta(hours=12)
+        early_news = []
+        for item in news:
+            ts = item.get('published_at')
+            try:
+                dt = datetime.fromisoformat(ts.replace('Z', '+00:00')) if ts else None
+            except Exception:
+                dt = None
+            if (dt and dt > twelve_hours_ago) or not dt:
+                early_news.append(item)
+        early_news = early_news[:10]
+
+        # Earnings/Economic calendars via Finnhub if available
+        earnings = []
+        economic = []
+        try:
+            if finnhub_client:
+                today = datetime.now().strftime('%Y-%m-%d')
+                cal = finnhub_client.earnings_calendar(_from=today, to=today)
+                earnings = cal.get('earningsCalendar', [])[:20]
+                econ = finnhub_client.economic_calendar(_from=today, to=today)
+                # Finnhub returns a dict with economicCalendar list
+                economic = econ.get('economicCalendar', [])[:20]
+        except Exception as e:
+            print(f"Finnhub calendar error: {e}")
+
+        # Movers
+        movers = await get_market_movers()
+
+        # Trending tickers derived from news headlines
+        import re
+        counts = {}
+        pattern = re.compile(r"\b[A-Z]{1,5}\b")
+        for n in news:
+            text = f"{n.get('title','')} {n.get('description','')}"
+            for m in pattern.findall(text):
+                if len(m) <= 5 and m.isalpha():
+                    counts[m] = counts.get(m, 0) + 1
+        trending = sorted([{ "ticker": k, "mentions": v } for k, v in counts.items()], key=lambda x: x['mentions'], reverse=True)[:10]
+
+        # Market score (bearish > 50, bullish < 50)
+        fut_avg = 0.0
+        if futures:
+            fut_avg = sum(f.get('changePercent', 0.0) for f in futures if isinstance(f.get('changePercent'), (int, float))) / max(len(futures), 1)
+        # Movers polarity
+        g = movers.get('gainers', []) if isinstance(movers, dict) else []
+        l = movers.get('losers', []) if isinstance(movers, dict) else []
+        total = max(len(g) + len(l), 1)
+        losers_share = len(l) / total
+        # Headline sentiment proxy via keyword hits
+        neg_words = ['miss', 'cut', 'down', 'drop', 'loss', 'bear', 'layoff', 'warn']
+        pos_words = ['beat', 'up', 'gain', 'growth', 'bull', 'record', 'raise']
+        neg = sum(1 for n in news if any(w in (n.get('title','') + ' ' + (n.get('description','') or '')).lower() for w in neg_words))
+        pos = sum(1 for n in news if any(w in (n.get('title','') + ' ' + (n.get('description','') or '')).lower() for w in pos_words))
+        total_news = max(neg + pos, 1)
+        neg_ratio = neg / total_news
+
+        score = 50.0
+        score += (-fut_avg) * 6.0  # red futures increase score (bearish)
+        score += (losers_share - 0.5) * 50.0
+        score += (neg_ratio - 0.5) * 30.0
+        score = max(0, min(100, round(score, 1)))
+
+        payload = {
+            "futures": futures,
+            "global_indices": global_indices,
+            "early_news": early_news,
+            "earnings_today": earnings,
+            "economic_today": economic,
+            "movers": movers,
+            "trending": trending,
+            "market_score": score,
+            "timestamp": datetime.now().isoformat()
+        }
+        _cache_set(cache_key, payload)
+        return payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building morning brief: {e}")
 
 def fetch_advanced_stock_data(ticker: str):
     """Fetch comprehensive stock data with advanced technical indicators"""
