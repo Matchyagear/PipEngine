@@ -6,13 +6,13 @@ import React, { useEffect, useMemo, useRef } from 'react';
 const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1M', theme = 'dark', scale = 1 }) => {
     const containerRef = useRef(null);
 
-  // Render the widget at a larger internal height, then scale down to target height
-  const internalHeight = Math.max(40, Math.round(height / Math.max(0.1, scale)));
+    // Render the widget at a larger internal height, then scale down to target height
+    const internalHeight = Math.max(40, Math.round(height / Math.max(0.1, scale)));
 
-  const config = useMemo(() => ({
+    const config = useMemo(() => ({
         symbol: (symbol || 'AAPL').toUpperCase(),
         width: '100%',
-    height: internalHeight,
+        height: internalHeight,
         locale: 'en',
         dateRange,
         colorTheme: theme,
@@ -46,13 +46,13 @@ const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1M', theme = '
         };
     }, [config]);
 
-  return (
-    <div className="w-full overflow-hidden rounded" style={{ height }}>
-      <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-        <div ref={containerRef} style={{ width: '100%', height: internalHeight }} />
-      </div>
-    </div>
-  );
+    return (
+        <div className="w-full overflow-hidden rounded" style={{ height }}>
+            <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+                <div ref={containerRef} style={{ width: '100%', height: internalHeight }} />
+            </div>
+        </div>
+    );
 };
 
 export default TradingViewMiniChart;

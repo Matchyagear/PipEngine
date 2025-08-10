@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Upload, 
-  PieChart, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  Plus,
+  Upload,
+  PieChart,
+  TrendingUp,
+  TrendingDown,
   BarChart3,
   DollarSign,
   Percent,
@@ -98,7 +98,7 @@ const Portfolio = () => {
     try {
       // Fetch current stock price (you'd replace this with actual API call)
       const mockCurrentPrice = Math.random() * 200 + 50; // Mock price for demo
-      
+
       const newPosition = {
         symbol: manualStock.symbol.toUpperCase(),
         companyName: `${manualStock.symbol.toUpperCase()} Company`, // Mock company name
@@ -120,7 +120,7 @@ const Portfolio = () => {
       // Recalculate portfolio totals
       const totalMarketValue = updatedPortfolio.positions.reduce((sum, pos) => sum + pos.marketValue, 0);
       const totalUnrealizedPnL = updatedPortfolio.positions.reduce((sum, pos) => sum + pos.unrealizedPnL, 0);
-      
+
       updatedPortfolio.totalValue = totalMarketValue;
       updatedPortfolio.dayChange = totalUnrealizedPnL;
       updatedPortfolio.dayChangePercent = totalMarketValue > 0 ? (totalUnrealizedPnL / (totalMarketValue - totalUnrealizedPnL)) * 100 : 0;
@@ -183,7 +183,7 @@ const Portfolio = () => {
     // Recalculate totals
     const totalMarketValue = updatedPortfolio.positions.reduce((sum, pos) => sum + pos.marketValue, 0);
     const totalUnrealizedPnL = updatedPortfolio.positions.reduce((sum, pos) => sum + pos.unrealizedPnL, 0);
-    
+
     updatedPortfolio.totalValue = totalMarketValue;
     updatedPortfolio.dayChange = totalUnrealizedPnL;
     updatedPortfolio.dayChangePercent = totalMarketValue > 0 ? (totalUnrealizedPnL / (totalMarketValue - totalUnrealizedPnL)) * 100 : 0;
@@ -412,7 +412,7 @@ const Portfolio = () => {
                     <input
                       type="text"
                       value={manualStock.symbol}
-                      onChange={(e) => setManualStock({...manualStock, symbol: e.target.value})}
+                      onChange={(e) => setManualStock({ ...manualStock, symbol: e.target.value })}
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="AAPL"
                       required
@@ -427,7 +427,7 @@ const Portfolio = () => {
                       <input
                         type="number"
                         value={manualStock.quantity}
-                        onChange={(e) => setManualStock({...manualStock, quantity: e.target.value})}
+                        onChange={(e) => setManualStock({ ...manualStock, quantity: e.target.value })}
                         className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="100"
                         required
@@ -442,7 +442,7 @@ const Portfolio = () => {
                         type="number"
                         step="0.01"
                         value={manualStock.avgCost}
-                        onChange={(e) => setManualStock({...manualStock, avgCost: e.target.value})}
+                        onChange={(e) => setManualStock({ ...manualStock, avgCost: e.target.value })}
                         className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="150.00"
                         required
@@ -457,7 +457,7 @@ const Portfolio = () => {
                     <input
                       type="date"
                       value={manualStock.purchaseDate}
-                      onChange={(e) => setManualStock({...manualStock, purchaseDate: e.target.value})}
+                      onChange={(e) => setManualStock({ ...manualStock, purchaseDate: e.target.value })}
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
@@ -528,7 +528,7 @@ const Portfolio = () => {
                     <input
                       type="text"
                       value={webullCredentials.accountId}
-                      onChange={(e) => setWebullCredentials({...webullCredentials, accountId: e.target.value})}
+                      onChange={(e) => setWebullCredentials({ ...webullCredentials, accountId: e.target.value })}
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Your Webull Account ID"
                       required

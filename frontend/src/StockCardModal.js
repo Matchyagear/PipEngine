@@ -17,7 +17,7 @@ const StockCardModal = ({ isOpen, onClose, stock, aiProvider = 'gemini', onOpenC
           className="absolute inset-0 bg-black bg-opacity-50"
           onClick={onClose}
         />
-        
+
         {/* Modal Content */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -28,15 +28,15 @@ const StockCardModal = ({ isOpen, onClose, stock, aiProvider = 'gemini', onOpenC
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all"
+            className="absolute top-4 right-4 z-10 p-2 text-gray-300 hover:text-white bg-carbon-800 rounded-full shadow-lg hover:shadow-xl transition-all"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Full Stock Card */}
           <div className="p-4">
-            <StockCard 
-              stock={stock} 
+            <StockCard
+              stock={stock}
               aiProvider={aiProvider}
               onOpenChart={onOpenChart}
             />
