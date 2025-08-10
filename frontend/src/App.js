@@ -845,7 +845,7 @@ function App() {
             ) : activeTab === "screener" ? (
               <ScreenerTab />
             ) : activeTab === 'screenerTest' ? (
-              <ScreenerTestTab />
+              <ScreenerTestTab onOpenChart={openChartForStock} />
             ) : (
               <>
                 {/* Enhanced Controls */}

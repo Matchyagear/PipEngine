@@ -614,6 +614,18 @@ const StockCard = ({
             {loadingAI ? 'Loading...' : showAI ? 'Hide AI' : 'AI Insight'}
           </span>
         </button>
+        {onOpenChart && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenChart(stock);
+            }}
+            className="flex items-center justify-center py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            title="Show Chart"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </button>
+        )}
         <a
           href={`https://finviz.com/quote.ashx?t=${stock.ticker}`}
           target="_blank"

@@ -115,7 +115,7 @@ const CriterionRow = ({ item, index, onDragStart, onDragOver, onDrop, onChange }
   );
 };
 
-const ScreenerTestTab = () => {
+const ScreenerTestTab = ({ onOpenChart }) => {
   const [criteria, setCriteria] = useState(defaultCriteria);
   const [dragIndex, setDragIndex] = useState(null);
   const [snapshot, setSnapshot] = useState([]);
@@ -348,11 +348,7 @@ const ScreenerTestTab = () => {
         onClose={() => setShowModal(false)}
         stock={selected}
         aiProvider="gemini"
-        onOpenChart={(s) => {
-          // Navigate to chart tab by setting location hash or open finviz as fallback
-          // For now: open TradingView chart new tab for symbol
-          window.open(`https://www.tradingview.com/chart/?symbol=${(s.ticker || '').toUpperCase()}`, '_blank');
-        }}
+        onOpenChart={(s) => onOpenChart && onOpenChart(s)}
       />
     </div>
   );
