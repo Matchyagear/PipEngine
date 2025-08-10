@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import TradingViewMiniChart from './components/TradingViewMiniChart';
+import TradingViewSymbolOverview from './components/TradingViewSymbolOverview';
 import {
   TrendingUp,
   TrendingDown,
@@ -657,10 +657,10 @@ const StockCard = ({
         )}
       </div>
 
-      {/* TradingView Mini Chart (inline) */}
+      {/* TradingView Symbol Overview (compact) */}
       {stock.ticker && (
         <div className="mb-4">
-          <TradingViewMiniChart symbol={stock.ticker} height={120} />
+          <TradingViewSymbolOverview symbol={stock.ticker} height={90} />
         </div>
       )}
 
