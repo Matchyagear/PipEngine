@@ -274,7 +274,7 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
 
       {/* TradingView Mini Chart (requested) */}
       <div className="mt-2">
-        <TradingViewMiniChart symbol={stock.ticker} height={64} />
+        <TradingViewMiniChart symbol={stock.ticker} height={48} />
       </div>
 
       {/* Click indicator */}
