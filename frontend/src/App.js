@@ -511,8 +511,8 @@ function App() {
     <div className={`min-h-screen ${darkMode ? 'dark' : ''} bg-carbon-900 text-gray-100 transition-colors carbon`}>
       {/* Enhanced Header - Made Sticky/Floating */}
       <header className="sticky top-0 z-50 bg-carbon-800/90 border-b border-carbon-700 shadow-sm backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto pl-4 pr-2 sm:pl-4 sm:pr-4 lg:pl-4 lg:pr-2 py-4">
-          <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between lg:justify-start">
+        <div className="w-full px-2 sm:px-3 lg:px-4 py-3">
+          <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-start">
             {/* Left Side - Logo and Title */}
             <div className="flex items-center space-x-3">
               <Logo size="lg" showText={true} src="/pipengine_logo.png" />
@@ -524,7 +524,7 @@ function App() {
             </div>
 
             {/* Center - Global Search */}
-            <div className="max-w-md lg:ml-6">
+            <div className="max-w-md ml-2 lg:ml-4">
               <div className="relative">
                 <input
                   type="text"
@@ -656,7 +656,7 @@ function App() {
             </div>
 
             {/* Right Side - Controls */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 ml-auto">
               {/* AI Chat Button */}
               <button
                 onClick={() => setShowAIChat(!showAIChat)}
