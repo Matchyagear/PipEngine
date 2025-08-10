@@ -1,12 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  ExternalLink
-} from 'lucide-react';
-import TradingViewSymbolOverview from './components/TradingViewSymbolOverview';
+import TradingViewMiniChart from './components/TradingViewMiniChart';
 
 const IndexCard = ({ index, onClick }) => {
   const getChangeColor = (change) => {
@@ -26,9 +20,9 @@ const IndexCard = ({ index, onClick }) => {
     const s = (rawSymbol || '').toUpperCase();
     switch (s) {
       case '^GSPC':
-        return { display: 'SPX', tv: 'SP:SPX' };
+        return { display: 'SPY', tv: 'SPY' };
       case '^DJI':
-        return { display: 'DJI', tv: 'DJ:DJI' };
+        return { display: 'US30', tv: 'FOREXCOM:US30' };
       case '^IXIC':
         return { display: 'NDQ', tv: 'NASDAQ:IXIC' };
       case '^RUT':
@@ -49,7 +43,7 @@ const IndexCard = ({ index, onClick }) => {
       onClick={onClick}
       style={{ height: 140 }}
     >
-      <TradingViewSymbolOverview symbol={getDisplayAndTvSymbols(index.symbol).tv} height={140} />
+      <TradingViewMiniChart symbol={getDisplayAndTvSymbols(index.symbol).tv} height={140} />
     </motion.div>
   );
 };
