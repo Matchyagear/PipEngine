@@ -373,8 +373,8 @@ const WatchlistTab = ({
               <button
                 onClick={() => setViewMode('mini')}
                 className={`p-2 rounded transition-colors ${viewMode === 'mini'
-                    ? 'bg-white dark:bg-gray-600 shadow-sm'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-white dark:bg-gray-600 shadow-sm'
+                  : 'hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 title="Mini Cards"
               >
@@ -383,8 +383,8 @@ const WatchlistTab = ({
               <button
                 onClick={() => setViewMode('full')}
                 className={`p-2 rounded transition-colors ${viewMode === 'full'
-                    ? 'bg-white dark:bg-gray-600 shadow-sm'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-white dark:bg-gray-600 shadow-sm'
+                  : 'hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 title="Full Cards"
               >
@@ -462,6 +462,7 @@ const WatchlistTab = ({
                     key={stock.ticker}
                     stock={stock}
                     aiProvider={aiProvider}
+                    onOpenChart={() => onOpenChart(stock)}
                   />
                 ))}
               </div>
@@ -556,6 +557,7 @@ const WatchlistTab = ({
         onClose={closeStockModal}
         stock={selectedMiniStock}
         aiProvider={aiProvider}
+        onOpenChart={onOpenChart}
       />
     </div>
   );

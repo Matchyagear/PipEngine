@@ -812,6 +812,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
         onClose={closeStockModal}
         stock={selectedMiniStock}
         aiProvider="gemini"
+        onOpenChart={onOpenChart}
       />
     </div>
   );
