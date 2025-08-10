@@ -543,22 +543,7 @@ function App() {
                 </p>
               )}
               {showLogoMenu && (
-                <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
-                  <div className="py-1">
-                    <button onClick={() => { setActiveTab('home'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Home</button>
-                    <button onClick={() => { setActiveTab('shadow'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Shadow's Picks</button>
-                    <button onClick={() => { setActiveTab('screener'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Screener</button>
-                    <button onClick={() => { setActiveTab('watchlist'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Watchlist</button>
-                    <button onClick={() => { setActiveTab('portfolio'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Portfolio</button>
-                    <button onClick={() => { setActiveTab('news'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">News</button>
-                    <button onClick={() => { setActiveTab('chart'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Chart</button>
-                  </div>
-                  <div className="border-t border-gray-700" />
-                  <div className="py-1">
-                    <button onClick={() => { setDarkMode((d) => !d); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Toggle Dark Mode</button>
-                    <button onClick={() => { setShowSettings(true); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Settings</button>
-                  </div>
-                </div>
+                <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50" />
               )}
             </div>
 
