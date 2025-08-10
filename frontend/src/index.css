@@ -18,6 +18,10 @@ body {
     @apply bg-black border border-black rounded-xl shadow-glossy;
 }
 
+.card-panel {
+    @apply bg-carbon-900 border border-carbon-800;
+}
+
 .panel-accent {
     @apply bg-black border border-black rounded-xl shadow-glossy;
 }
