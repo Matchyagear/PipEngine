@@ -1422,7 +1422,12 @@ def basic_quality_filter(tickers, max_stocks=100):
 @app.get("/api/stocks/{ticker}")
 async def get_stock_detail(ticker: str, ai_provider: str = "gemini"):
     """Get detailed information for a specific stock with AI analysis"""
-    stock_data = fetch_advanced_stock_data(ticker.upper())
+    # Quick path: try cache first for snappy UX on header search
+    cached = _adv_cache_get(ticker.upper())
+    if cached:
+        stock_data = cached
+    else:
+        stock_data = fetch_advanced_stock_data(ticker.upper())
     if not stock_data:
         raise HTTPException(status_code=404, detail="Stock not found")
 

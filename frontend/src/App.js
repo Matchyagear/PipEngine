@@ -76,7 +76,7 @@ function App() {
   const [chartSymbol, setChartSymbol] = useState('AAPL');
   const [showLogoMenu, setShowLogoMenu] = useState(false);
   const logoMenuRef = useRef(null);
-  
+
 
   // Search functionality
   const [searchTicker, setSearchTicker] = useState('');
@@ -286,21 +286,24 @@ function App() {
   };
 
   const searchStock = async () => {
-    if (!searchTicker.trim()) return;
+    const symbol = searchTicker.trim().toUpperCase();
+    if (!symbol) return;
 
     try {
+      // Instant feedback: show a stub result while fetching full details
       setIsSearching(true);
-      const response = await fetch(`${API_BASE_URL}/api/stocks/${searchTicker.toUpperCase()}`);
+      setSearchResult({ ticker: symbol, companyName: 'Loading…', rank: 1 });
+      setShowSearchResult(true);
+      setActiveTab('search');
+
+      const response = await fetch(`${API_BASE_URL}/api/stocks/${symbol}`);
       const data = await response.json();
 
       if (response.ok) {
-        // Add rank as 1 for search results
         data.rank = 1;
         setSearchResult(data);
-        setShowSearchResult(true);
-        setActiveTab('search');
       } else {
-        alert(`Stock ${searchTicker.toUpperCase()} not found or error occurred`);
+        alert(`Stock ${symbol} not found or error occurred`);
       }
     } catch (error) {
       console.error('Error searching stock:', error);
@@ -726,9 +729,13 @@ function App() {
                   onClick={searchStock}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  {isSearching ? (
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
@@ -881,7 +888,7 @@ function App() {
       {/* Main Content */}
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        
+
 
         {/* News Search Box (only show on news tab) */}
         {!isShadowbotRoute && activeTab === 'news' && (
