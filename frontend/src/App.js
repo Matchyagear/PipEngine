@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -73,6 +73,8 @@ function App() {
   const [showMobileView, setShowMobileView] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [chartSymbol, setChartSymbol] = useState('AAPL');
+  const [showLogoMenu, setShowLogoMenu] = useState(false);
+  const logoMenuRef = useRef(null);
 
   // Search functionality
   const [searchTicker, setSearchTicker] = useState('');
@@ -126,6 +128,17 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Close logo dropdown when clicking outside
+  useEffect(() => {
+    const handleDocumentClick = (event) => {
+      if (logoMenuRef.current && !logoMenuRef.current.contains(event.target)) {
+        setShowLogoMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
+  }, []);
 
   const loadUserPreferences = async () => {
     try {
@@ -513,13 +526,39 @@ function App() {
       <header className="sticky top-0 z-50 bg-carbon-800/90 border-b border-carbon-700 shadow-sm backdrop-blur-sm">
         <div className="w-full px-0 py-3">
           <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-start">
-            {/* Left Side - Logo and Title */}
-            <div className="flex items-center space-x-2">
-              <Logo size="lg" showText={false} src="/pipengine_logo.png" />
+            {/* Left Side - Logo and Title with dropdown */}
+            <div ref={logoMenuRef} className="relative flex items-center space-x-2">
+              <button
+                onClick={() => setShowLogoMenu((v) => !v)}
+                className="rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-haspopup="menu"
+                aria-expanded={showLogoMenu}
+                title="Open menu"
+              >
+                <Logo size="lg" showText={false} src="/pipengine_logo.png" />
+              </button>
               {autoRefresh && (
                 <p className="text-xs text-green-600 dark:text-green-400">
                   Auto-refreshing every {refreshInterval / 60} minutes
                 </p>
+              )}
+              {showLogoMenu && (
+                <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
+                  <div className="py-1">
+                    <button onClick={() => { setActiveTab('home'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Home</button>
+                    <button onClick={() => { setActiveTab('shadow'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Shadow's Picks</button>
+                    <button onClick={() => { setActiveTab('screener'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Screener</button>
+                    <button onClick={() => { setActiveTab('watchlist'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Watchlist</button>
+                    <button onClick={() => { setActiveTab('portfolio'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Portfolio</button>
+                    <button onClick={() => { setActiveTab('news'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">News</button>
+                    <button onClick={() => { setActiveTab('chart'); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Chart</button>
+                  </div>
+                  <div className="border-t border-gray-700" />
+                  <div className="py-1">
+                    <button onClick={() => { setDarkMode((d) => !d); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Toggle Dark Mode</button>
+                    <button onClick={() => { setShowSettings(true); setShowLogoMenu(false); }} className="w-full text-left px-3 py-2 hover:bg-gray-800">Settings</button>
+                  </div>
+                </div>
               )}
             </div>
 
