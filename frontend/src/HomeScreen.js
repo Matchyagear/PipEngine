@@ -503,7 +503,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
         </div>
 
         {/* Top Losers with Expand Feature */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div className="panel p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <TrendingDown className="w-5 h-5 text-red-600" />
