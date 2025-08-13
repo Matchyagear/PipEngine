@@ -45,41 +45,13 @@ const WatchlistTab = ({
 
   // Create default watchlist if none exists
   useEffect(() => {
-    const createDefaultWatchlist = async () => {
-      if (watchlists.length === 0) {
-        try {
-          console.log('Creating default watchlist...');
-          const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              name: 'My Watchlist',
-              tickers: ['AAPL', 'MSFT', 'GOOGL', 'TSLA']
-            })
-          });
-
-          if (response.ok) {
-            const newWatchlist = await response.json();
-            console.log('Default watchlist created:', newWatchlist);
-            setWatchlists([newWatchlist]);
-            setSelectedWatchlist(newWatchlist);
-          } else {
-            console.error('Failed to create default watchlist:', response.status);
-          }
-        } catch (error) {
-          console.error('Error creating default watchlist:', error);
-        }
-      } else {
-        // Set the first watchlist as selected by default
-        console.log('Using existing watchlist:', watchlists[0]);
-        setSelectedWatchlist(watchlists[0]);
-      }
-    };
-
-    createDefaultWatchlist();
-  }, [watchlists, setWatchlists]);
+    // If no watchlists in memory, prompt user via modal from parent through onNewWatchlist
+    if (watchlists.length === 0) {
+      setSelectedWatchlist(null);
+    } else if (!selectedWatchlist) {
+      setSelectedWatchlist(watchlists[0]);
+    }
+  }, [watchlists]);
 
   // Fetch stocks for selected watchlist
   useEffect(() => {
@@ -403,7 +375,7 @@ const WatchlistTab = ({
             <span className="ml-3 text-gray-600 dark:text-gray-400">Loading stocks...</span>
           </div>
         ) : watchlistStocks.length === 0 ? (
-          <div className="text-center py-16">
+            <div className="text-center py-16">
             <Star className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Your watchlist is empty
@@ -412,7 +384,7 @@ const WatchlistTab = ({
               Add some stocks to "{selectedWatchlist?.name}" to get started
             </p>
             <button
-              onClick={onNewWatchlist}
+              onClick={() => onNewWatchlist('AAPL, MSFT, GOOGL, TSLA')}
               className="inline-flex items-center space-x-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />

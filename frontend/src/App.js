@@ -66,6 +66,7 @@ function App() {
   const [aiProvider, setAiProvider] = useState('gemini');
   const [watchlists, setWatchlists] = useState([]);
   const [currentWatchlist, setCurrentWatchlist] = useState(null);
+  const [watchlistsBackendAvailable, setWatchlistsBackendAvailable] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showWatchlistModal, setShowWatchlistModal] = useState(false);
   const [newWatchlistName, setNewWatchlistName] = useState('');
@@ -155,6 +156,46 @@ function App() {
     }
   };
 
+  // Local watchlist helpers (fallback when backend is disabled)
+  const generateLocalId = () => {
+    try { return crypto.randomUUID(); } catch { return `wl_${Date.now()}_${Math.floor(Math.random()*1e6)}`; }
+  };
+  const loadLocalWatchlists = () => {
+    try {
+      const raw = localStorage.getItem('watchlists');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  };
+  const saveLocalWatchlists = (lists) => {
+    try { localStorage.setItem('watchlists', JSON.stringify(lists)); } catch {}
+  };
+  const createLocalWatchlist = (name, tickers) => {
+    const wl = {
+      id: generateLocalId(),
+      name,
+      tickers,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      source: 'local'
+    };
+    const next = [wl, ...watchlists];
+    setWatchlists(next);
+    saveLocalWatchlists(next);
+    return wl;
+  };
+  const deleteLocalWatchlist = (watchlistId) => {
+    const next = watchlists.filter(w => w.id !== watchlistId);
+    setWatchlists(next);
+    saveLocalWatchlists(next);
+  };
+  const updateLocalWatchlist = (watchlistId, name, tickers) => {
+    const next = watchlists.map(w => w.id === watchlistId ? { ...w, name, tickers, updated_at: new Date().toISOString(), source: 'local' } : w);
+    setWatchlists(next);
+    saveLocalWatchlists(next);
+    return next.find(w => w.id === watchlistId);
+  };
+
   const saveUserPreferences = async () => {
     try {
       await fetch(`${API_BASE_URL}/api/preferences`, {
@@ -198,10 +239,24 @@ function App() {
   const fetchWatchlists = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/watchlists`);
+      if (!response.ok) {
+        // Backend unavailable → fallback to local
+        setWatchlistsBackendAvailable(false);
+        setWatchlists(loadLocalWatchlists());
+        return;
+      }
       const data = await response.json();
+      if (data && data.message && String(data.message).toLowerCase().includes('watchlists disabled')) {
+        setWatchlistsBackendAvailable(false);
+        setWatchlists(loadLocalWatchlists());
+        return;
+      }
+      setWatchlistsBackendAvailable(true);
       setWatchlists(data.watchlists || []);
     } catch (error) {
       console.error('Error fetching watchlists:', error);
+      setWatchlistsBackendAvailable(false);
+      setWatchlists(loadLocalWatchlists());
     }
   };
 
@@ -225,25 +280,38 @@ function App() {
         .split(',')
         .map(t => t.trim().toUpperCase())
         .filter(Boolean);
-      const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newWatchlistName.trim(), tickers })
-      });
+      if (!watchlistsBackendAvailable) {
+        createLocalWatchlist(newWatchlistName.trim(), tickers);
+      } else {
+        const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newWatchlistName.trim(), tickers })
+        });
 
-      if (!response.ok) {
-        const text = await response.text();
-        alert(`Failed to create watchlist (${response.status}). ${text || ''}`);
-        return;
+        if (!response.ok) {
+          // Fallback to local when backend rejects (e.g., 503)
+          setWatchlistsBackendAvailable(false);
+          createLocalWatchlist(newWatchlistName.trim(), tickers);
+        } else {
+          await fetchWatchlists();
+        }
       }
 
       setNewWatchlistName('');
       setNewWatchlistTickers('');
       setShowWatchlistModal(false);
-      fetchWatchlists();
     } catch (error) {
       console.error('Error creating watchlist:', error);
-      alert('Error creating watchlist. Please try again.');
+      // Final fallback: local
+      const tickers = newWatchlistTickers
+        .split(',')
+        .map(t => t.trim().toUpperCase())
+        .filter(Boolean);
+      createLocalWatchlist(newWatchlistName.trim(), tickers);
+      setNewWatchlistName('');
+      setNewWatchlistTickers('');
+      setShowWatchlistModal(false);
     } finally {
       setIsCreatingWatchlist(false);
     }
@@ -251,15 +319,23 @@ function App() {
 
   const deleteWatchlist = async (watchlistId) => {
     try {
-      await fetch(`${API_BASE_URL}/api/watchlists/${watchlistId}`, {
-        method: 'DELETE'
-      });
-      fetchWatchlists();
+      if (!watchlistsBackendAvailable) {
+        deleteLocalWatchlist(watchlistId);
+      } else {
+        const resp = await fetch(`${API_BASE_URL}/api/watchlists/${watchlistId}`, { method: 'DELETE' });
+        if (!resp.ok) {
+          setWatchlistsBackendAvailable(false);
+          deleteLocalWatchlist(watchlistId);
+        } else {
+          fetchWatchlists();
+        }
+      }
       if (currentWatchlist && currentWatchlist.id === watchlistId) {
         setCurrentWatchlist(null);
       }
     } catch (error) {
       console.error('Error deleting watchlist:', error);
+      deleteLocalWatchlist(watchlistId);
     }
   };
 
