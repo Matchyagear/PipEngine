@@ -183,7 +183,9 @@ function App() {
         url = `${API_BASE_URL}/api/watchlists/${currentWatchlist.id}/scan`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: currentWatchlist ? 'POST' : 'GET'
+      });
       const data = await response.json();
       setStocks(data.stocks || []);
     } catch (error) {
@@ -213,28 +215,37 @@ function App() {
     }
   };
 
+  const [isCreatingWatchlist, setIsCreatingWatchlist] = useState(false);
   const createWatchlist = async () => {
-    if (!newWatchlistName || !newWatchlistTickers) return;
+    if (!newWatchlistName || !newWatchlistTickers || isCreatingWatchlist) return;
 
     try {
-      const tickers = newWatchlistTickers.split(',').map(t => t.trim().toUpperCase());
+      setIsCreatingWatchlist(true);
+      const tickers = newWatchlistTickers
+        .split(',')
+        .map(t => t.trim().toUpperCase())
+        .filter(Boolean);
       const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newWatchlistName,
-          tickers: tickers
-        })
+        body: JSON.stringify({ name: newWatchlistName.trim(), tickers })
       });
 
-      if (response.ok) {
-        setNewWatchlistName('');
-        setNewWatchlistTickers('');
-        setShowWatchlistModal(false);
-        fetchWatchlists();
+      if (!response.ok) {
+        const text = await response.text();
+        alert(`Failed to create watchlist (${response.status}). ${text || ''}`);
+        return;
       }
+
+      setNewWatchlistName('');
+      setNewWatchlistTickers('');
+      setShowWatchlistModal(false);
+      fetchWatchlists();
     } catch (error) {
       console.error('Error creating watchlist:', error);
+      alert('Error creating watchlist. Please try again.');
+    } finally {
+      setIsCreatingWatchlist(false);
     }
   };
 
@@ -980,6 +991,7 @@ function App() {
         setNewWatchlistName={setNewWatchlistName}
         newWatchlistTickers={newWatchlistTickers}
         setNewWatchlistTickers={setNewWatchlistTickers}
+        isSubmitting={isCreatingWatchlist}
       />
 
       {/* Stock Detail Modal */}

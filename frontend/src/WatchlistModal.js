@@ -8,7 +8,8 @@ const WatchlistModal = ({
   newWatchlistName,
   setNewWatchlistName,
   newWatchlistTickers,
-  setNewWatchlistTickers 
+  setNewWatchlistTickers,
+  isSubmitting = false
 }) => {
   const nameInputRef = useRef(null);
   const tickersInputRef = useRef(null);
@@ -100,9 +101,10 @@ const WatchlistModal = ({
             <div className="flex space-x-2">
               <button
                 type="submit"
-                className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg btn-primary"
+                disabled={isSubmitting}
+                className={`flex-1 py-2 px-4 rounded-lg btn-primary text-white ${isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
-                Create Watchlist
+                {isSubmitting ? 'Creating…' : 'Create Watchlist'}
               </button>
               <button
                 type="button"

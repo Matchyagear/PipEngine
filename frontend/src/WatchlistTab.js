@@ -56,7 +56,7 @@ const WatchlistTab = ({
             },
             body: JSON.stringify({
               name: 'My Watchlist',
-              tickers: 'AAPL, MSFT, GOOGL, TSLA' // Add some default tickers
+              tickers: ['AAPL', 'MSFT', 'GOOGL', 'TSLA']
             })
           });
 
