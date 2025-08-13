@@ -1044,6 +1044,9 @@ def _adv_cache_set(ticker: str, data):
         'timestamp': datetime.now().timestamp()
     }
 
+class BatchTickers(BaseModel):
+    tickers: List[str]
+
 @lru_cache(maxsize=1000)
 def get_cached_stock_info(ticker: str):
     """Cached basic stock info to reduce API calls"""
@@ -1451,6 +1454,54 @@ async def get_stock_detail(ticker: str, ai_provider: str = "gemini"):
 
     return stock_data
 
+def _fetch_stock_with_cache(symbol: str):
+    """Internal helper to fetch stock using per-ticker cache."""
+    symbol = symbol.upper()
+    cached = _adv_cache_get(symbol)
+    if cached:
+        return cached
+    data = fetch_advanced_stock_data(symbol)
+    if data:
+        _adv_cache_set(symbol, data)
+    return data
+
+@app.post("/api/stocks/batch")
+async def get_stocks_batch(payload: BatchTickers):
+    """Return advanced stock data for many tickers quickly (no AI)."""
+    if not payload or not payload.tickers:
+        return {"stocks": []}
+
+    # Clean and dedupe tickers
+    cleaned = []
+    seen = set()
+    for t in payload.tickers:
+        if not isinstance(t, str):
+            continue
+        s = t.split(":")[-1].strip().upper()
+        if not s:
+            continue
+        if s not in seen:
+            seen.add(s)
+            cleaned.append(s)
+
+    # Use a small thread pool for I/O-bound yfinance calls
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(_fetch_stock_with_cache, s) for s in cleaned[:200]]
+        for fut in concurrent.futures.as_completed(futures):
+            try:
+                data = fut.result()
+                if data:
+                    results.append(data)
+            except Exception:
+                continue
+
+    # Sort by score and assign ranks
+    results.sort(key=lambda x: x.get('score', 0), reverse=True)
+    for i, stock in enumerate(results):
+        stock['rank'] = i + 1
+    return {"stocks": results}
+
 @app.get("/api/stocks/{ticker}/finviz")
 async def get_finviz_urls(ticker: str):
     """Get Finviz chart and page URLs for a stock"""
@@ -1522,33 +1573,13 @@ async def delete_watchlist(watchlist_id: str):
 
 @app.post("/api/watchlists/{watchlist_id}/scan")
 async def scan_watchlist(watchlist_id: str):
-    """Scan stocks in a specific watchlist"""
+    """Scan stocks in a specific watchlist (fast, cached)."""
     watchlist = watchlists_collection.find_one({"id": watchlist_id})
     if not watchlist:
         raise HTTPException(status_code=404, detail="Watchlist not found")
 
-    stocks_data = []
-
-    for ticker in watchlist['tickers']:
-        try:
-            # Parse ticker to handle exchange prefixes like "NASDAQ:XCUR" -> "XCUR"
-            clean_ticker = ticker.split(':')[-1].upper() if ':' in ticker else ticker.upper()
-            print(f"Processing ticker: {ticker} -> {clean_ticker}")
-
-            stock_data = fetch_advanced_stock_data(clean_ticker)
-            if stock_data:
-                stocks_data.append(stock_data)
-                await asyncio.sleep(0.1)  # Rate limiting
-        except Exception as e:
-            print(f"Skipping {ticker}: {str(e)}")
-            continue
-
-    # Sort by score and assign ranks
-    stocks_data.sort(key=lambda x: x['score'], reverse=True)
-    for i, stock in enumerate(stocks_data):
-        stock['rank'] = i + 1
-
-    return {"stocks": stocks_data, "watchlist_name": watchlist['name']}
+    batch = await get_stocks_batch(BatchTickers(tickers=watchlist.get('tickers', [])))
+    return {"stocks": batch["stocks"], "watchlist_name": watchlist.get('name', '')}
 
 # User Preferences
 @app.get("/api/preferences")

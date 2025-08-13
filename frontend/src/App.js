@@ -158,7 +158,7 @@ function App() {
 
   // Local watchlist helpers (fallback when backend is disabled)
   const generateLocalId = () => {
-    try { return crypto.randomUUID(); } catch { return `wl_${Date.now()}_${Math.floor(Math.random()*1e6)}`; }
+    try { return crypto.randomUUID(); } catch { return `wl_${Date.now()}_${Math.floor(Math.random() * 1e6)}`; }
   };
   const loadLocalWatchlists = () => {
     try {
@@ -168,7 +168,7 @@ function App() {
     } catch { return []; }
   };
   const saveLocalWatchlists = (lists) => {
-    try { localStorage.setItem('watchlists', JSON.stringify(lists)); } catch {}
+    try { localStorage.setItem('watchlists', JSON.stringify(lists)); } catch { }
   };
   const createLocalWatchlist = (name, tickers) => {
     const wl = {
@@ -228,7 +228,10 @@ function App() {
         method: currentWatchlist ? 'POST' : 'GET'
       });
       const data = await response.json();
-      setStocks(data.stocks || []);
+      // On mobile, render fewer cards initially
+      const all = data.stocks || [];
+      const isMobile = window.innerWidth < 768;
+      setStocks(isMobile ? all.slice(0, 24) : all);
     } catch (error) {
       console.error('Error fetching stocks:', error);
     } finally {

@@ -116,26 +116,27 @@ const WatchlistTab = ({
         return;
       }
 
-      const stockPromises = tickers.map(async (ticker) => {
-        try {
-          console.log(`Fetching data for ${ticker}...`);
-          const response = await fetch(`${API_BASE_URL}/api/stocks/${ticker}`);
-
-          if (!response.ok) {
-            console.error(`Failed to fetch ${ticker}: ${response.status}`);
-            return null;
-          }
-
-          const stockData = await response.json();
-          console.log(`Successfully fetched ${ticker}:`, stockData.ticker);
-          return stockData;
-        } catch (error) {
-          console.error(`Error fetching ${ticker}:`, error);
-          return null;
-        }
+      // Use fast batch endpoint for speed
+      const resp = await fetch(`${API_BASE_URL}/api/stocks/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers })
       });
-
-      const stocks = await Promise.all(stockPromises);
+      let stocks = [];
+      if (resp.ok) {
+        const data = await resp.json();
+        stocks = data.stocks || [];
+      } else {
+        // Fallback to per-ticker fetch
+        const stockPromises = tickers.map(async (ticker) => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/stocks/${ticker}`);
+            if (!response.ok) return null;
+            return await response.json();
+          } catch { return null; }
+        });
+        stocks = await Promise.all(stockPromises);
+      }
       const validStocks = stocks.filter(stock => stock !== null);
       console.log('Valid stocks found:', validStocks.length);
       console.log('Stock tickers:', validStocks.map(s => s.ticker));
@@ -375,7 +376,7 @@ const WatchlistTab = ({
             <span className="ml-3 text-gray-600 dark:text-gray-400">Loading stocks...</span>
           </div>
         ) : watchlistStocks.length === 0 ? (
-            <div className="text-center py-16">
+          <div className="text-center py-16">
             <Star className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Your watchlist is empty
@@ -418,7 +419,7 @@ const WatchlistTab = ({
             {/* Stock Cards */}
             {viewMode === 'mini' ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {watchlistStocks.map((stock) => (
+                {watchlistStocks.slice(0, 24).map((stock) => (
                   <MiniStockCard
                     key={stock.ticker}
                     stock={stock}
@@ -426,10 +427,20 @@ const WatchlistTab = ({
                     onOpenChart={() => onOpenChart(stock)}
                   />
                 ))}
+                {watchlistStocks.length > 24 && (
+                  <div className="col-span-full flex justify-center mt-4">
+                    <button
+                      onClick={() => setWatchlistStocks(watchlistStocks)}
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                    >
+                      Load more
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {watchlistStocks.map((stock) => (
+                {watchlistStocks.slice(0, 18).map((stock) => (
                   <StockCard
                     key={stock.ticker}
                     stock={stock}
@@ -437,6 +448,16 @@ const WatchlistTab = ({
                     onOpenChart={() => onOpenChart(stock)}
                   />
                 ))}
+                {watchlistStocks.length > 18 && (
+                  <div className="col-span-full flex justify-center mt-4">
+                    <button
+                      onClick={() => setWatchlistStocks(watchlistStocks)}
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                    >
+                      Load more
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </>
