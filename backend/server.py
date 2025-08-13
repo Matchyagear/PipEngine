@@ -69,6 +69,7 @@ else:
         alerts_collection = db.alerts
         user_preferences_collection = db.user_preferences
         users_collection = db.users
+        portfolios_collection = db.portfolios
         strategies_collection = db.shadowbot_strategies
         print("✅ MongoDB connected successfully")
     except Exception as e:
@@ -80,6 +81,7 @@ else:
         alerts_collection = None
         user_preferences_collection = None
         users_collection = None
+        portfolios_collection = None
         strategies_collection = None
 
 # Initialize API clients
@@ -1578,27 +1580,47 @@ async def get_finviz_urls(ticker: str):
 
 # Watchlist Management
 @app.get("/api/watchlists")
-async def get_watchlists():
-    """Get all user watchlists"""
+async def get_watchlists(authorization: Optional[str] = None):
+    """Get all user watchlists for current user (JWT)"""
     if watchlists_collection is None:
         return {"watchlists": [], "message": "MongoDB not available - watchlists disabled"}
 
+    user_id = None
+    if authorization and authorization.lower().startswith('bearer '):
+        token = authorization.split(' ',1)[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get('sub')
+        except JWTError:
+            pass
+
+    query = {"user_id": user_id} if user_id else {}
+
     watchlists = []
-    for doc in watchlists_collection.find():
+    for doc in watchlists_collection.find(query):
         doc['_id'] = str(doc['_id'])
         watchlists.append(doc)
     return {"watchlists": watchlists}
 
 @app.post("/api/watchlists")
-async def create_watchlist(watchlist: CreateWatchlist):
+async def create_watchlist(watchlist: CreateWatchlist, authorization: Optional[str] = None):
     """Create a new watchlist"""
     if watchlists_collection is None:
         raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+
+    user_id = None
+    if authorization and authorization.lower().startswith('bearer '):
+        try:
+            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get('sub')
+        except JWTError:
+            pass
 
     watchlist_doc = {
         "id": str(uuid.uuid4()),
         "name": watchlist.name,
         "tickers": watchlist.tickers,
+        "user_id": user_id,
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     }
@@ -1608,7 +1630,7 @@ async def create_watchlist(watchlist: CreateWatchlist):
     return watchlist_doc
 
 @app.put("/api/watchlists/{watchlist_id}")
-async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist):
+async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist, authorization: Optional[str] = None):
     """Update an existing watchlist"""
     update_doc = {
         "name": watchlist.name,
@@ -1616,8 +1638,16 @@ async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist):
         "updated_at": datetime.now()
     }
 
+    query = {"id": watchlist_id}
+    if authorization and authorization.lower().startswith('bearer '):
+        try:
+            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            query["user_id"] = payload.get('sub')
+        except JWTError:
+            pass
+
     result = watchlists_collection.update_one(
-        {"id": watchlist_id},
+        query,
         {"$set": update_doc}
     )
 
@@ -1627,9 +1657,16 @@ async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist):
     return {"message": "Watchlist updated successfully"}
 
 @app.delete("/api/watchlists/{watchlist_id}")
-async def delete_watchlist(watchlist_id: str):
+async def delete_watchlist(watchlist_id: str, authorization: Optional[str] = None):
     """Delete a watchlist"""
-    result = watchlists_collection.delete_one({"id": watchlist_id})
+    query = {"id": watchlist_id}
+    if authorization and authorization.lower().startswith('bearer '):
+        try:
+            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            query["user_id"] = payload.get('sub')
+        except JWTError:
+            pass
+    result = watchlists_collection.delete_one(query)
 
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Watchlist not found")
@@ -1637,9 +1674,16 @@ async def delete_watchlist(watchlist_id: str):
     return {"message": "Watchlist deleted successfully"}
 
 @app.post("/api/watchlists/{watchlist_id}/scan")
-async def scan_watchlist(watchlist_id: str):
+async def scan_watchlist(watchlist_id: str, authorization: Optional[str] = None):
     """Scan stocks in a specific watchlist (fast, cached)."""
-    watchlist = watchlists_collection.find_one({"id": watchlist_id})
+    query = {"id": watchlist_id}
+    if authorization and authorization.lower().startswith('bearer '):
+        try:
+            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            query["user_id"] = payload.get('sub')
+        except JWTError:
+            pass
+    watchlist = watchlists_collection.find_one(query)
     if not watchlist:
         raise HTTPException(status_code=404, detail="Watchlist not found")
 

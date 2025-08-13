@@ -46,6 +46,7 @@ import WatchlistTab from './WatchlistTab';
 import ChartTab from './ChartTab';
 import ScreenerTestTab from "./ScreenerTestTab";
 import Logo from "./components/Logo";
+import AuthPage from "./components/AuthPage";
 import ShadowbotPage from "./ShadowbotPage";
 import "./App.css";
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
@@ -162,14 +163,14 @@ function App() {
 
   const authHeaders = () => (authToken ? { Authorization: `Bearer ${authToken}` } : {});
 
-  const handleAuthSuccess = (data) => {
+  const handleAuthSuccess = (data, { remember } = { remember: true }) => {
     if (data?.token) {
       setAuthToken(data.token);
-      localStorage.setItem('authToken', data.token);
+      if (remember) localStorage.setItem('authToken', data.token);
     }
     if (data?.user) {
       setAuthUser(data.user);
-      localStorage.setItem('authUser', JSON.stringify(data.user));
+      if (remember) localStorage.setItem('authUser', JSON.stringify(data.user));
     }
   };
 
@@ -258,7 +259,9 @@ function App() {
 
   const fetchWatchlists = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/watchlists`);
+      const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
+        headers: { ...authHeaders() }
+      });
       if (!response.ok) {
         // Backend unavailable → fallback to local
         setWatchlistsBackendAvailable(false);
@@ -282,7 +285,7 @@ function App() {
 
   const fetchAlerts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/alerts`);
+      const response = await fetch(`${API_BASE_URL}/api/alerts`, { headers: { ...authHeaders() } });
       const data = await response.json();
       setAlerts(data.alerts || []);
     } catch (error) {
@@ -305,7 +308,7 @@ function App() {
       } else {
         const response = await fetch(`${API_BASE_URL}/api/watchlists`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ name: newWatchlistName.trim(), tickers })
         });
 
@@ -342,7 +345,7 @@ function App() {
       if (!watchlistsBackendAvailable) {
         deleteLocalWatchlist(watchlistId);
       } else {
-        const resp = await fetch(`${API_BASE_URL}/api/watchlists/${watchlistId}`, { method: 'DELETE' });
+        const resp = await fetch(`${API_BASE_URL}/api/watchlists/${watchlistId}`, { method: 'DELETE', headers: { ...authHeaders() } });
         if (!resp.ok) {
           setWatchlistsBackendAvailable(false);
           deleteLocalWatchlist(watchlistId);
@@ -787,6 +790,10 @@ function App() {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''} bg-carbon-900 text-gray-100 transition-colors carbon`}>
+      {/* Dedicated Auth Route */}
+      {typeof window !== 'undefined' && window.location.pathname === '/auth' && (
+        <AuthPage onAuth={(data, opts) => { handleAuthSuccess(data, opts); window.location.href = '/'; }} />
+      )}
       {/* Enhanced Header - Made Sticky/Floating */}
       <header className="sticky top-0 z-50 header-gunmetal border-b border-carbon-700 shadow-sm backdrop-blur-sm">
         <div className="w-full px-0 py-3">
@@ -1066,7 +1073,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
 
 
