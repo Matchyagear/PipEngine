@@ -74,6 +74,10 @@ function App() {
   const [alerts, setAlerts] = useState([]);
   const [showMobileView, setShowMobileView] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('authToken') || '');
+  const [authUser, setAuthUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('authUser')) || null; } catch { return null; }
+  });
   const [chartSymbol, setChartSymbol] = useState('AAPL');
   const [showLogoMenu, setShowLogoMenu] = useState(false);
   const logoMenuRef = useRef(null);
@@ -153,6 +157,19 @@ function App() {
       setAiProvider(prefs.ai_provider);
     } catch (error) {
       console.error('Error loading preferences:', error);
+    }
+  };
+
+  const authHeaders = () => (authToken ? { Authorization: `Bearer ${authToken}` } : {});
+
+  const handleAuthSuccess = (data) => {
+    if (data?.token) {
+      setAuthToken(data.token);
+      localStorage.setItem('authToken', data.token);
+    }
+    if (data?.user) {
+      setAuthUser(data.user);
+      localStorage.setItem('authUser', JSON.stringify(data.user));
     }
   };
 
@@ -921,6 +938,79 @@ function App() {
 
             {/* Right Side - Controls */}
             <div className="flex items-center space-x-2 ml-auto pr-2">
+              {/* Auth quick actions */}
+              {!authUser ? (
+                <>
+                  <button
+                    onClick={async () => {
+                      const email = prompt('Email');
+                      const password = prompt('Password');
+                      if (!email || !password) return;
+                      try {
+                        const resp = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, password })
+                        });
+                        const data = await resp.json();
+                        if (!resp.ok) {
+                          alert(data.detail || 'Login failed');
+                        } else {
+                          handleAuthSuccess(data);
+                        }
+                      } catch (e) {
+                        alert('Login error');
+                      }
+                    }}
+                    className="sleek-icon-btn"
+                    title="Login"
+                  >
+                    <span className="text-sm">Login</span>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const email = prompt('Email');
+                      const password = prompt('Password');
+                      if (!email || !password) return;
+                      try {
+                        const resp = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ email, password })
+                        });
+                        const data = await resp.json();
+                        if (!resp.ok) {
+                          alert(data.detail || 'Registration failed');
+                        } else {
+                          handleAuthSuccess(data);
+                        }
+                      } catch (e) {
+                        alert('Registration error');
+                      }
+                    }}
+                    className="sleek-icon-btn"
+                    title="Register"
+                  >
+                    <span className="text-sm">Sign up</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-gray-400">{authUser.email}</span>
+                  <button
+                    onClick={() => {
+                      setAuthToken('');
+                      setAuthUser(null);
+                      localStorage.removeItem('authToken');
+                      localStorage.removeItem('authUser');
+                    }}
+                    className="sleek-icon-btn"
+                    title="Logout"
+                  >
+                    <span className="text-sm">Logout</span>
+                  </button>
+                </>
+              )}
               {/* AI Chat Button */}
               <button
                 onClick={() => setShowAIChat(!showAIChat)}

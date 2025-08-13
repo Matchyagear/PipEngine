@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Query, WebSocket, W
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 from typing import List, Dict, Optional
+from jose import jwt, JWTError
+from passlib.context import CryptContext
 import requests
 import numpy as np
 import pandas as pd
@@ -66,6 +68,7 @@ else:
         watchlists_collection = db.watchlists
         alerts_collection = db.alerts
         user_preferences_collection = db.user_preferences
+        users_collection = db.users
         strategies_collection = db.shadowbot_strategies
         print("✅ MongoDB connected successfully")
     except Exception as e:
@@ -76,6 +79,7 @@ else:
         watchlists_collection = None
         alerts_collection = None
         user_preferences_collection = None
+        users_collection = None
         strategies_collection = None
 
 # Initialize API clients
@@ -316,6 +320,14 @@ class Watchlist(BaseModel):
 class CreateWatchlist(BaseModel):
     name: str
     tickers: List[str]
+
+class AuthRegister(BaseModel):
+    email: str
+    password: str
+
+class AuthLogin(BaseModel):
+    email: str
+    password: str
 
 class UserPreferences(BaseModel):
     user_id: str = "default"
@@ -1029,6 +1041,39 @@ def _cache_set(key: str, data):
         'timestamp': datetime.now().timestamp()
     }
 
+@app.post("/api/auth/register")
+async def register_user(payload: AuthRegister):
+    """Register a new user. Falls back to 503 if MongoDB is disabled."""
+    if users_collection is None:
+        raise HTTPException(status_code=503, detail="MongoDB not available - auth disabled")
+
+    existing = users_collection.find_one({"email": payload.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user_doc = {
+        "id": str(uuid.uuid4()),
+        "email": payload.email.lower(),
+        "password_hash": hash_password(payload.password),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
+    users_collection.insert_one(user_doc)
+
+    token = create_access_token(user_doc["id"])
+    return {"token": token, "user": {"id": user_doc["id"], "email": user_doc["email"]}}
+
+@app.post("/api/auth/login")
+async def login_user(payload: AuthLogin):
+    if users_collection is None:
+        raise HTTPException(status_code=503, detail="MongoDB not available - auth disabled")
+
+    user = users_collection.find_one({"email": payload.email.lower()})
+    if not user or not verify_password(payload.password, user.get("password_hash", "")):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_access_token(user["id"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"]}}
 def _adv_cache_get(ticker: str):
     entry = stock_cache.get(ticker)
     if not entry:
@@ -1043,6 +1088,26 @@ def _adv_cache_set(ticker: str, data):
         'data': data,
         'timestamp': datetime.now().timestamp()
     }
+
+# ---- Auth configuration ----
+JWT_SECRET = os.environ.get('JWT_SECRET', 'dev-secret')
+JWT_ALGORITHM = 'HS256'
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get('JWT_EXPIRE_MINUTES', '10080'))  # 7 days
+password_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return password_context.hash(password)
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return password_context.verify(password, hashed)
+    except Exception:
+        return False
+
+def create_access_token(subject: str) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode = {"sub": subject, "exp": expire}
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 class BatchTickers(BaseModel):
     tickers: List[str]
