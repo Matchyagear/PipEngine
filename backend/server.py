@@ -49,10 +49,9 @@ for _p in _env_candidates:
         pass
 
 # As a final safety net, ensure sane defaults for local development
-import os as _os_env
-_os_env.setdefault('DB_NAME', 'shadowbeta')
-_os_env.setdefault('MONGODB_DISABLED', 'false')
-_os_env.setdefault('MONGO_URL', 'mongodb://127.0.0.1:27017')
+os.environ.setdefault('DB_NAME', 'shadowbeta')
+os.environ.setdefault('MONGODB_DISABLED', 'false')
+os.environ.setdefault('MONGO_URL', 'mongodb://127.0.0.1:27017')
 
 # Initialize FastAPI app
 app = FastAPI(title="ShadowBeta Financial Dashboard API")
