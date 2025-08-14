@@ -945,6 +945,12 @@ function App() {
 
             {/* Right Side - Controls */}
             <div className="flex items-center space-x-2 ml-auto pr-2">
+              {/* Auth status indicator */}
+              {authUser ? (
+                <span className="hidden sm:inline text-xs text-green-400 mr-2">Logged in as: {authUser.email}</span>
+              ) : (
+                <span className="hidden sm:inline text-xs text-yellow-400 mr-2">Not logged in</span>
+              )}
               {/* Auth quick actions */}
               {!authUser ? (
                 <>
@@ -1073,7 +1079,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-            <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
 
 
