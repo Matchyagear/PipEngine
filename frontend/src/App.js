@@ -814,11 +814,11 @@ function App() {
                   Auto-refreshing every {refreshInterval / 60} minutes
                 </p>
               )}
-              {showLogoMenu && (
+            {showLogoMenu && (
                 <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
                   <div className="py-1">
                     <button
-                      onClick={() => { setShowLogoMenu(false); window.open('/shadowbot', '_blank', 'noopener'); }}
+                      onClick={() => { setShowLogoMenu(false); window.location.href = '/shadowbot'; }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-800"
                     >
                       Shadowbot

@@ -132,8 +132,8 @@ export default function ShadowbotPage() {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-6">
-            <h1 className="text-2xl font-semibold mb-2">Shadowbot</h1>
-            <p className="text-sm text-gray-400 mb-6">Automated trading bot (Alpaca {account?.paper ? 'Paper' : 'Live'})</p>
+            <h1 className="text-2xl font-semibold mb-1">Shadowbot</h1>
+            <p className="text-sm text-gray-400 mb-4">Automated trading bot. Below are clearly labeled sections for account status, manual orders, strategies, and live events.</p>
 
             {error && (
                 <div className="mb-4 p-3 border border-red-700 bg-red-900/20 rounded-lg text-red-300">{error}</div>
@@ -141,13 +141,13 @@ export default function ShadowbotPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="panel p-4 lg:col-span-1">
-                    <h2 className="font-medium mb-3">Account</h2>
+                    <h2 className="font-medium mb-3">Account Overview</h2>
                     {account ? (
                         <ul className="text-sm space-y-1">
                             <li><span className="text-gray-400">Status:</span> {account.status}</li>
-                            <li><span className="text-gray-400">Buying Power:</span> ${account.buying_power}</li>
-                            <li><span className="text-gray-400">Equity:</span> ${account.equity}</li>
-                            <li><span className="text-gray-400">Mode:</span> {account.paper ? 'Paper' : 'Live'}</li>
+                            <li><span className="text-gray-400">Buying Power (USD):</span> ${account.buying_power}</li>
+                            <li><span className="text-gray-400">Total Equity (USD):</span> ${account.equity}</li>
+                            <li><span className="text-gray-400">Trading Mode:</span> {account.paper ? 'Paper (simulated)' : 'Live (real)'} </li>
                         </ul>
                     ) : (
                         <p className="text-sm text-gray-500">Connect Alpaca in server env to view account.</p>
@@ -155,7 +155,8 @@ export default function ShadowbotPage() {
                 </div>
 
                 <div className="panel p-4 lg:col-span-1">
-                    <h2 className="font-medium mb-3">Place Market Order</h2>
+                    <h2 className="font-medium mb-3">Quick Trade (Market Order)</h2>
+                    <p className="text-xs text-gray-500 mb-2">Submit a simple market order to test connectivity. Use Paper mode until confident.</p>
                     <div className="space-y-3">
                         <input className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Symbol" value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} />
                         <input className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Quantity" type="number" min="1" value={form.qty} onChange={e => setForm({ ...form, qty: e.target.value })} />
@@ -196,15 +197,16 @@ export default function ShadowbotPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                 <div className="panel p-4">
-                    <h2 className="font-medium mb-3">Strategy Editor</h2>
+                    <h2 className="font-medium mb-1">Strategy Editor</h2>
+                    <p className="text-xs text-gray-500 mb-3">Configure basic risk and entry rules. Columns labeled for clarity.</p>
                     <div className="grid grid-cols-2 gap-3">
-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Name" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} />
+                        <label className="text-xs text-gray-400">Name<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Name" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} /></label>
                         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={strategyForm.enabled} onChange={e => setStrategyForm({ ...strategyForm, enabled: e.target.checked })} /> Enabled</label>
-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Positions" value={strategyForm.max_positions} onChange={e => setStrategyForm({ ...strategyForm, max_positions: Number(e.target.value) })} />
-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Notional" value={strategyForm.max_notional_per_trade} onChange={e => setStrategyForm({ ...strategyForm, max_notional_per_trade: Number(e.target.value) })} />
-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Stop %" value={strategyForm.stop_loss_pct} onChange={e => setStrategyForm({ ...strategyForm, stop_loss_pct: Number(e.target.value) })} />
-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Target %" value={strategyForm.take_profit_pct} onChange={e => setStrategyForm({ ...strategyForm, take_profit_pct: Number(e.target.value) })} />
-                        <textarea className="col-span-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm" rows={2} value={strategyForm.symbols.join(',')} onChange={e => setStrategyForm({ ...strategyForm, symbols: e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean) })} />
+                        <label className="text-xs text-gray-400">Max Positions<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" value={strategyForm.max_positions} onChange={e => setStrategyForm({ ...strategyForm, max_positions: Number(e.target.value) })} /></label>
+                        <label className="text-xs text-gray-400">Max Notional per Trade (USD)<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" value={strategyForm.max_notional_per_trade} onChange={e => setStrategyForm({ ...strategyForm, max_notional_per_trade: Number(e.target.value) })} /></label>
+                        <label className="text-xs text-gray-400">Stop Loss %<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" value={strategyForm.stop_loss_pct} onChange={e => setStrategyForm({ ...strategyForm, stop_loss_pct: Number(e.target.value) })} /></label>
+                        <label className="text-xs text-gray-400">Take Profit %<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" value={strategyForm.take_profit_pct} onChange={e => setStrategyForm({ ...strategyForm, take_profit_pct: Number(e.target.value) })} /></label>
+                        <label className="text-xs text-gray-400 col-span-2">Symbols (comma-separated)<textarea className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm" rows={2} value={strategyForm.symbols.join(',')} onChange={e => setStrategyForm({ ...strategyForm, symbols: e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean) })} /></label>
                     </div>
                     <div className="flex gap-2 mt-3">
                         <button className="btn-primary px-4 py-2 rounded-md" onClick={saveStrategy}>Save Strategy</button>
@@ -215,7 +217,8 @@ export default function ShadowbotPage() {
                     <div className="text-xs text-gray-400 mt-2">Runner: {runnerStatus?.active ? 'Active' : 'Stopped'} <button className="ml-2 text-blue-400" onClick={refreshRunner}>Refresh</button></div>
                 </div>
                 <div className="panel p-4">
-                    <h2 className="font-medium mb-3">Saved Strategies</h2>
+                    <h2 className="font-medium mb-1">Saved Strategies</h2>
+                    <p className="text-xs text-gray-500 mb-2">List of saved configuration profiles. Click Edit to load into the editor.</p>
                     <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                         {strategies.length === 0 ? <p className="text-sm text-gray-500">No strategies yet.</p> : strategies.map(s => (
                             <div key={s.id} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2 text-sm flex items-center justify-between">
@@ -234,7 +237,8 @@ export default function ShadowbotPage() {
             </div>
 
             <div className="panel p-4 mt-4">
-                <h2 className="font-medium mb-3">Live Events</h2>
+                <h2 className="font-medium mb-1">Live Events</h2>
+                <p className="text-xs text-gray-500 mb-2">Real-time signals, orders, and paper trade activity.</p>
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-sm">
                     {liveEvents.length === 0 ? (
                         <p className="text-gray-500">No events yet.</p>
@@ -252,7 +256,7 @@ export default function ShadowbotPage() {
                             {e.type === 'paper_exit' && (
                                 <div><span className="text-yellow-400">Exit:</span> {e.symbol} sell {e.qty} @ ${e.price}</div>
                             )}
-                            {!['signal','order_submitted','paper_trade','paper_exit'].includes(e.type || '') && (
+                            {!['signal', 'order_submitted', 'paper_trade', 'paper_exit'].includes(e.type || '') && (
                                 <pre className="text-xs overflow-x-auto">{JSON.stringify(e, null, 2)}</pre>
                             )}
                         </div>
