@@ -31,7 +31,28 @@ from alpaca.trading.enums import OrderSide, TimeInForce
 
 # Load environment variables
 from dotenv import load_dotenv
-load_dotenv()
+from pathlib import Path
+
+# Load environment variables from multiple locations to be robust to working dir
+load_dotenv()  # default
+_env_candidates = [
+    Path(__file__).resolve().parent / '.env',            # backend/.env
+    Path(__file__).resolve().parent.parent / '.env',     # project root .env
+    Path.cwd() / '.env'                                  # current working dir
+]
+for _p in _env_candidates:
+    try:
+        if _p.exists():
+            # Do NOT override real environment (e.g., Render). Files only fill missing values.
+            load_dotenv(dotenv_path=_p, override=False)
+    except Exception:
+        pass
+
+# As a final safety net, ensure sane defaults for local development
+import os as _os_env
+_os_env.setdefault('DB_NAME', 'shadowbeta')
+_os_env.setdefault('MONGODB_DISABLED', 'false')
+_os_env.setdefault('MONGO_URL', 'mongodb://127.0.0.1:27017')
 
 # Initialize FastAPI app
 app = FastAPI(title="ShadowBeta Financial Dashboard API")
@@ -52,8 +73,13 @@ MONGODB_DISABLED = os.environ.get('MONGODB_DISABLED', 'false').lower() == 'true'
 print(f"🔍 Debug: MONGO_URL = {MONGO_URL}")
 print(f"🔍 Debug: MONGODB_DISABLED = {MONGODB_DISABLED}")
 
-if MONGODB_DISABLED or not MONGO_URL:
-    print("⚠️  MongoDB disabled or URL not set - using in-memory storage")
+# If URL missing but Mongo not explicitly disabled, default to local instance
+if not MONGODB_DISABLED and not MONGO_URL:
+    MONGO_URL = 'mongodb://127.0.0.1:27017'
+    print("ℹ️  No MONGO_URL provided. Defaulting to local MongoDB at mongodb://127.0.0.1:27017")
+
+if MONGODB_DISABLED:
+    print("⚠️  MongoDB explicitly disabled via env")
     client = None
     db = None
     watchlists_collection = None
@@ -1018,6 +1044,19 @@ def send_discord_alert(message: str):
 @app.get("/")
 async def root():
     return {"message": "ShadowBeta Financial Dashboard API - Enhanced Version"}
+
+# Minimal env diagnostics (no secrets)
+@app.get("/api/debug/env")
+async def debug_env():
+    try:
+        return {
+            "has_mongo_url": bool(os.environ.get('MONGO_URL') or MONGO_URL),
+            "mongo_disabled": bool(os.environ.get('MONGODB_DISABLED', 'false').lower() == 'true'),
+            "has_db_name": bool(os.environ.get('DB_NAME') or os.environ.get('DB') or os.environ.get('DBNAME')),
+            "has_jwt_secret": bool(os.environ.get('JWT_SECRET'))
+        }
+    except Exception:
+        return {"has_mongo_url": False, "mongo_disabled": False, "has_db_name": False, "has_jwt_secret": False}
 
 # Performance optimization cache
 stock_cache = {}
