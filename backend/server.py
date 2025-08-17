@@ -309,42 +309,73 @@ db_pool = None
 def setup_supabase():
     """Setup Supabase PostgreSQL connection"""
     print("🔄 Setting up Supabase PostgreSQL connection...")
-
+    
     # Get connection string from environment
     database_url = os.environ.get('DATABASE_URL')
-
+    
     if not database_url:
         print("❌ No DATABASE_URL found in environment variables")
         print("💡 Set DATABASE_URL environment variable with your Supabase connection string")
         return None
-
+    
     print(f"🔗 Connecting to Supabase: {database_url[:50]}...")
+    
+    # Try multiple connection methods
+    connection_methods = [
+        # Method 1: Standard connection
+        lambda: SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url),
+        # Method 2: With connection parameters
+        lambda: SimpleConnectionPool(
+            minconn=1, maxconn=10, dsn=database_url,
+            options="-c search_path=public"
+        ),
+        # Method 3: Parse URL and force IPv4
+        lambda: _create_connection_with_ipv4(database_url)
+    ]
+    
+    for i, method in enumerate(connection_methods, 1):
+        try:
+            print(f"🔄 Trying connection method {i}...")
+            global db_pool
+            db_pool = method()
+            
+            # Test connection
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT version();")
+                    version = cur.fetchone()
+                    print(f"✅ Supabase connection successful! PostgreSQL version: {version[0]}")
+            
+            # Create tables if they don't exist
+            create_tables()
+            print("✅ All tables initialized successfully")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Connection method {i} failed: {e}")
+            if i == len(connection_methods):
+                print("💡 All connection methods failed. Check your DATABASE_URL and network access")
+                return None
+            continue
 
+def _create_connection_with_ipv4(database_url):
+    """Create connection with IPv4 forcing"""
     try:
-        # Create connection pool
-        global db_pool
-        db_pool = SimpleConnectionPool(
-            minconn=1,
-            maxconn=10,
-            dsn=database_url
-        )
-
-        # Test connection
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT version();")
-                version = cur.fetchone()
-                print(f"✅ Supabase connection successful! PostgreSQL version: {version[0]}")
-
-        # Create tables if they don't exist
-        create_tables()
-        print("✅ All tables initialized successfully")
-        return True
-
+        # Parse the URL and modify to force IPv4
+        from urllib.parse import urlparse
+        parsed = urlparse(database_url)
+        
+        # Force IPv4 by adding connection parameters
+        if '?' in database_url:
+            database_url += '&preferQueryMode=simple'
+        else:
+            database_url += '?preferQueryMode=simple'
+        
+        return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
     except Exception as e:
-        print(f"❌ Supabase connection failed: {e}")
-        print("💡 Check your DATABASE_URL and network access")
-        return None
+        print(f"⚠️ IPv4 connection setup failed: {e}")
+        # Fallback to original URL
+        return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
 
 @contextmanager
 def get_db_connection():
