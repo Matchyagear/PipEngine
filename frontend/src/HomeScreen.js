@@ -150,8 +150,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setLoadingFeatured(true);
       setFeaturedError(null);
 
-      // Try fast endpoint first for live featured stocks
-      const response = await fetch(`${API_BASE_URL}/api/stocks/scan/fast`);
+      // Use full scan endpoint for proper swing analysis (4/4 swing scan setup)
+      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=2&max_results=10`);
 
       if (response.ok) {
         const data = await response.json();
@@ -159,21 +159,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
           // Take top 2 performing stocks for featured section
           setFeaturedStocks(data.stocks.slice(0, 2));
         } else {
-          throw new Error('No stocks returned from fast scan');
+          throw new Error('No stocks returned from swing scan');
         }
       } else {
-        // Try regular scan if fast endpoint fails
-        const fallbackResponse = await fetch(`${API_BASE_URL}/api/stocks/scan`);
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          if (fallbackData.stocks && fallbackData.stocks.length > 0) {
-            setFeaturedStocks(fallbackData.stocks.slice(0, 2));
-          } else {
-            throw new Error('No stocks returned from regular scan');
-          }
-        } else {
-          throw new Error(`Failed to fetch live data: ${fallbackResponse.status} ${fallbackResponse.statusText}`);
-        }
+        throw new Error(`Failed to fetch swing scan data: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error fetching featured stocks:', error);

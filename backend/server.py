@@ -366,13 +366,13 @@ def _create_connection_with_ipv4(database_url):
         # Parse the URL and modify to force IPv4
         from urllib.parse import urlparse
         parsed = urlparse(database_url)
-        
+
         # Force IPv4 by adding connection parameters
         if '?' in database_url:
             database_url += '&preferQueryMode=simple'
         else:
             database_url += '?preferQueryMode=simple'
-        
+
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
     except Exception as e:
         print(f"⚠️ IPv4 connection setup failed: {e}")
@@ -385,7 +385,7 @@ def _create_connection_with_pooler(database_url):
         # Replace port 5432 with 6543 for connection pooler
         pooler_url = database_url.replace(':5432/', ':6543/')
         print(f"🔄 Using connection pooler: {pooler_url[:50]}...")
-        
+
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=pooler_url)
     except Exception as e:
         print(f"⚠️ Connection pooler setup failed: {e}")
@@ -772,6 +772,75 @@ def calculate_moving_averages(prices):
     ma_200 = prices.rolling(window=200).mean().iloc[-1] if len(prices) >= 200 else prices.mean()
     return ma_50, ma_200
 
+def calculate_swing_score(stock_data):
+    """Calculate swing score (1-100) based on the frontend's computeSwingScore algorithm"""
+    try:
+        # Defensive defaults
+        base_score = stock_data.get('score', 2)  # 0-4 from evaluate_advanced_criteria
+        rsi = stock_data.get('RSI', 50)
+        macd = stock_data.get('MACD', 0)
+        rel_vol = stock_data.get('relativeVolume', 1)
+        stoch = stock_data.get('stochastic', 50)
+        price = stock_data.get('currentPrice', 0)
+        ma50 = stock_data.get('fiftyMA', price)
+        ma200 = stock_data.get('twoHundredMA', price)
+
+        # Weights (sum ~100) - matching frontend algorithm
+        W_BASE = 38
+        W_OVERSOLD = 10
+        W_BREAKOUT = 8
+        W_TREND = 16  # MA trend + price location
+        W_MACD = 8
+        W_RSI = 14    # Heavier than breakout
+        W_VOLUME = 4
+        W_STOCH = 2
+        W_MARKET = 6  # Context alignment with market/sector
+        W_SECTOR = 4
+        total_weight = W_BASE + W_OVERSOLD + W_BREAKOUT + W_TREND + W_MACD + W_RSI + W_VOLUME + W_STOCH + W_MARKET + W_SECTOR
+
+        pts = 0
+
+        # Base (existing 0-4 score)
+        pts += (max(0, min(4, base_score)) / 4) * W_BASE
+
+        # Passes from evaluate_advanced_criteria
+        passes = stock_data.get('passes', {})
+        if passes.get('oversold'): pts += W_OVERSOLD
+        if passes.get('breakout'): pts += W_BREAKOUT
+
+        # Trend: 50MA > 200MA and price above both
+        if ma50 > ma200: pts += W_TREND * 0.6  # golden cross bias
+        if price > ma50 and price > ma200: pts += W_TREND * 0.4  # strong location
+
+        # MACD positive
+        if macd > 0: pts += W_MACD
+
+        # RSI sweet-spot: favor 35-55 for swing entries
+        if 35 <= rsi <= 55: pts += W_RSI
+        elif (30 <= rsi < 35) or (55 < rsi <= 60): pts += W_RSI * 0.5
+
+        # Relative volume
+        if rel_vol >= 1.5: pts += W_VOLUME
+        elif rel_vol >= 1.2: pts += W_VOLUME * 0.5
+
+        # Stochastic in healthy zone 20-80
+        if 20 <= stoch <= 80: pts += W_STOCH
+
+        # Market/Sector context (optional inputs)
+        market_chg = stock_data.get('marketChangePercent', 0)
+        sector_chg = stock_data.get('sectorChangePercent', 0)
+        stock_chg = stock_data.get('priceChangePercent', 0)
+        
+        if market_chg >= 0 and stock_chg >= 0 or market_chg < 0 and stock_chg < 0: pts += W_MARKET
+        if sector_chg >= 0 and stock_chg >= 0 or sector_chg < 0 and stock_chg < 0: pts += W_SECTOR
+
+        swing_score = max(1, min(100, round((pts / total_weight) * 100)))
+        return swing_score
+
+    except Exception as e:
+        print(f"Error calculating swing score: {e}")
+        return 50  # Default to neutral score
+
 def evaluate_advanced_criteria(stock_data):
     """Enhanced evaluation with more criteria"""
     current_price = stock_data['currentPrice']
@@ -796,7 +865,11 @@ def evaluate_advanced_criteria(stock_data):
 
     # Main score is still out of 4, bonus criteria add extra insights
     main_score = sum([passes['trend'], passes['momentum'], passes['volume'], passes['priceAction']])
-    return passes, main_score
+    
+    # Calculate swing score (1-100)
+    swing_score = calculate_swing_score(stock_data)
+    
+    return passes, main_score, swing_score
 
 async def get_gemini_insight(ticker: str, price: float, passes: dict, score: int):
     """Get AI insight from Gemini"""
@@ -1374,9 +1447,10 @@ def fetch_advanced_stock_data(ticker: str):
         }
 
         # Evaluate criteria
-        passes, score = evaluate_advanced_criteria(stock_data)
+        passes, score, swing_score = evaluate_advanced_criteria(stock_data)
         stock_data['passes'] = passes
         stock_data['score'] = score
+        stock_data['swing_score'] = swing_score
 
         # Add stock-specific news
         stock_data['news'] = fetch_stock_news(ticker, limit=3)
