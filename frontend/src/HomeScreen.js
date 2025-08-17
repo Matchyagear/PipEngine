@@ -529,9 +529,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {[
                       { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
-                      { symbol: "NASDAQ:QQQ", name: "NASDAQ ETF" },
-                      { symbol: "FOREXCOM:DJI", name: "Dow Jones" },
-                      { symbol: "LSE:FTSE", name: "FTSE 100" }
+                      { symbol: "$NDQ", name: "NASDAQ" },
+                      { symbol: "FOREXCOM:DJI", name: "Dow Jones" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
@@ -552,17 +551,13 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
 
                 <div>
                   <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-green-400" />
-                    Futures (Pre-Market) - Live Charts
+                    <Zap className="w-4 h-4 text-purple-400" />
+                    Popular ETFs - Live Charts
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {[
-                      { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
-                      { symbol: "CME_MINI:NQ1!", name: "Nasdaq Futures" },
-                      { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
-                      { symbol: "NYMEX:CL1!", name: "Crude Oil" },
-                      { symbol: "COMEX:GC1!", name: "Gold Futures" },
-                      { symbol: "BITSTAMP:BTCUSD", name: "Bitcoin" }
+                      { symbol: "$QQQ", name: "Invesco QQQ Trust" },
+                      { symbol: "$SPY", name: "SPDR S&P 500 ETF" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
@@ -855,6 +850,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 </div>
               </>
             )}
+
           </div>
         )}
       </div>
