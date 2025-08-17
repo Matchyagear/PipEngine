@@ -843,17 +843,30 @@ def calculate_swing_score(stock_data):
 
 def evaluate_advanced_criteria(stock_data):
     """Enhanced evaluation with more criteria"""
-    current_price = stock_data['currentPrice']
-    fifty_ma = stock_data['fiftyMA']
-    two_hundred_ma = stock_data['twoHundredMA']
-    rsi = stock_data['RSI']
-    macd = stock_data['MACD']
-    avg_volume = stock_data['averageVolume']
-    rel_volume = stock_data['relativeVolume']
-    bollinger_upper = stock_data['bollinger_upper']
-    bollinger_lower = stock_data['bollinger_lower']
-    stochastic = stock_data['stochastic']
+    current_price = stock_data.get('currentPrice', 0)
+    fifty_ma = stock_data.get('fiftyMA', current_price)
+    two_hundred_ma = stock_data.get('twoHundredMA', current_price)
+    rsi = stock_data.get('RSI', 50)
+    macd = stock_data.get('MACD', 0)
+    avg_volume = stock_data.get('averageVolume', 0)
+    rel_volume = stock_data.get('relativeVolume', 1.0)
+    bollinger_upper = stock_data.get('bollinger_upper', current_price)
+    bollinger_lower = stock_data.get('bollinger_lower', current_price)
+    stochastic = stock_data.get('stochastic', 50)
 
+    # Ensure all values are valid numbers
+    current_price = float(current_price) if current_price and not (isinstance(current_price, float) and (np.isnan(current_price) or np.isinf(current_price))) else 0
+    fifty_ma = float(fifty_ma) if fifty_ma and not (isinstance(fifty_ma, float) and (np.isnan(fifty_ma) or np.isinf(fifty_ma))) else current_price
+    two_hundred_ma = float(two_hundred_ma) if two_hundred_ma and not (isinstance(two_hundred_ma, float) and (np.isnan(two_hundred_ma) or np.isinf(two_hundred_ma))) else current_price
+    rsi = float(rsi) if rsi and not (isinstance(rsi, float) and (np.isnan(rsi) or np.isinf(rsi))) else 50
+    macd = float(macd) if macd and not (isinstance(macd, float) and (np.isnan(macd) or np.isinf(macd))) else 0
+    avg_volume = float(avg_volume) if avg_volume and not (isinstance(avg_volume, float) and (np.isnan(avg_volume) or np.isinf(avg_volume))) else 0
+    rel_volume = float(rel_volume) if rel_volume and not (isinstance(rel_volume, float) and (np.isnan(rel_volume) or np.isinf(rel_volume))) else 1.0
+    bollinger_upper = float(bollinger_upper) if bollinger_upper and not (isinstance(bollinger_upper, float) and (np.isnan(bollinger_upper) or np.isinf(bollinger_upper))) else current_price
+    bollinger_lower = float(bollinger_lower) if bollinger_lower and not (isinstance(bollinger_lower, float) and (np.isnan(bollinger_lower) or np.isinf(bollinger_lower))) else current_price
+    stochastic = float(stochastic) if stochastic and not (isinstance(stochastic, float) and (np.isnan(stochastic) or np.isinf(stochastic))) else 50
+
+    # Always return all four universal criteria for StockCard compatibility
     passes = {
         'trend': fifty_ma > two_hundred_ma and current_price > fifty_ma and current_price > two_hundred_ma,
         'momentum': rsi > 50 and macd > 0 and stochastic > 20,
