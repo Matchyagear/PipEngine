@@ -3194,8 +3194,8 @@ async def get_market_full_movers():
         full_gainers = []
         full_losers = []
 
-        # Process top 3 gainers with fresh data (bypass cache for Shadow's Picks)
-        for gainer in movers_data["gainers"][:3]:
+        # Process top 10 gainers with fresh data (bypass cache for Shadow's Picks)
+        for gainer in movers_data["gainers"][:10]:
             try:
                 full_stock = fetch_advanced_stock_data(gainer["ticker"], bypass_cache=True)
                 if full_stock:
@@ -3205,8 +3205,8 @@ async def get_market_full_movers():
                 print(f"Error analyzing gainer {gainer['ticker']}: {e}")
                 continue
 
-        # Process top 3 losers with fresh data (bypass cache for Shadow's Picks)
-        for loser in movers_data["losers"][:3]:
+        # Process top 10 losers with fresh data (bypass cache for Shadow's Picks)
+        for loser in movers_data["losers"][:10]:
             try:
                 full_stock = fetch_advanced_stock_data(loser["ticker"], bypass_cache=True)
                 if full_stock:
