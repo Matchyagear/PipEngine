@@ -30,7 +30,7 @@ const TradingViewMiniWidget = ({ symbol = 'NASDAQ:AAPL', height = '100%', width 
         script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
         script.async = true;
 
-        // Configuration object - exactly as you provided
+        // Configuration object - optimized for container sizing
         const config = {
             "symbol": symbol,
             "chartOnly": false,
@@ -40,8 +40,8 @@ const TradingViewMiniWidget = ({ symbol = 'NASDAQ:AAPL', height = '100%', width 
             "isTransparent": false,
             "locale": "en",
             "width": "100%",
-            "autosize": true,
-            "height": "100%"
+            "autosize": false,
+            "height": typeof height === 'number' ? height : parseInt(height) || 100
         };
 
         script.innerHTML = JSON.stringify(config);
@@ -64,9 +64,9 @@ const TradingViewMiniWidget = ({ symbol = 'NASDAQ:AAPL', height = '100%', width 
     }, [symbol, height, width]);
 
     return (
-        <div 
+        <div
             ref={containerRef}
-            style={{ 
+            style={{
                 width: typeof width === 'number' ? `${width}px` : width,
                 height: typeof height === 'number' ? `${height}px` : height,
                 minHeight: '100px'
