@@ -366,13 +366,13 @@ def _create_connection_with_ipv4(database_url):
         # Parse the URL and modify to force IPv4
         from urllib.parse import urlparse
         parsed = urlparse(database_url)
-
+        
         # Force IPv4 by adding connection parameters
         if '?' in database_url:
             database_url += '&preferQueryMode=simple'
         else:
             database_url += '?preferQueryMode=simple'
-
+        
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
     except Exception as e:
         print(f"⚠️ IPv4 connection setup failed: {e}")
@@ -385,7 +385,7 @@ def _create_connection_with_pooler(database_url):
         # Replace port 5432 with 6543 for connection pooler
         pooler_url = database_url.replace(':5432/', ':6543/')
         print(f"🔄 Using connection pooler: {pooler_url[:50]}...")
-
+        
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=pooler_url)
     except Exception as e:
         print(f"⚠️ Connection pooler setup failed: {e}")
@@ -1538,7 +1538,7 @@ def fetch_lightweight_stock_data(ticker: str):
 
         # Get minimal stock info from yfinance
         stock = yf.Ticker(ticker)
-        hist = stock.history(period="5d")  # Only 5 days instead of 1 year
+        hist = stock.history(period="14d")  # Need 14 days for proper RSI calculation
 
         if hist.empty or len(hist) < 2:
             return None
@@ -1561,8 +1561,15 @@ def fetch_lightweight_stock_data(ticker: str):
         is_liquid = avg_volume > 100000  # Min 100K average volume
         is_reasonable_price = 5.0 <= current_price <= 500.0  # Skip penny stocks and ultra-expensive
 
+        # Get company name from stock info
+        try:
+            company_name = stock.info.get('longName', ticker + ' Corp')
+        except:
+            company_name = ticker + ' Corp'
+
         stock_data = {
             'ticker': ticker,
+            'companyName': company_name,
             'currentPrice': float(current_price),
             'priceChange': float(price_change),
             'priceChangePercent': float(price_change_percent),
@@ -2118,7 +2125,7 @@ async def scan_stocks_fast():
         for i, stock in enumerate(fast_results):
             formatted_stocks.append({
                 'ticker': stock['ticker'],
-                'companyName': stock['ticker'] + ' Corp',  # Simple fallback
+                'companyName': stock.get('companyName', stock['ticker'] + ' Corp'),
                 'currentPrice': stock['currentPrice'],
                 'priceChange': stock['priceChange'],
                 'priceChangePercent': stock['priceChangePercent'],

@@ -149,7 +149,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
     try {
       setLoadingFeatured(true);
       setFeaturedError(null);
-      
+
       // Try fast endpoint first for live featured stocks
       const response = await fetch(`${API_BASE_URL}/api/stocks/scan/fast`);
 
@@ -512,7 +512,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
                         <div className="h-48">
-                          <img 
+                          <img
                             src={`https://finviz.com/chart.ashx?t=${ticker.symbol}&ty=c&ta=1&p=d&s=l`}
                             alt={`${ticker.symbol} futures chart`}
                             className="w-full h-full object-cover rounded"
@@ -852,7 +852,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     </svg>
                   </div>
                   <p className="text-red-600 dark:text-red-400 font-medium">{featuredError}</p>
-                  <button 
+                  <button
                     onClick={fetchFeaturedStocks}
                     className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                   >
@@ -864,7 +864,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
               <div className="flex justify-center items-center h-64">
                 <div className="text-center">
                   <p className="text-gray-500 dark:text-gray-400">No featured stocks available</p>
-                  <button 
+                  <button
                     onClick={fetchFeaturedStocks}
                     className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                   >
