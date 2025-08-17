@@ -101,6 +101,8 @@ function App() {
   const [isSearchingNews, setIsSearchingNews] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [showStockDetail, setShowStockDetail] = useState(false);
+  const [selectedMiniStock, setSelectedMiniStock] = useState(null);
+  const [showStockModal, setShowStockModal] = useState(false);
 
 
   // Auto-refresh effect - use fast endpoint for auto-refresh too
@@ -1419,6 +1421,15 @@ function App() {
         onClose={() => setShowStockDetail(false)}
         aiProvider={aiProvider}
         API_BASE_URL={API_BASE_URL}
+      />
+
+      {/* Stock Card Modal */}
+      <StockCardModal
+        isOpen={showStockModal}
+        onClose={() => setShowStockModal(false)}
+        stock={selectedMiniStock}
+        aiProvider={aiProvider}
+        onOpenChart={openChartForStock}
       />
 
 
