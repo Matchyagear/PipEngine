@@ -309,48 +309,50 @@ db_pool = None
 def setup_supabase():
     """Setup Supabase PostgreSQL connection"""
     print("🔄 Setting up Supabase PostgreSQL connection...")
-    
+
     # Get connection string from environment
     database_url = os.environ.get('DATABASE_URL')
-    
+
     if not database_url:
         print("❌ No DATABASE_URL found in environment variables")
         print("💡 Set DATABASE_URL environment variable with your Supabase connection string")
         return None
-    
+
     print(f"🔗 Connecting to Supabase: {database_url[:50]}...")
-    
+
     # Try multiple connection methods
     connection_methods = [
-        # Method 1: Standard connection
+        # Method 1: Connection pooler (recommended for Render)
+        lambda: _create_connection_with_pooler(database_url),
+        # Method 2: Standard connection
         lambda: SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url),
-        # Method 2: With connection parameters
+        # Method 3: With connection parameters
         lambda: SimpleConnectionPool(
             minconn=1, maxconn=10, dsn=database_url,
             options="-c search_path=public"
         ),
-        # Method 3: Parse URL and force IPv4
+        # Method 4: Parse URL and force IPv4
         lambda: _create_connection_with_ipv4(database_url)
     ]
-    
+
     for i, method in enumerate(connection_methods, 1):
         try:
             print(f"🔄 Trying connection method {i}...")
             global db_pool
             db_pool = method()
-            
+
             # Test connection
             with get_db_connection() as conn:
                 with conn.cursor() as cur:
                     cur.execute("SELECT version();")
                     version = cur.fetchone()
                     print(f"✅ Supabase connection successful! PostgreSQL version: {version[0]}")
-            
+
             # Create tables if they don't exist
             create_tables()
             print("✅ All tables initialized successfully")
             return True
-            
+
         except Exception as e:
             print(f"❌ Connection method {i} failed: {e}")
             if i == len(connection_methods):
@@ -374,6 +376,19 @@ def _create_connection_with_ipv4(database_url):
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
     except Exception as e:
         print(f"⚠️ IPv4 connection setup failed: {e}")
+        # Fallback to original URL
+        return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
+
+def _create_connection_with_pooler(database_url):
+    """Create connection using Supabase connection pooler"""
+    try:
+        # Replace port 5432 with 6543 for connection pooler
+        pooler_url = database_url.replace(':5432/', ':6543/')
+        print(f"🔄 Using connection pooler: {pooler_url[:50]}...")
+        
+        return SimpleConnectionPool(minconn=1, maxconn=10, dsn=pooler_url)
+    except Exception as e:
+        print(f"⚠️ Connection pooler setup failed: {e}")
         # Fallback to original URL
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
 
