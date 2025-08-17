@@ -780,7 +780,16 @@ function App() {
                     momentum: true,
                     volume: true,
                     priceAction: true
-                  }
+                  },
+                  RSI: 65.2,
+                  MACD: 2.34,
+                  Stochastic: 78.5,
+                  averageVolume: 45000000,
+                  relativeVolume: 1.8,
+                  fiftyDayMA: 170.25,
+                  twoHundredDayMA: 165.80,
+                  bollingerUpper: 180.50,
+                  bollingerLower: 160.20
                 }}
                 onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'AAPL' })}
@@ -799,7 +808,16 @@ function App() {
                     momentum: false,
                     volume: true,
                     priceAction: true
-                  }
+                  },
+                  RSI: 45.8,
+                  MACD: -0.12,
+                  Stochastic: 35.2,
+                  averageVolume: 1200000,
+                  relativeVolume: 1.6,
+                  fiftyDayMA: 33.45,
+                  twoHundredDayMA: 32.10,
+                  bollingerUpper: 36.80,
+                  bollingerLower: 30.20
                 }}
                 onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'CAKE' })}
@@ -818,7 +836,16 @@ function App() {
                     momentum: true,
                     volume: true,
                     priceAction: true
-                  }
+                  },
+                  RSI: 72.1,
+                  MACD: 1.85,
+                  Stochastic: 82.3,
+                  averageVolume: 850000,
+                  relativeVolume: 2.1,
+                  fiftyDayMA: 11.20,
+                  twoHundredDayMA: 10.80,
+                  bollingerUpper: 14.50,
+                  bollingerLower: 9.80
                 }}
                 onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'NNE' })}
