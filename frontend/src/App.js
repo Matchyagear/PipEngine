@@ -806,7 +806,7 @@ function App() {
                   dividend: 0.92,
                   dividendYield: 0.53
                 }}
-                onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'AAPL' })}
               />
 
@@ -849,7 +849,7 @@ function App() {
                   dividend: 0.00,
                   dividendYield: 0.00
                 }}
-                onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'CAKE' })}
               />
 
@@ -892,7 +892,7 @@ function App() {
                   dividend: 0.00,
                   dividendYield: 0.00
                 }}
-                onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'NNE' })}
               />
             </div>
@@ -995,7 +995,7 @@ function App() {
                       <MiniStockCard
                         key={stock.ticker}
                         stock={stock}
-                        onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                        onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
                         onOpenChart={() => openChartForStock(stock)}
                       />
                     ))
