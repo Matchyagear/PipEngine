@@ -523,30 +523,51 @@ const StockCard = ({
         )}
 
         {/* Main Criteria Grid */}
-        {stock.passes && (
+        {stock.passes ? (
           <div className="grid grid-cols-2 gap-3 mb-4">
             {Object.entries(stock.passes)
               .filter(([criteria]) => ['trend', 'momentum', 'volume', 'priceAction'].includes(criteria))
               .map(([criteria, passed]) => (
+                <div
+                  key={criteria}
+                  className={`p-3 rounded-lg border-2 ${passed
+                    ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700'
+                    : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'
+                    }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className={passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                      {getCriteriaIcon(criteria)}
+                    </div>
+                    <span className={`text-xs font-medium capitalize ${passed ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
+                      }`}>
+                      {criteria === 'priceAction' ? 'Price Action' : criteria}
+                    </span>
+                  </div>
+                  <div className={`text-xs mt-1 ${passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    }`}>
+                    {passed ? 'PASS' : 'FAIL'}
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {['trend', 'momentum', 'volume', 'priceAction'].map((criteria) => (
               <div
                 key={criteria}
-                className={`p-3 rounded-lg border-2 ${passed
-                  ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700'
-                  : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'
-                  }`}
+                className="p-3 rounded-lg border-2 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700"
               >
                 <div className="flex items-center space-x-2">
-                  <div className={passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                    {getCriteriaIcon(criteria)}
+                  <div className="text-red-600 dark:text-red-400">
+                    ❌
                   </div>
-                  <span className={`text-xs font-medium capitalize ${passed ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
-                    }`}>
+                  <span className="text-xs font-medium capitalize text-red-800 dark:text-red-300">
                     {criteria === 'priceAction' ? 'Price Action' : criteria}
                   </span>
                 </div>
-                <div className={`text-xs mt-1 ${passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
-                  {passed ? 'PASS' : 'FAIL'}
+                <div className="text-xs mt-1 text-red-600 dark:text-red-400">
+                  NO DATA
                 </div>
               </div>
             ))}
