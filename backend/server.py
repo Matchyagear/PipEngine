@@ -3871,6 +3871,37 @@ async def import_webull_portfolio(credentials: dict):
 
 # ===== END PORTFOLIO ENDPOINTS =====
 
+@app.get("/api/test/shadows-picks-debug")
+async def test_shadows_picks_debug():
+    """Test endpoint to debug Shadow's Picks data"""
+    try:
+        # Test with a single stock to see what's happening
+        test_ticker = "AAPL"
+        print(f"🧪 TESTING {test_ticker} for Shadow's Picks debug...")
+
+        # Get the data the same way Shadow's Picks does
+        stock_data = fetch_advanced_stock_data(test_ticker, bypass_cache=True)
+
+        if not stock_data:
+            return {"error": "No data returned for test ticker"}
+
+        # Check what's in the passes object
+        passes = stock_data.get('passes', {})
+        score = stock_data.get('score', 0)
+
+        print(f"🧪 TEST {test_ticker}: Raw passes={passes}")
+        print(f"🧪 TEST {test_ticker}: Score={score}")
+
+        return {
+            "ticker": test_ticker,
+            "passes": passes,
+            "score": score,
+            "all_data": stock_data
+        }
+    except Exception as e:
+        print(f"🧪 TEST ERROR: {e}")
+        return {"error": str(e)}
+
 @app.get("/api/market/volatile-stocks")
 async def get_volatile_stocks(limit: int = Query(10, ge=1, le=50)):
     """Get the most volatile stocks based on price volatility and volume"""

@@ -1,0 +1,5 @@
+[33me48d83d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add debug logging to evaluate_advanced_criteria to diagnose Shadow's Picks scoring issue
+[33maf9fb5c[m Fix Shadow's Picks: Process all 10 gainers instead of just 3 for complete data
+[33m44757b2[m Add .yarnrc to fix Vercel build registry issue
+[33mc628f5e[m Bypass caching for Shadow's Picks to ensure fresh data with all four criteria
+[33mc21811a[m Add cache busting to Shadow's Picks to ensure fresh data with all four criteria
