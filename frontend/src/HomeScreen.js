@@ -151,7 +151,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setFeaturedError(null);
 
       // Use full scan endpoint for proper swing analysis (4/4 swing scan setup)
-      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=2&max_results=10`);
+      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=2&max_results=10&_t=${Date.now()}`);
 
       if (response.ok) {
         const data = await response.json();

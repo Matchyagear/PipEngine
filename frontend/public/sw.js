@@ -2,8 +2,8 @@
 // SHADOWBETA SERVICE WORKER - OFFLINE-FIRST PERFORMANCE
 // =============================================================================
 
-const CACHE_NAME = 'shadowbeta-v1.2.0';
-const API_CACHE_NAME = 'shadowbeta-api-v1.2.0';
+const CACHE_NAME = 'shadowbeta-v1.2.1';
+const API_CACHE_NAME = 'shadowbeta-api-v1.2.1';
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [
@@ -16,7 +16,6 @@ const STATIC_ASSETS = [
 
 // API endpoints to cache for offline data
 const API_ENDPOINTS = [
-    '/api/stocks/scan/instant',
     '/api/market/overview/instant',
     '/api/news/general/instant'
 ];
@@ -105,8 +104,8 @@ self.addEventListener('fetch', (event) => {
 async function handleApiRequest(request) {
     const url = new URL(request.url);
 
-    // For instant endpoints, try cache first for ultra-fast loading
-    if (url.pathname.includes('/instant')) {
+    // For instant endpoints (except scan), try cache first for ultra-fast loading
+    if (url.pathname.includes('/instant') && !url.pathname.includes('/scan')) {
         try {
             // Try cache first
             const cache = await caches.open(API_CACHE_NAME);
@@ -127,10 +126,18 @@ async function handleApiRequest(request) {
 
     // Fallback to network
     try {
-        const response = await fetch(request);
+        // For scan endpoints, add cache-busting to ensure fresh data
+        let fetchRequest = request;
+        if (url.pathname.includes('/scan') && !url.pathname.includes('/instant')) {
+            const urlWithCacheBust = new URL(request.url);
+            urlWithCacheBust.searchParams.set('_t', Date.now());
+            fetchRequest = new Request(urlWithCacheBust.toString(), request);
+        }
 
-        // Cache successful responses
-        if (response.ok && request.method === 'GET') {
+        const response = await fetch(fetchRequest);
+
+        // Cache successful responses (but not scan endpoints)
+        if (response.ok && request.method === 'GET' && !url.pathname.includes('/scan')) {
             const cache = await caches.open(API_CACHE_NAME);
             cache.put(request, response.clone());
         }
