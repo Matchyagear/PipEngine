@@ -297,21 +297,26 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # Initialize MongoDB connection (optional)
 MONGO_URL = os.environ.get('MONGO_URL')
-MONGODB_DISABLED = os.environ.get('MONGODB_DISABLED', 'true').lower() in ['true', '1', 'yes', 'on']
+MONGODB_DISABLED_ENV = os.environ.get('MONGODB_DISABLED', 'true').lower() in ['true', '1', 'yes', 'on']
 
 print(f"🔍 Debug: MONGO_URL = {MONGO_URL}")
-print(f"🔍 Debug: MONGODB_DISABLED = {MONGODB_DISABLED}")
+print(f"🔍 Debug: MONGODB_DISABLED_ENV = {MONGODB_DISABLED_ENV}")
 print(f"🔍 Debug: Raw MONGODB_DISABLED env = '{os.environ.get('MONGODB_DISABLED', 'true')}'")
 
-# Force disable MongoDB if no URL provided (production environment like Render)
+# FORCE disable MongoDB if no URL provided (production safety)
+# This takes priority over environment variable to prevent connection attempts
 if not MONGO_URL:
-    print("⚠️  No MONGO_URL found. MongoDB automatically disabled to prevent connection delays.")
+    print("⚠️  No MONGO_URL found. MongoDB FORCE DISABLED to prevent connection delays.")
     MONGODB_DISABLED = True
-elif MONGODB_DISABLED:
-    print("⚠️  MongoDB explicitly disabled via MONGODB_DISABLED environment variable.")
+else:
+    MONGODB_DISABLED = MONGODB_DISABLED_ENV
+    if MONGODB_DISABLED:
+        print("⚠️  MongoDB explicitly disabled via MONGODB_DISABLED environment variable.")
+    else:
+        print(f"✅ MongoDB enabled. Will attempt connection to: {MONGO_URL}")
 
 if MONGODB_DISABLED:
-    print("⚠️  MongoDB explicitly disabled via env")
+    print("✅ MongoDB DISABLED - App will run without user features (watchlists, alerts, etc.)")
     client = None
     db = None
     watchlists_collection = None
