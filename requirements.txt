@@ -37,3 +37,10 @@ anthropic
 newsapi-python>=0.2.7
 feedparser>=6.0.11
 alpaca-py>=0.21.0
+
+# Background job scheduling for cache warming
+schedule>=1.2.0
+
+# PostgreSQL/Supabase support
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.0

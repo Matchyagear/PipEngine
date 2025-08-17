@@ -309,17 +309,17 @@ db_pool = None
 def setup_supabase():
     """Setup Supabase PostgreSQL connection"""
     print("🔄 Setting up Supabase PostgreSQL connection...")
-    
+
     # Get connection string from environment
     database_url = os.environ.get('DATABASE_URL')
-    
+
     if not database_url:
         print("❌ No DATABASE_URL found in environment variables")
         print("💡 Set DATABASE_URL environment variable with your Supabase connection string")
         return None
-    
+
     print(f"🔗 Connecting to Supabase: {database_url[:50]}...")
-    
+
     try:
         # Create connection pool
         global db_pool
@@ -328,19 +328,19 @@ def setup_supabase():
             maxconn=10,
             dsn=database_url
         )
-        
+
         # Test connection
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT version();")
                 version = cur.fetchone()
                 print(f"✅ Supabase connection successful! PostgreSQL version: {version[0]}")
-        
+
         # Create tables if they don't exist
         create_tables()
         print("✅ All tables initialized successfully")
         return True
-        
+
     except Exception as e:
         print(f"❌ Supabase connection failed: {e}")
         print("💡 Check your DATABASE_URL and network access")
@@ -351,7 +351,7 @@ def get_db_connection():
     """Get database connection from pool"""
     if not db_pool:
         raise Exception("Database not initialized")
-    
+
     conn = db_pool.getconn()
     try:
         yield conn
@@ -374,7 +374,7 @@ def create_tables():
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
-            
+
             # Create user_preferences table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS user_preferences (
@@ -389,7 +389,7 @@ def create_tables():
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
-            
+
             # Create alerts table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS alerts (
@@ -403,7 +403,7 @@ def create_tables():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
-            
+
             conn.commit()
 
 # Initialize Supabase
@@ -418,7 +418,7 @@ def safe_db_operation(operation, default_return=None):
     """Safely execute database operations with error handling"""
     if not is_database_available():
         return default_return
-    
+
     try:
         return operation()
     except Exception as e:
@@ -2322,7 +2322,7 @@ async def get_watchlists(authorization: Optional[str] = None):
                     cur.execute("SELECT * FROM watchlists WHERE user_id = %s", (user_id,))
                 else:
                     cur.execute("SELECT * FROM watchlists")
-                
+
                 watchlists = []
                 for row in cur.fetchall():
                     watchlist = dict(row)
@@ -2345,7 +2345,7 @@ async def create_watchlist(watchlist: CreateWatchlist, authorization: Optional[s
                 pass
 
         watchlist_id = str(uuid.uuid4())
-        
+
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("""
@@ -2353,10 +2353,10 @@ async def create_watchlist(watchlist: CreateWatchlist, authorization: Optional[s
                     VALUES (%s, %s, %s, %s)
                     RETURNING *
                 """, (watchlist_id, watchlist.name, watchlist.tickers, user_id))
-                
+
                 result = cur.fetchone()
                 conn.commit()
-                
+
                 watchlist_doc = dict(result)
                 watchlist_doc['id'] = str(watchlist_doc['id'])
                 return watchlist_doc
@@ -2382,19 +2382,19 @@ async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist, author
             with conn.cursor() as cur:
                 if user_id:
                     cur.execute("""
-                        UPDATE watchlists 
+                        UPDATE watchlists
                         SET name = %s, tickers = %s, updated_at = CURRENT_TIMESTAMP
                         WHERE watchlist_id = %s AND user_id = %s
                     """, (watchlist.name, watchlist.tickers, watchlist_id, user_id))
                 else:
                     cur.execute("""
-                        UPDATE watchlists 
+                        UPDATE watchlists
                         SET name = %s, tickers = %s, updated_at = CURRENT_TIMESTAMP
                         WHERE watchlist_id = %s
                     """, (watchlist.name, watchlist.tickers, watchlist_id))
-                
+
                 conn.commit()
-                
+
                 if cur.rowcount == 0:
                     raise HTTPException(status_code=404, detail="Watchlist not found")
 
@@ -2423,9 +2423,9 @@ async def delete_watchlist(watchlist_id: str, authorization: Optional[str] = Non
                     cur.execute("DELETE FROM watchlists WHERE watchlist_id = %s AND user_id = %s", (watchlist_id, user_id))
                 else:
                     cur.execute("DELETE FROM watchlists WHERE watchlist_id = %s", (watchlist_id,))
-                
+
                 conn.commit()
-                
+
                 if cur.rowcount == 0:
                     raise HTTPException(status_code=404, detail="Watchlist not found")
 
@@ -2455,7 +2455,7 @@ async def scan_watchlist(watchlist_id: str, authorization: Optional[str] = None)
                     cur.execute("SELECT * FROM watchlists WHERE watchlist_id = %s AND user_id = %s", (watchlist_id, user_id))
                 else:
                     cur.execute("SELECT * FROM watchlists WHERE watchlist_id = %s", (watchlist_id,))
-                
+
                 result = cur.fetchone()
                 if result:
                     return dict(result)
@@ -2481,7 +2481,7 @@ async def get_user_preferences():
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("SELECT * FROM user_preferences WHERE user_id = %s", ("default",))
                 prefs = cur.fetchone()
-                
+
                 if not prefs:
                     # Create default preferences
                     cur.execute("""
@@ -2489,10 +2489,10 @@ async def get_user_preferences():
                         VALUES (%s, %s, %s, %s, %s, %s)
                         RETURNING *
                     """, ("default", False, True, 300, "gemini", True))
-                    
+
                     prefs = cur.fetchone()
                     conn.commit()
-                
+
                 return dict(prefs)
 
     default_prefs = {
@@ -2533,7 +2533,7 @@ async def update_user_preferences(preferences: UserPreferences):
                     prefs_dict.get('ai_provider', 'gemini'),
                     prefs_dict.get('notifications_enabled', True)
                 ))
-                
+
                 conn.commit()
                 return {"message": "Preferences updated successfully"}
 
