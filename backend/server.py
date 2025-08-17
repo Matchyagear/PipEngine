@@ -590,7 +590,7 @@ async def _evaluate_strategy_and_trade(strategy: dict):
 
             passes = True
             if rules.get('rsi_oversold'):
-                passes &= (rsi <= 35)
+                passes &= (rsi <= 30)
             if rules.get('ma50_above_ma200'):
                 passes &= (ma50 >= ma200)
             if rules.get('price_above_ma50'):
@@ -1657,7 +1657,7 @@ def fetch_lightweight_stock_data(ticker: str):
 
         # Quick scoring system (simplified)
         score = 0
-        if quick_rsi < 35:  # Oversold
+        if quick_rsi < 30:  # Oversold
             score += 1
         if rel_volume > 1.5:  # High relative volume
             score += 1
@@ -2118,7 +2118,8 @@ async def scan_stocks_fast():
                 'passes': {
                     'trend': stock['priceChangePercent'] > 0,
                     'volume': stock['relativeVolume'] > 1.5,
-                    'oversold': stock['RSI'] < 35,
+                    'oversold': stock['RSI'] < 30,
+                    'overbought': stock['RSI'] > 70,
                     'breakout': stock['priceChangePercent'] > 2
                 }
             })
@@ -3676,7 +3677,7 @@ async def backtest(strategy: dict):
                     # very rough RSI gate using last 14 price momentum
                     if rules.get('rsi_oversold') and i >= 14:
                         rsi = _calc_rsi(close.iloc[:i])
-                        passes &= (rsi <= 35)
+                        passes &= (rsi <= 30)
                     if position == 0 and passes:
                         position = 1
                         entry = price
