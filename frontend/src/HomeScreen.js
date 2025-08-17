@@ -63,6 +63,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const [loadingVolume, setLoadingVolume] = useState(true);
   const [loadingVolatile, setLoadingVolatile] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [featuredError, setFeaturedError] = useState(null);
 
   // Expandable section states
   const [showMorningBrief, setShowMorningBrief] = useState(true);
@@ -147,122 +148,37 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchFeaturedStocks = async () => {
     try {
       setLoadingFeatured(true);
-      // Use fast endpoint for live featured stocks (not static)
+      setFeaturedError(null);
+      
+      // Try fast endpoint first for live featured stocks
       const response = await fetch(`${API_BASE_URL}/api/stocks/scan/fast`);
 
       if (response.ok) {
         const data = await response.json();
-        // Take top 2 performing stocks for featured section
-        setFeaturedStocks(data.stocks?.slice(0, 2) || []);
+        if (data.stocks && data.stocks.length > 0) {
+          // Take top 2 performing stocks for featured section
+          setFeaturedStocks(data.stocks.slice(0, 2));
+        } else {
+          throw new Error('No stocks returned from fast scan');
+        }
       } else {
-        // Fallback to regular scan if fast endpoint fails
+        // Try regular scan if fast endpoint fails
         const fallbackResponse = await fetch(`${API_BASE_URL}/api/stocks/scan`);
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
-          setFeaturedStocks(fallbackData.stocks?.slice(0, 2) || []);
+          if (fallbackData.stocks && fallbackData.stocks.length > 0) {
+            setFeaturedStocks(fallbackData.stocks.slice(0, 2));
+          } else {
+            throw new Error('No stocks returned from regular scan');
+          }
         } else {
-          // Final fallback to static data only if both live endpoints fail
-          setFeaturedStocks([
-            {
-              symbol: 'AAPL',
-              company_name: 'Apple Inc.',
-              current_price: 227.52,
-              change_percent: 2.1,
-              volume: 45678901,
-              score: 4,
-              analysis: {
-                recommendation: 'Strong Buy',
-                price_target: 250,
-                risk_level: 'Low'
-              }
-            },
-            {
-              symbol: 'NVDA',
-              company_name: 'NVIDIA Corporation',
-              current_price: 140.76,
-              change_percent: 3.4,
-              volume: 67890123,
-              score: 4,
-              analysis: {
-                recommendation: 'Buy',
-                price_target: 160,
-                risk_level: 'Medium'
-              }
-            }
-          ]);
+          throw new Error(`Failed to fetch live data: ${fallbackResponse.status} ${fallbackResponse.statusText}`);
         }
       }
     } catch (error) {
       console.error('Error fetching featured stocks:', error);
-      // Try regular scan as fallback for network errors
-      try {
-        const fallbackResponse = await fetch(`${API_BASE_URL}/api/stocks/scan`);
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          setFeaturedStocks(fallbackData.stocks?.slice(0, 2) || []);
-        } else {
-          // Final fallback to static data
-          setFeaturedStocks([
-            {
-              symbol: 'AAPL',
-              company_name: 'Apple Inc.',
-              current_price: 227.52,
-              change_percent: 2.1,
-              volume: 45678901,
-              score: 4,
-              analysis: {
-                recommendation: 'Strong Buy',
-                price_target: 250,
-                risk_level: 'Low'
-              }
-            },
-            {
-              symbol: 'MSFT',
-              company_name: 'Microsoft Corporation',
-              current_price: 422.54,
-              change_percent: 1.8,
-              volume: 23456789,
-              score: 4,
-              analysis: {
-                recommendation: 'Buy',
-                price_target: 450,
-                risk_level: 'Low'
-              }
-            }
-          ]);
-        }
-      } catch (fallbackError) {
-        console.error('Fallback fetch also failed:', fallbackError);
-        // Final static fallback
-        setFeaturedStocks([
-          {
-            symbol: 'AAPL',
-            company_name: 'Apple Inc.',
-            current_price: 227.52,
-            change_percent: 2.1,
-            volume: 45678901,
-            score: 4,
-            analysis: {
-              recommendation: 'Strong Buy',
-              price_target: 250,
-              risk_level: 'Low'
-            }
-          },
-          {
-            symbol: 'MSFT',
-            company_name: 'Microsoft Corporation',
-            current_price: 422.54,
-            change_percent: 1.8,
-            volume: 23456789,
-            score: 4,
-            analysis: {
-              recommendation: 'Buy',
-              price_target: 450,
-              risk_level: 'Low'
-            }
-          }
-        ]);
-      }
+      setFeaturedError(`Failed to load Shadow's Picks: ${error.message}`);
+      setFeaturedStocks([]); // Clear any previous data
     } finally {
       setLoadingFeatured(false);
     }
@@ -926,6 +842,35 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
                 <span className="ml-3 text-gray-600 dark:text-gray-400">Loading featured analysis...</span>
+              </div>
+            ) : featuredError ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="text-center">
+                  <div className="text-red-500 mb-2">
+                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-red-600 dark:text-red-400 font-medium">{featuredError}</p>
+                  <button 
+                    onClick={fetchFeaturedStocks}
+                    className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            ) : featuredStocks.length === 0 ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="text-center">
+                  <p className="text-gray-500 dark:text-gray-400">No featured stocks available</p>
+                  <button 
+                    onClick={fetchFeaturedStocks}
+                    className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                    Refresh
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
