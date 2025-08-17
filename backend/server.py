@@ -830,7 +830,7 @@ def calculate_swing_score(stock_data):
         market_chg = stock_data.get('marketChangePercent', 0)
         sector_chg = stock_data.get('sectorChangePercent', 0)
         stock_chg = stock_data.get('priceChangePercent', 0)
-        
+
         if market_chg >= 0 and stock_chg >= 0 or market_chg < 0 and stock_chg < 0: pts += W_MARKET
         if sector_chg >= 0 and stock_chg >= 0 or sector_chg < 0 and stock_chg < 0: pts += W_SECTOR
 
@@ -865,10 +865,10 @@ def evaluate_advanced_criteria(stock_data):
 
     # Main score is still out of 4, bonus criteria add extra insights
     main_score = sum([passes['trend'], passes['momentum'], passes['volume'], passes['priceAction']])
-    
+
     # Calculate swing score (1-100)
     swing_score = calculate_swing_score(stock_data)
-    
+
     return passes, main_score, swing_score
 
 async def get_gemini_insight(ticker: str, price: float, passes: dict, score: int):
