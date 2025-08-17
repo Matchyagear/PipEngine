@@ -1000,10 +1000,10 @@ function App() {
       )}
       {/* Enhanced Header - Made Sticky/Floating */}
       <header className="sticky top-0 z-50 header-gunmetal border-b border-carbon-700 shadow-sm backdrop-blur-sm">
-        <div className="w-full px-0 py-3">
-          <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-start">
+        <div className="w-full px-2 py-2">
+          <div className="flex flex-col lg:flex-row gap-1 lg:items-center justify-between">
             {/* Left Side - Logo and Title with dropdown */}
-            <div ref={logoMenuRef} className="relative flex items-center space-x-2">
+            <div ref={logoMenuRef} className="relative flex items-center space-x-1">
               <button
                 onClick={() => setShowLogoMenu((v) => !v)}
                 className="rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1011,10 +1011,10 @@ function App() {
                 aria-expanded={showLogoMenu}
                 title="Open menu"
               >
-                <Logo size="lg" showText={false} src="/pipengine_logo.png" />
+                <Logo size="md" showText={false} src="/pipengine_logo.png" />
               </button>
               {autoRefresh && (
-                <p className="text-xs text-green-600 dark:text-green-400">
+                <p className="text-xs text-green-600 dark:text-green-400 hidden sm:block">
                   Auto-refreshing every {refreshInterval / 60} minutes
                 </p>
               )}
@@ -1033,14 +1033,14 @@ function App() {
             </div>
 
             {/* Center - Global Search */}
-            <div className="max-w-md ml-0">
+            <div className="flex-1 max-w-2xl mx-2">
               <div className="relative">
                 <input
                   type="text"
                   value={searchTicker}
                   onChange={(e) => setSearchTicker(e.target.value.toUpperCase())}
                   onKeyPress={handleSearchKeyPress}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   placeholder="Search any stock ticker (e.g., AAPL, TSLA)"
                 />
                 <button
@@ -1048,9 +1048,9 @@ function App() {
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                 >
                   {isSearching ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   )}
@@ -1059,16 +1059,16 @@ function App() {
             </div>
 
             {/* Navigation Tabs in Header Center */}
-            <div className="flex items-center space-x-1 bg-gray-800/30 p-1 rounded-lg border border-gray-700/60">
+            <div className="flex items-center space-x-0.5 bg-gray-800/30 p-0.5 rounded-lg border border-gray-700/60">
               <button
                 onClick={() => {
                   setActiveTab('home');
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`tab-button ${activeTab === 'home' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'home' ? 'tab-button-active' : ''}`}
               >
-                <Home className="w-4 h-4" />
+                <Home className="w-3 h-3" />
                 <span>Home</span>
               </button>
 
@@ -1080,9 +1080,9 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`tab-button ${activeTab === 'portfolio' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'portfolio' ? 'tab-button-active' : ''}`}
               >
-                <PieChart className="w-4 h-4" />
+                <PieChart className="w-3 h-3" />
                 <span>Portfolio</span>
               </button>
 
@@ -1092,9 +1092,9 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`tab-button ${activeTab === 'watchlist' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'watchlist' ? 'tab-button-active' : ''}`}
               >
-                <Star className="w-4 h-4" />
+                <Star className="w-3 h-3" />
                 <span>Watchlist</span>
               </button>
 
@@ -1105,9 +1105,9 @@ function App() {
                   setShowSearchResult(false);
                   fetchNews();
                 }}
-                className={`tab-button ${activeTab === 'news' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'news' ? 'tab-button-active' : ''}`}
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-3 h-3" />
                 <span>News</span>
               </button>
 
@@ -1117,9 +1117,9 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`tab-button ${activeTab === 'chart' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'chart' ? 'tab-button-active' : ''}`}
               >
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="w-3 h-3" />
                 <span>Chart</span>
               </button>
 
@@ -1129,9 +1129,9 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`tab-button ${activeTab === 'screener' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'screener' ? 'tab-button-active' : ''}`}
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3 h-3" />
                 <span>Screener</span>
               </button>
 
@@ -1141,20 +1141,20 @@ function App() {
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
                 }}
-                className={`tab-button ${activeTab === 'shadows-picks' ? 'tab-button-active' : ''}`}
+                className={`tab-button text-xs ${activeTab === 'shadows-picks' ? 'tab-button-active' : ''}`}
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-3 h-3" />
                 <span>Shadow's Picks</span>
               </button>
             </div>
 
             {/* Right Side - Controls */}
-            <div className="flex items-center space-x-2 ml-auto pr-2">
+            <div className="flex items-center space-x-1 ml-auto pr-1">
               {/* Auth status indicator */}
               {authUser ? (
-                <span className="hidden sm:inline text-xs text-green-400 mr-2">Logged in as: {authUser.email}</span>
+                <span className="hidden lg:inline text-xs text-green-400 mr-1">Logged in as: {authUser.email}</span>
               ) : (
-                <span className="hidden sm:inline text-xs text-yellow-400 mr-2">Not logged in</span>
+                <span className="hidden lg:inline text-xs text-yellow-400 mr-1">Not logged in</span>
               )}
               {/* Auth quick actions */}
               {!authUser ? (
@@ -1180,10 +1180,10 @@ function App() {
                         alert('Login error');
                       }
                     }}
-                    className="sleek-icon-btn"
+                    className="sleek-icon-btn text-xs"
                     title="Login"
                   >
-                    <span className="text-sm">Login</span>
+                    <span className="text-xs">Login</span>
                   </button>
                   <button
                     onClick={async () => {
@@ -1206,15 +1206,15 @@ function App() {
                         alert('Registration error');
                       }
                     }}
-                    className="sleek-icon-btn"
+                    className="sleek-icon-btn text-xs"
                     title="Register"
                   >
-                    <span className="text-sm">Sign up</span>
+                    <span className="text-xs">Sign up</span>
                   </button>
                 </>
               ) : (
                 <>
-                  <span className="text-xs text-gray-400">{authUser.email}</span>
+                  <span className="text-xs text-gray-400 hidden md:inline">{authUser.email}</span>
                   <button
                     onClick={() => {
                       setAuthToken('');
@@ -1222,10 +1222,10 @@ function App() {
                       localStorage.removeItem('authToken');
                       localStorage.removeItem('authUser');
                     }}
-                    className="sleek-icon-btn"
+                    className="sleek-icon-btn text-xs"
                     title="Logout"
                   >
-                    <span className="text-sm">Logout</span>
+                    <span className="text-xs">Logout</span>
                   </button>
                 </>
               )}
@@ -1235,7 +1235,7 @@ function App() {
                 className={`sleek-icon-btn ${showAIChat ? 'border-blue-500 text-blue-300' : ''}`}
                 title="AI Chat"
               >
-                <Brain className="w-5 h-5" />
+                <Brain className="w-4 h-4" />
               </button>
 
               {/* Mobile/Desktop Toggle */}
@@ -1243,7 +1243,7 @@ function App() {
                 onClick={() => setShowMobileView(!showMobileView)}
                 className="sleek-icon-btn"
               >
-                {showMobileView ? <Monitor className="w-5 h-5" /> : <Smartphone className="w-5 h-5" />}
+                {showMobileView ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
               </button>
 
               {/* Dark Mode Toggle */}
@@ -1251,7 +1251,7 @@ function App() {
                 onClick={() => setDarkMode(!darkMode)}
                 className="sleek-icon-btn"
               >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
 
               {/* Settings */}
@@ -1259,15 +1259,15 @@ function App() {
                 onClick={() => setShowSettings(true)}
                 className="sleek-icon-btn"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-4 h-4" />
               </button>
 
               {/* Export */}
               <button
                 onClick={() => exportData("json")}
-                className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-4 h-4" />
               </button>
 
               {/* Refresh */}
@@ -1276,7 +1276,7 @@ function App() {
                 disabled={isRefreshing}
                 className="sleek-icon-btn disabled:opacity-50"
               >
-                <RefreshCw className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </button>
             </div>
           </div>
