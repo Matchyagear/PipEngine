@@ -526,28 +526,28 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                      <BarChart3 className="w-4 h-4 text-blue-400" />
                      Key Market Indices - Live Charts
                    </h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                     {[
-                       { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
-                       { symbol: "NASDAQ:QQQ", name: "NASDAQ ETF" },
-                       { symbol: "FOREXCOM:DJI", name: "Dow Jones" },
-                       { symbol: "LSE:FTSE", name: "FTSE 100" }
-                     ].map((ticker) => (
-                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-2 hover:bg-gray-800/60 transition-colors">
-                         <div className="flex items-center justify-between mb-1">
-                           <div className="text-xs font-medium text-gray-300">{ticker.name}</div>
-                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
-                         </div>
-                         <div className="h-16">
-                           <TradingViewMiniWidget
-                             symbol={ticker.symbol}
-                             width="100%"
-                             height={64}
-                           />
-                         </div>
-                       </div>
-                     ))}
-                   </div>
+                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {[
+                        { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
+                        { symbol: "NASDAQ:QQQ", name: "NASDAQ ETF" },
+                        { symbol: "FOREXCOM:DJI", name: "Dow Jones" },
+                        { symbol: "LSE:FTSE", name: "FTSE 100" }
+                      ].map((ticker) => (
+                        <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
+                            <div className="text-xs text-gray-400">{ticker.symbol}</div>
+                          </div>
+                          <div className="h-24">
+                            <TradingViewMiniWidget
+                              symbol={ticker.symbol}
+                              width="100%"
+                              height={96}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                  </div>
 
                  <div>
@@ -555,30 +555,30 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                      <Globe className="w-4 h-4 text-green-400" />
                      Futures (Pre-Market) - Live Charts
                    </h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                     {[
-                       { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
-                       { symbol: "CME_MINI:NQ1!", name: "Nasdaq Futures" },
-                       { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
-                       { symbol: "NYMEX:CL1!", name: "Crude Oil" },
-                       { symbol: "COMEX:GC1!", name: "Gold Futures" },
-                       { symbol: "BITSTAMP:BTCUSD", name: "Bitcoin" }
-                     ].map((ticker) => (
-                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-2 hover:bg-gray-800/60 transition-colors">
-                         <div className="flex items-center justify-between mb-1">
-                           <div className="text-xs font-medium text-gray-300">{ticker.name}</div>
-                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
-                         </div>
-                         <div className="h-16">
-                           <TradingViewMiniWidget
-                             symbol={ticker.symbol}
-                             width="100%"
-                             height={64}
-                           />
-                         </div>
-                       </div>
-                     ))}
-                   </div>
+                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {[
+                        { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
+                        { symbol: "CME_MINI:NQ1!", name: "Nasdaq Futures" },
+                        { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
+                        { symbol: "NYMEX:CL1!", name: "Crude Oil" },
+                        { symbol: "COMEX:GC1!", name: "Gold Futures" },
+                        { symbol: "BITSTAMP:BTCUSD", name: "Bitcoin" }
+                      ].map((ticker) => (
+                        <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
+                            <div className="text-xs text-gray-400">{ticker.symbol}</div>
+                          </div>
+                          <div className="h-24">
+                            <TradingViewMiniWidget
+                              symbol={ticker.symbol}
+                              width="100%"
+                              height={96}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                  </div>
 
                  <div>
@@ -586,24 +586,24 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                      <Zap className="w-4 h-4 text-yellow-400" />
                      Popular Stocks - Live Charts
                    </h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
-                     {[
-                       "NASDAQ:AAPL", "NASDAQ:MSFT", "NASDAQ:GOOGL", "NASDAQ:AMZN"
-                     ].map((ticker) => (
-                       <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-2 hover:bg-gray-800/60 transition-colors">
-                         <div className="flex items-center justify-between mb-1">
-                           <div className="text-xs font-bold text-yellow-400">{ticker.split(':')[1]}</div>
-                         </div>
-                         <div className="h-12">
-                           <TradingViewMiniWidget
-                             symbol={ticker}
-                             width="100%"
-                             height={48}
-                           />
-                         </div>
-                       </div>
-                     ))}
-                   </div>
+                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                      {[
+                        "NASDAQ:AAPL", "NASDAQ:MSFT", "NASDAQ:GOOGL", "NASDAQ:AMZN"
+                      ].map((ticker) => (
+                        <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-bold text-yellow-400">{ticker.split(':')[1]}</div>
+                          </div>
+                          <div className="h-20">
+                            <TradingViewMiniWidget
+                              symbol={ticker}
+                              width="100%"
+                              height={80}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                  </div>
 
                  <div>
