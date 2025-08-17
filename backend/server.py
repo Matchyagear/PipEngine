@@ -1401,13 +1401,14 @@ async def get_morning_brief():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error building morning brief: {e}")
 
-def fetch_advanced_stock_data(ticker: str):
+def fetch_advanced_stock_data(ticker: str, bypass_cache: bool = False):
     """Fetch comprehensive stock data with advanced technical indicators"""
     try:
-        # Per-ticker in-memory cache to avoid recomputation
-        cached = _adv_cache_get(ticker)
-        if cached:
-            return cached
+        # Per-ticker in-memory cache to avoid recomputation (unless bypassed)
+        if not bypass_cache:
+            cached = _adv_cache_get(ticker)
+            if cached:
+                return cached
 
         # Get basic stock info from yfinance - OPTIMIZED: Only 6 months instead of 1 year
         stock = yf.Ticker(ticker)
@@ -1468,7 +1469,9 @@ def fetch_advanced_stock_data(ticker: str):
         # Add stock-specific news
         stock_data['news'] = fetch_stock_news(ticker, limit=3)
 
-        _adv_cache_set(ticker, stock_data)
+        # Only cache if not bypassing
+        if not bypass_cache:
+            _adv_cache_set(ticker, stock_data)
         return stock_data
 
     except Exception as e:
@@ -3191,10 +3194,10 @@ async def get_market_full_movers():
         full_gainers = []
         full_losers = []
 
-        # Process top 3 gainers
+        # Process top 3 gainers with fresh data (bypass cache for Shadow's Picks)
         for gainer in movers_data["gainers"][:3]:
             try:
-                full_stock = fetch_advanced_stock_data(gainer["ticker"])
+                full_stock = fetch_advanced_stock_data(gainer["ticker"], bypass_cache=True)
                 if full_stock:
                     full_gainers.append(full_stock)
                 await asyncio.sleep(0.3)  # Rate limiting
@@ -3202,10 +3205,10 @@ async def get_market_full_movers():
                 print(f"Error analyzing gainer {gainer['ticker']}: {e}")
                 continue
 
-        # Process top 3 losers
+        # Process top 3 losers with fresh data (bypass cache for Shadow's Picks)
         for loser in movers_data["losers"][:3]:
             try:
-                full_stock = fetch_advanced_stock_data(loser["ticker"])
+                full_stock = fetch_advanced_stock_data(loser["ticker"], bypass_cache=True)
                 if full_stock:
                     full_losers.append(full_stock)
                 await asyncio.sleep(0.3)  # Rate limiting
