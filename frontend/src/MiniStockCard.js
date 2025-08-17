@@ -267,14 +267,14 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         {/* Price and Change */}
         <div className="mb-2">
           <p className="text-lg font-bold text-gray-900 dark:text-white">
-            ${stock.currentPrice.toFixed(2)}
+            ${stock.currentPrice ? stock.currentPrice.toFixed(2) : 'N/A'}
           </p>
-          <p className={`text-xs font-medium ${stock.priceChangePercent >= 0
+          <p className={`text-xs font-medium ${(stock.priceChangePercent || 0) >= 0
             ? 'text-green-600 dark:text-green-400'
             : 'text-red-600 dark:text-red-400'
             }`}>
-            {stock.priceChangePercent >= 0 ? '+' : ''}
-            {stock.priceChangePercent.toFixed(2)}%
+            {(stock.priceChangePercent || 0) >= 0 ? '+' : ''}
+            {stock.priceChangePercent ? stock.priceChangePercent.toFixed(2) : '0.00'}%
           </p>
         </div>
 

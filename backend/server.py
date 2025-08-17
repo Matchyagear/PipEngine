@@ -74,7 +74,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Local development
-        "https://*.vercel.app",   # Vercel deployments
+        "https://pip-engine.vercel.app",  # Main Vercel deployment
+        "https://pip-engine-ah50zb1hp-matts-projects-07983335.vercel.app",  # Current Vercel URL
+        "https://*.vercel.app",   # All Vercel deployments
         "https://*.onrender.com", # Render deployments
         "*"  # Allow all origins for now (restrict in production)
     ],
@@ -276,14 +278,7 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"📡 WEBSOCKET: Error - {e}")
         manager.disconnect(websocket)
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS already configured above - removing duplicate
 
 # Initialize MongoDB connection (optional)
 MONGO_URL = os.environ.get('MONGO_URL')
@@ -1276,7 +1271,26 @@ def send_discord_alert(message: str):
 # API Routes
 @app.get("/")
 async def root():
-    return {"message": "ShadowBeta Financial Dashboard API - Enhanced Version"}
+    return {"message": "ShadowBeta Financial Dashboard API - Enhanced Version", "status": "active", "version": "2.0"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify all systems"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "mongodb_connected": db is not None,
+        "mongodb_disabled": MONGODB_DISABLED,
+        "endpoints": {
+            "scan_instant": "/api/stocks/scan/instant",
+            "market_instant": "/api/market/overview/instant", 
+            "news_instant": "/api/news/general/instant"
+        },
+        "cors_origins": [
+            "https://pip-engine.vercel.app",
+            "https://pip-engine-ah50zb1hp-matts-projects-07983335.vercel.app"
+        ]
+    }
 
 # Minimal env diagnostics (no secrets)
 @app.get("/api/debug/env")

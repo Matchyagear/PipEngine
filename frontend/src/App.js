@@ -180,17 +180,16 @@ function App() {
         };
 
         ws.onclose = () => {
-          console.log('📡 WEBSOCKET: Connection closed, reconnecting...');
+          console.log('📡 WEBSOCKET: Connection closed');
           setIsConnected(false);
           setWebsocket(null);
-
-          // Reconnect after 5 seconds
-          setTimeout(connectWebSocket, 5000);
+          // Don't auto-reconnect for now to prevent spam
         };
 
         ws.onerror = (error) => {
           console.log('📡 WEBSOCKET: Connection error:', error);
           setIsConnected(false);
+          // Don't auto-reconnect for now to prevent spam
         };
 
       } catch (error) {

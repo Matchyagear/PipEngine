@@ -149,7 +149,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setLoadingFeatured(true);
       // Use instant endpoint for featured stocks (fastest)
       const response = await fetch(`${API_BASE_URL}/api/stocks/scan/instant`);
-      
+
       if (response.ok) {
         const data = await response.json();
         // Take top 2 performing stocks for featured section
