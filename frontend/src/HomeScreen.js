@@ -150,19 +150,19 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setLoadingFeatured(true);
       setFeaturedError(null);
 
-      // Use full scan endpoint for proper swing analysis (4/4 swing scan setup)
-      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=2&max_results=10&_t=${Date.now()}`);
+      // Use the same endpoint as home screen stocks that work correctly
+      const response = await fetch(`${API_BASE_URL}/api/market/full-movers?_t=${Date.now()}`);
 
       if (response.ok) {
         const data = await response.json();
-        if (data.stocks && data.stocks.length > 0) {
-          // Take top 5-10 performing stocks for featured section (4/4 scan results)
-          setFeaturedStocks(data.stocks.slice(0, 10));
+        if (data.gainers && data.gainers.length > 0) {
+          // Take top 5-10 performing stocks from gainers (4/4 scan results)
+          setFeaturedStocks(data.gainers.slice(0, 10));
         } else {
-          throw new Error('No stocks returned from swing scan');
+          throw new Error('No stocks returned from market movers');
         }
       } else {
-        throw new Error(`Failed to fetch swing scan data: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch market movers data: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error fetching featured stocks:', error);
