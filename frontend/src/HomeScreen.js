@@ -582,31 +582,6 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 </div>
 
                 <div>
-                  <h3 className="font-medium mb-3 flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-yellow-400" />
-                    Popular Stocks - Live Charts
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
-                    {[
-                      "NASDAQ:AAPL", "NASDAQ:MSFT", "NASDAQ:GOOGL", "NASDAQ:AMZN"
-                    ].map((ticker) => (
-                      <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-sm font-bold text-yellow-400">{ticker.split(':')[1]}</div>
-                        </div>
-                        <div className="h-24">
-                          <TradingViewMiniWidget
-                            symbol={ticker}
-                            width="100%"
-                            height={96}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
                   <h3 className="font-medium mb-2">Overnight/Early Headlines</h3>
                   <ul className="space-y-1 list-disc list-inside">
                     {morning?.early_news?.map((n, idx) => (
