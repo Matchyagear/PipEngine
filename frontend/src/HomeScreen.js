@@ -519,196 +519,196 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
               </div>
             )}
 
-                         {true && ( // FORCE TRADINGVIEW WIDGETS ALWAYS
-               <>
-                                   <div>
-                    <h3 className="font-medium mb-3 flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-blue-400" />
-                      Key Market Indices - Live Charts
-                    </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {[
-                        { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
-                        { symbol: "NASDAQ:QQQ", name: "NASDAQ ETF" },
-                        { symbol: "FOREXCOM:DJI", name: "Dow Jones" },
-                        { symbol: "LSE:FTSE", name: "FTSE 100" }
-                      ].map((ticker) => (
-                        <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-2 hover:bg-gray-800/60 transition-colors">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="text-xs font-medium text-gray-300">{ticker.name}</div>
-                            <div className="text-xs text-gray-400">{ticker.symbol}</div>
-                          </div>
-                          <div className="h-12">
-                            <TradingViewMiniWidget
-                              symbol={ticker.symbol}
-                              width="100%"
-                              height={48}
-                            />
-                          </div>
+            {true && ( // FORCE TRADINGVIEW WIDGETS ALWAYS
+              <>
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-blue-400" />
+                    Key Market Indices - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {[
+                      { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
+                      { symbol: "NASDAQ:QQQ", name: "NASDAQ ETF" },
+                      { symbol: "FOREXCOM:DJI", name: "Dow Jones" },
+                      { symbol: "LSE:FTSE", name: "FTSE 100" }
+                    ].map((ticker) => (
+                      <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
+                          <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
-                      ))}
-                    </div>
-                 </div>
-
-                 <div>
-                   <h3 className="font-medium mb-3 flex items-center gap-2">
-                     <Globe className="w-4 h-4 text-green-400" />
-                     Futures (Pre-Market) - Live Charts
-                   </h3>
-                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {[
-                        { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
-                        { symbol: "CME_MINI:NQ1!", name: "Nasdaq Futures" },
-                        { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
-                        { symbol: "NYMEX:CL1!", name: "Crude Oil" },
-                        { symbol: "COMEX:GC1!", name: "Gold Futures" },
-                        { symbol: "BITSTAMP:BTCUSD", name: "Bitcoin" }
-                      ].map((ticker) => (
-                        <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-2 hover:bg-gray-800/60 transition-colors">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="text-xs font-medium text-gray-300">{ticker.name}</div>
-                            <div className="text-xs text-gray-400">{ticker.symbol}</div>
-                          </div>
-                          <div className="h-12">
-                            <TradingViewMiniWidget
-                              symbol={ticker.symbol}
-                              width="100%"
-                              height={48}
-                            />
-                          </div>
+                        <div className="h-32">
+                          <TradingViewMiniWidget
+                            symbol={ticker.symbol}
+                            width="100%"
+                            height={128}
+                          />
                         </div>
-                      ))}
-                    </div>
-                 </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                 <div>
-                   <h3 className="font-medium mb-3 flex items-center gap-2">
-                     <Zap className="w-4 h-4 text-yellow-400" />
-                     Popular Stocks - Live Charts
-                   </h3>
-                                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
-                      {[
-                        "NASDAQ:AAPL", "NASDAQ:MSFT", "NASDAQ:GOOGL", "NASDAQ:AMZN"
-                      ].map((ticker) => (
-                        <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-2 hover:bg-gray-800/60 transition-colors">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="text-xs font-bold text-yellow-400">{ticker.split(':')[1]}</div>
-                          </div>
-                          <div className="h-10">
-                            <TradingViewMiniWidget
-                              symbol={ticker}
-                              width="100%"
-                              height={40}
-                            />
-                          </div>
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-green-400" />
+                    Futures (Pre-Market) - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {[
+                      { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
+                      { symbol: "CME_MINI:NQ1!", name: "Nasdaq Futures" },
+                      { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
+                      { symbol: "NYMEX:CL1!", name: "Crude Oil" },
+                      { symbol: "COMEX:GC1!", name: "Gold Futures" },
+                      { symbol: "BITSTAMP:BTCUSD", name: "Bitcoin" }
+                    ].map((ticker) => (
+                      <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
+                          <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
+                        <div className="h-32">
+                          <TradingViewMiniWidget
+                            symbol={ticker.symbol}
+                            width="100%"
+                            height={128}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    Popular Stocks - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+                    {[
+                      "NASDAQ:AAPL", "NASDAQ:MSFT", "NASDAQ:GOOGL", "NASDAQ:AMZN"
+                    ].map((ticker) => (
+                      <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm font-bold text-yellow-400">{ticker.split(':')[1]}</div>
+                        </div>
+                        <div className="h-24">
+                          <TradingViewMiniWidget
+                            symbol={ticker}
+                            width="100%"
+                            height={96}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Overnight/Early Headlines</h3>
+                  <ul className="space-y-1 list-disc list-inside">
+                    {morning?.early_news?.map((n, idx) => (
+                      <li key={idx}><a href={n.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{n.title}</a> <span className="text-gray-500">— {n.source}</span></li>
+                    )) || [
+                      { title: "Market Rally Continues as Tech Stocks Lead Gains", url: "#", source: "Financial News" },
+                      { title: "Federal Reserve Signals Continued Economic Support", url: "#", source: "Economic Times" },
+                      { title: "Major Earnings Reports Drive Market Activity", url: "#", source: "MarketWatch" }
+                    ].map((n, idx) => (
+                      <li key={idx}><a href={n.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{n.title}</a> <span className="text-gray-500">— {n.source}</span></li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Earnings Today</h3>
+                    <ul className="text-sm space-y-1">
+                      {morning?.earnings_today?.map((e, idx) => (
+                        <li key={idx} className="text-gray-300">{e.symbol || ''} <span className="text-gray-500">{e.time || ''}</span></li>
+                      )) || [
+                        { symbol: "AAPL", time: "4:30 PM ET" },
+                        { symbol: "MSFT", time: "4:00 PM ET" },
+                        { symbol: "GOOGL", time: "4:15 PM ET" }
+                      ].map((e, idx) => (
+                        <li key={idx} className="text-gray-300">{e.symbol} <span className="text-gray-500">{e.time}</span></li>
                       ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">Economic Calendar</h3>
+                    <ul className="text-sm space-y-1">
+                      {morning?.economic_today?.map((e, idx) => (
+                        <li key={idx} className="text-gray-300">{e.event || ''} <span className="text-gray-500">{e.time || ''}</span></li>
+                      )) || [
+                        { event: "CPI Data Release", time: "8:30 AM ET" },
+                        { event: "Fed Minutes", time: "2:00 PM ET" },
+                        { event: "Jobless Claims", time: "8:30 AM ET" }
+                      ].map((e, idx) => (
+                        <li key={idx} className="text-gray-300">{e.event} <span className="text-gray-500">{e.time}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Top Gainers/Losers (Pre/Post)</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-gray-400 mb-1">Gainers</div>
+                      <ul className="text-sm space-y-1">
+                        {morning?.movers?.gainers?.slice(0, 5).map((s) => (
+                          <li key={s.ticker}>{s.ticker} <span className="text-green-400">{s.changePercent}%</span></li>
+                        )) || [
+                          { ticker: "NVDA", changePercent: 3.2 },
+                          { ticker: "TSLA", changePercent: 2.8 },
+                          { ticker: "AMD", changePercent: 2.1 }
+                        ].map((s) => (
+                          <li key={s.ticker}>{s.ticker} <span className="text-green-400">{s.changePercent}%</span></li>
+                        ))}
+                      </ul>
                     </div>
-                 </div>
+                    <div>
+                      <div className="text-xs text-gray-400 mb-1">Losers</div>
+                      <ul className="text-sm space-y-1">
+                        {morning?.movers?.losers?.slice(0, 5).map((s) => (
+                          <li key={s.ticker}>{s.ticker} <span className="text-red-400">{s.changePercent}%</span></li>
+                        )) || [
+                          { ticker: "NFLX", changePercent: -1.8 },
+                          { ticker: "META", changePercent: -1.2 },
+                          { ticker: "PYPL", changePercent: -0.9 }
+                        ].map((s) => (
+                          <li key={s.ticker}>{s.ticker} <span className="text-red-400">{s.changePercent}%</span></li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
-                 <div>
-                   <h3 className="font-medium mb-2">Overnight/Early Headlines</h3>
-                   <ul className="space-y-1 list-disc list-inside">
-                     {morning?.early_news?.map((n, idx) => (
-                       <li key={idx}><a href={n.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{n.title}</a> <span className="text-gray-500">— {n.source}</span></li>
-                     )) || [
-                       { title: "Market Rally Continues as Tech Stocks Lead Gains", url: "#", source: "Financial News" },
-                       { title: "Federal Reserve Signals Continued Economic Support", url: "#", source: "Economic Times" },
-                       { title: "Major Earnings Reports Drive Market Activity", url: "#", source: "MarketWatch" }
-                     ].map((n, idx) => (
-                       <li key={idx}><a href={n.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{n.title}</a> <span className="text-gray-500">— {n.source}</span></li>
-                     ))}
-                   </ul>
-                 </div>
-
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                   <div>
-                     <h3 className="font-medium mb-2">Earnings Today</h3>
-                     <ul className="text-sm space-y-1">
-                       {morning?.earnings_today?.map((e, idx) => (
-                         <li key={idx} className="text-gray-300">{e.symbol || ''} <span className="text-gray-500">{e.time || ''}</span></li>
-                       )) || [
-                         { symbol: "AAPL", time: "4:30 PM ET" },
-                         { symbol: "MSFT", time: "4:00 PM ET" },
-                         { symbol: "GOOGL", time: "4:15 PM ET" }
-                       ].map((e, idx) => (
-                         <li key={idx} className="text-gray-300">{e.symbol} <span className="text-gray-500">{e.time}</span></li>
-                       ))}
-                     </ul>
-                   </div>
-                   <div>
-                     <h3 className="font-medium mb-2">Economic Calendar</h3>
-                     <ul className="text-sm space-y-1">
-                       {morning?.economic_today?.map((e, idx) => (
-                         <li key={idx} className="text-gray-300">{e.event || ''} <span className="text-gray-500">{e.time || ''}</span></li>
-                       )) || [
-                         { event: "CPI Data Release", time: "8:30 AM ET" },
-                         { event: "Fed Minutes", time: "2:00 PM ET" },
-                         { event: "Jobless Claims", time: "8:30 AM ET" }
-                       ].map((e, idx) => (
-                         <li key={idx} className="text-gray-300">{e.event} <span className="text-gray-500">{e.time}</span></li>
-                       ))}
-                     </ul>
-                   </div>
-                 </div>
-
-                 <div>
-                   <h3 className="font-medium mb-2">Top Gainers/Losers (Pre/Post)</h3>
-                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                     <div>
-                       <div className="text-xs text-gray-400 mb-1">Gainers</div>
-                       <ul className="text-sm space-y-1">
-                         {morning?.movers?.gainers?.slice(0, 5).map((s) => (
-                           <li key={s.ticker}>{s.ticker} <span className="text-green-400">{s.changePercent}%</span></li>
-                         )) || [
-                           { ticker: "NVDA", changePercent: 3.2 },
-                           { ticker: "TSLA", changePercent: 2.8 },
-                           { ticker: "AMD", changePercent: 2.1 }
-                         ].map((s) => (
-                           <li key={s.ticker}>{s.ticker} <span className="text-green-400">{s.changePercent}%</span></li>
-                         ))}
-                       </ul>
-                     </div>
-                     <div>
-                       <div className="text-xs text-gray-400 mb-1">Losers</div>
-                       <ul className="text-sm space-y-1">
-                         {morning?.movers?.losers?.slice(0, 5).map((s) => (
-                           <li key={s.ticker}>{s.ticker} <span className="text-red-400">{s.changePercent}%</span></li>
-                         )) || [
-                           { ticker: "NFLX", changePercent: -1.8 },
-                           { ticker: "META", changePercent: -1.2 },
-                           { ticker: "PYPL", changePercent: -0.9 }
-                         ].map((s) => (
-                           <li key={s.ticker}>{s.ticker} <span className="text-red-400">{s.changePercent}%</span></li>
-                         ))}
-                       </ul>
-                     </div>
-                   </div>
-                 </div>
-
-                 <div>
-                   <h3 className="font-medium mb-2">Market Score (1–100)</h3>
-                   <div className="space-y-2">
-                     <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: 'linear-gradient(90deg, #16a34a 0%, #84cc16 20%, #facc15 50%, #f97316 80%, #dc2626 100%)' }}>
-                       <div className="h-full bg-white/80" style={{ width: `${Math.max(0, Math.min(100, morning?.market_score || 65))}%` }}></div>
-                     </div>
-                     <div className="flex items-center justify-between text-xs text-gray-400">
-                       <span>Bullish</span>
-                       <span className="text-sm text-gray-200 font-semibold">{morning?.market_score || 65}</span>
-                       <span>Bearish</span>
-                     </div>
-                     {morning?.score_components && (
-                       <div className="text-xs text-gray-400">
-                         <span className="mr-3">Fut: {morning.score_components.futures}%</span>
-                         <span className="mr-3">Breadth: {morning.score_components.breadth}%</span>
-                         <span className="mr-3">Global: {morning.score_components.global}%</span>
-                         <span>News: {morning.score_components.news}%</span>
-                       </div>
-                     )}
-                   </div>
-                 </div>
-               </>
-             )}
+                <div>
+                  <h3 className="font-medium mb-2">Market Score (1–100)</h3>
+                  <div className="space-y-2">
+                    <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: 'linear-gradient(90deg, #16a34a 0%, #84cc16 20%, #facc15 50%, #f97316 80%, #dc2626 100%)' }}>
+                      <div className="h-full bg-white/80" style={{ width: `${Math.max(0, Math.min(100, morning?.market_score || 65))}%` }}></div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-400">
+                      <span>Bullish</span>
+                      <span className="text-sm text-gray-200 font-semibold">{morning?.market_score || 65}</span>
+                      <span>Bearish</span>
+                    </div>
+                    {morning?.score_components && (
+                      <div className="text-xs text-gray-400">
+                        <span className="mr-3">Fut: {morning.score_components.futures}%</span>
+                        <span className="mr-3">Breadth: {morning.score_components.breadth}%</span>
+                        <span className="mr-3">Global: {morning.score_components.global}%</span>
+                        <span>News: {morning.score_components.news}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
             {false && morning && ( // DISABLE BACKEND MORNING BRIEF FOR NOW
               <>
