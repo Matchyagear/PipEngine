@@ -508,14 +508,14 @@ const StockCard = ({
 
             {/* Bonus indicators */}
             <div className="flex space-x-1">
-              {stock.passes?.oversold && (
+              {stock.passes?.volume && (
                 <div className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-xs font-medium">
-                  Oversold
+                  Volume
                 </div>
               )}
-              {stock.passes?.breakout && (
+              {stock.passes?.priceAction && (
                 <div className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 rounded-full text-xs font-medium">
-                  Breakout
+                  Price Action
                 </div>
               )}
             </div>
