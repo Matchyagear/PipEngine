@@ -156,8 +156,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       if (response.ok) {
         const data = await response.json();
         if (data.stocks && data.stocks.length > 0) {
-          // Take top 2 performing stocks for featured section
-          setFeaturedStocks(data.stocks.slice(0, 2));
+          // Take top 5-10 performing stocks for featured section (4/4 scan results)
+          setFeaturedStocks(data.stocks.slice(0, 10));
         } else {
           throw new Error('No stocks returned from swing scan');
         }
@@ -862,7 +862,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {featuredStocks.map((stock) => (
                   <StockCard
                     key={stock.ticker}
