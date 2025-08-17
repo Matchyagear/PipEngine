@@ -6,15 +6,21 @@ const SimpleTradingViewWidget = ({ symbol = 'AAPL', width = '100%', height = 80 
     useEffect(() => {
         if (!containerRef.current) return;
 
-        // Clear any existing content
-        containerRef.current.innerHTML = '';
+        // Add a small delay to prevent TradingView rate limiting
+        const randomDelay = Math.random() * 1000; // 0-1 second random delay
+        
+        const timer = setTimeout(() => {
+            if (!containerRef.current) return;
 
-        // Create the widget script directly
-        const script = document.createElement('script');
+            // Clear any existing content
+            containerRef.current.innerHTML = '';
+
+            // Create the widget script directly
+            const script = document.createElement('script');
         script.type = 'text/javascript';
         script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
         script.async = true;
-        
+
         // Widget configuration as text content
         script.text = JSON.stringify({
             "symbol": symbol,
@@ -33,16 +39,19 @@ const SimpleTradingViewWidget = ({ symbol = 'AAPL', width = '100%', height = 80 
         widgetContainer.className = 'tradingview-widget-container';
         widgetContainer.style.height = height + 'px';
         widgetContainer.style.width = width;
-        
+
         // Append script to container
         widgetContainer.appendChild(script);
-        
+
         // Append to DOM
         containerRef.current.appendChild(widgetContainer);
 
         console.log('🧪 SIMPLE WIDGET: Created for', symbol);
 
+        }, randomDelay);
+
         return () => {
+            clearTimeout(timer);
             if (containerRef.current) {
                 containerRef.current.innerHTML = '';
             }
@@ -50,10 +59,10 @@ const SimpleTradingViewWidget = ({ symbol = 'AAPL', width = '100%', height = 80 
     }, [symbol, width, height]);
 
     return (
-        <div 
-            ref={containerRef} 
-            style={{ 
-                width: width, 
+        <div
+            ref={containerRef}
+            style={{
+                width: width,
                 height: height + 'px',
                 backgroundColor: '#1f2937',
                 border: '1px solid #374151',

@@ -433,10 +433,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                       { symbol: "^GSPC", name: "S&P 500" },
                       { symbol: "^IXIC", name: "NASDAQ" },
                       { symbol: "^DJI", name: "Dow" },
-                      { symbol: "^FTSE", name: "FTSE 100" },
-                      { symbol: "^GDAXI", name: "DAX" },
-                      { symbol: "^N225", name: "Nikkei 225" },
-                      { symbol: "^HSI", name: "Hang Seng" }
+                      { symbol: "^FTSE", name: "FTSE 100" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
@@ -496,7 +493,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     {[
-                      "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX"
+                      "AAPL", "MSFT", "GOOGL", "AMZN"
                     ].map((ticker) => (
                       <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">

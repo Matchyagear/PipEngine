@@ -68,7 +68,7 @@ const TradingViewMiniChart = ({ symbol, height = 52, dateRange = '1D', theme = '
 
             script.onload = () => {
                 console.log('🧪 TradingView: External script loaded successfully');
-        console.log('🧪 TradingView: Script available globally:', !!window.TradingView);
+                console.log('🧪 TradingView: Script available globally:', !!window.TradingView);
                 tradingViewScriptLoaded = true;
                 tradingViewLoadPromise.resolve();
                 resolve();
