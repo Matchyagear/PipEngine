@@ -756,6 +756,76 @@ function App() {
         return <ChartTab initialSymbol={chartSymbol} />;
       case 'screener':
         return <ScreenerTestTab onOpenChart={openChartForStock} />;
+      case 'shadows-picks':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Eye className="w-5 h-5 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Shadow's Picks
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* AAPL */}
+              <MiniStockCard
+                stock={{
+                  ticker: 'AAPL',
+                  companyName: 'Apple Inc.',
+                  currentPrice: 175.43,
+                  priceChangePercent: 2.15,
+                  score: 4,
+                  passes: {
+                    trend: true,
+                    momentum: true,
+                    volume: true,
+                    priceAction: true
+                  }
+                }}
+                onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                onOpenChart={() => openChartForStock({ ticker: 'AAPL' })}
+              />
+
+              {/* CAKE */}
+              <MiniStockCard
+                stock={{
+                  ticker: 'CAKE',
+                  companyName: 'Cheesecake Factory Inc.',
+                  currentPrice: 34.67,
+                  priceChangePercent: -1.23,
+                  score: 3,
+                  passes: {
+                    trend: true,
+                    momentum: false,
+                    volume: true,
+                    priceAction: true
+                  }
+                }}
+                onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                onOpenChart={() => openChartForStock({ ticker: 'CAKE' })}
+              />
+
+              {/* NNE */}
+              <MiniStockCard
+                stock={{
+                  ticker: 'NNE',
+                  companyName: 'Nano Nuclear Energy Inc.',
+                  currentPrice: 12.89,
+                  priceChangePercent: 5.67,
+                  score: 4,
+                  passes: {
+                    trend: true,
+                    momentum: true,
+                    volume: true,
+                    priceAction: true
+                  }
+                }}
+                onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
+                onOpenChart={() => openChartForStock({ ticker: 'NNE' })}
+              />
+            </div>
+          </div>
+        );
       default:
         return (
           <>
@@ -1022,6 +1092,18 @@ function App() {
               >
                 <Filter className="w-4 h-4" />
                 <span>Screener</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('shadows-picks');
+                  setCurrentWatchlist(null);
+                  setShowSearchResult(false);
+                }}
+                className={`tab-button ${activeTab === 'shadows-picks' ? 'tab-button-active' : ''}`}
+              >
+                <Eye className="w-4 h-4" />
+                <span>Shadow's Picks</span>
               </button>
             </div>
 
