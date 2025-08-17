@@ -26,8 +26,15 @@ import feedparser
 import concurrent.futures
 from functools import lru_cache
 import threading
-import schedule
 import time
+# Optional background scheduling (for cache warming)
+try:
+    import schedule
+    SCHEDULE_AVAILABLE = True
+except ImportError:
+    print("⚠️  Schedule library not available - background cache warming disabled")
+    SCHEDULE_AVAILABLE = False
+    schedule = None
 # Optional Alpaca trading imports (for paper trading features)
 try:
     from alpaca.trading.client import TradingClient
@@ -106,6 +113,14 @@ class CacheWarmer:
 
     def _run_scheduler(self):
         """Run the background scheduler"""
+        if not SCHEDULE_AVAILABLE:
+            print("⚠️  CACHE WARMER: Schedule not available, using timer-based approach")
+            # Fallback to simple timer approach
+            while self.is_running:
+                self._warm_cache()
+                time.sleep(900)  # 15 minutes
+            return
+
         # Schedule cache warming every 15 minutes
         schedule.every(15).minutes.do(self._warm_cache)
 
@@ -1283,7 +1298,7 @@ async def health_check():
         "mongodb_disabled": MONGODB_DISABLED,
         "endpoints": {
             "scan_instant": "/api/stocks/scan/instant",
-            "market_instant": "/api/market/overview/instant", 
+            "market_instant": "/api/market/overview/instant",
             "news_instant": "/api/news/general/instant"
         },
         "cors_origins": [
@@ -2200,9 +2215,20 @@ async def get_finviz_urls(ticker: str):
     """Get Finviz chart and page URLs for a stock"""
     ticker = ticker.upper()
     return {
-        "chartUrl": f"https://finviz.com/chart.ashx?t={ticker}&ty=c&ta=1&p=d&s=l",
-        "pageUrl": f"https://finviz.com/quote.ashx?t={ticker}"
+        "finviz_chart": f"https://finviz.com/chart.ashx?t={ticker}",
+        "finviz_page": f"https://finviz.com/quote.ashx?t={ticker}"
     }
+
+# =============================================================================
+# SERVER STARTUP: INITIALIZE CACHE WARMING
+# =============================================================================
+
+# Initialize and start the cache warmer for background data updates
+cache_warmer = CacheWarmer()
+cache_warmer.start()
+
+print("🚀 ShadowBeta Financial Dashboard API started successfully!")
+print("📊 Cache warming system initialized for optimal performance")
 
 # Watchlist Management
 @app.get("/api/watchlists")
