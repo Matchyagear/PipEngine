@@ -53,17 +53,14 @@ const Tooltip = ({ children, content }) => {
 
 const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsLoading, onOpenChart }) => {
   const [marketData, setMarketData] = useState(null);
-  const [featuredStocks, setFeaturedStocks] = useState([]);
   const [fullMovers, setFullMovers] = useState(null);
   const [highestVolumeStocks, setHighestVolumeStocks] = useState([]);
   const [volatileStocks, setVolatileStocks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [loadingMovers, setLoadingMovers] = useState(true);
   const [loadingVolume, setLoadingVolume] = useState(true);
   const [loadingVolatile, setLoadingVolatile] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [featuredError, setFeaturedError] = useState(null);
 
   // Expandable section states
   const [showMorningBrief, setShowMorningBrief] = useState(true);
@@ -90,7 +87,6 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
     const t1 = setTimeout(() => fetchFullMovers(), 3000);     // 3s delay
     const t2 = setTimeout(() => fetchHighestVolumeStocks(), 6000);  // 6s delay
     const t3 = setTimeout(() => fetchVolatileStocks(), 9000); // 9s delay
-    const t4 = setTimeout(() => fetchFeaturedStocks(), 4000); // 4s delay - after fullMovers loads
 
     // Refresh every 10 minutes instead of 5 (less frequent auto-refresh)
     const interval = setInterval(() => {
@@ -98,11 +94,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setTimeout(() => fetchFullMovers(), 1000);
       setTimeout(() => fetchHighestVolumeStocks(), 2000);
       setTimeout(() => fetchVolatileStocks(), 3000);
-      setTimeout(() => fetchFeaturedStocks(), 1500); // Load after fullMovers
     }, 600000); // 10 minutes instead of 5
 
     return () => {
-      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
       clearInterval(interval);
     };
   }, []);
@@ -145,36 +140,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
     }
   };
 
-  const fetchFeaturedStocks = async () => {
-    try {
-      setLoadingFeatured(true);
-      setFeaturedError(null);
 
-      // Use the same data as Top Gainers section
-      if (fullMovers && fullMovers.gainers && fullMovers.gainers.length > 0) {
-        setFeaturedStocks(fullMovers.gainers.slice(0, 10));
-      } else {
-        // Fallback to direct API call if fullMovers not loaded yet
-        const response = await fetch(`${API_BASE_URL}/api/market/full-movers?_t=${Date.now()}&cache_bust=${Math.random()}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.gainers && data.gainers.length > 0) {
-            setFeaturedStocks(data.gainers.slice(0, 10));
-          } else {
-            throw new Error('No stocks returned from market movers');
-          }
-        } else {
-          throw new Error(`Failed to fetch market movers data: ${response.status} ${response.statusText}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching featured stocks:', error);
-      setFeaturedError(`Failed to load Shadow's Picks: ${error.message}`);
-      setFeaturedStocks([]); // Clear any previous data
-    } finally {
-      setLoadingFeatured(false);
-    }
-  };
 
   const fetchFullMovers = async () => {
     try {
@@ -814,85 +780,16 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
         </div>
       </div>
 
-      {/* Featured Stocks and Market News Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Featured Stocks Section with Loading and Expand */}
-        <div className="lg:col-span-3">
-          <div className="panel p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Zap className="w-5 h-5 text-yellow-600" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Featured Stock Analysis
-                </h2>
-              </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                Top Performers
-              </span>
-            </div>
-
-            {loadingFeatured ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
-                <span className="ml-3 text-gray-600 dark:text-gray-400">Loading featured analysis...</span>
-              </div>
-            ) : featuredError ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="text-center">
-                  <div className="text-red-500 mb-2">
-                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <p className="text-red-600 dark:text-red-400 font-medium">{featuredError}</p>
-                  <button
-                    onClick={fetchFeaturedStocks}
-                    className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-                  >
-                    Retry
-                  </button>
-                </div>
-              </div>
-            ) : featuredStocks.length === 0 ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="text-center">
-                  <p className="text-gray-500 dark:text-gray-400">No featured stocks available</p>
-                  <button
-                    onClick={fetchFeaturedStocks}
-                    className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-                  >
-                    Refresh
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {featuredStocks.slice(0, 2).map((stock, index) => (
-                  <MiniStockCard
-                    key={stock.ticker}
-                    stock={stock}
-                    onClick={handleMiniStockClick}
-                    onOpenChart={() => onOpenChart(stock)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+      {/* Market News Section */}
+      <div className="panel p-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <Bell className="w-5 h-5 text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Market News
+          </h2>
         </div>
-
-        {/* Market News Section - Side by Side */}
-        <div className="lg:col-span-1">
-          <div className="panel p-6 h-full overflow-hidden">
-            <div className="flex items-center space-x-2 mb-4">
-              <Bell className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Market News
-              </h2>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              <NewsSidebar news={news} loading={newsLoading} />
-            </div>
-          </div>
+        <div className="max-h-96 overflow-y-auto">
+          <NewsSidebar news={news} loading={newsLoading} />
         </div>
       </div>
 
