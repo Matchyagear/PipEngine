@@ -866,6 +866,11 @@ def evaluate_advanced_criteria(stock_data):
     bollinger_lower = float(bollinger_lower) if bollinger_lower and not (isinstance(bollinger_lower, float) and (np.isnan(bollinger_lower) or np.isinf(bollinger_lower))) else current_price
     stochastic = float(stochastic) if stochastic and not (isinstance(stochastic, float) and (np.isnan(stochastic) or np.isinf(stochastic))) else 50
 
+    # Debug logging for Shadow's Picks
+    ticker = stock_data.get('ticker', 'UNKNOWN')
+    print(f"🔍 DEBUG {ticker}: RSI={rsi:.2f}, MACD={macd:.4f}, Stochastic={stochastic:.2f}")
+    print(f"🔍 DEBUG {ticker}: Bollinger={bollinger_lower:.2f} < {current_price:.2f} < {bollinger_upper:.2f}, 50MA={fifty_ma:.2f}")
+
     # Always return all four universal criteria for StockCard compatibility
     passes = {
         'trend': fifty_ma > two_hundred_ma and current_price > fifty_ma and current_price > two_hundred_ma,
@@ -875,6 +880,10 @@ def evaluate_advanced_criteria(stock_data):
         'oversold': rsi < 30 and stochastic < 20,  # Bonus criteria
         'breakout': current_price > bollinger_upper and rel_volume > 2.0  # Bonus criteria
     }
+
+    # Debug logging for Shadow's Picks
+    print(f"🔍 DEBUG {ticker}: PASSES={passes}")
+    print(f"🔍 DEBUG {ticker}: SCORE={sum([passes['trend'], passes['momentum'], passes['volume'], passes['priceAction']])}/4")
 
     # Main score is still out of 4, bonus criteria add extra insights
     main_score = sum([passes['trend'], passes['momentum'], passes['volume'], passes['priceAction']])
