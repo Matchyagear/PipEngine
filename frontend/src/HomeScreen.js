@@ -22,6 +22,7 @@ import StockCard from './StockCard';
 import IndexCard from './IndexCard';
 import { NewsSidebar } from './NewsComponents';
 import TradingViewHeatmap from './components/TradingViewHeatmap';
+import TradingViewMiniChart from './components/TradingViewMiniChart';
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -78,23 +79,23 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const [showStockModal, setShowStockModal] = useState(false);
 
   useEffect(() => {
-    // Load only lightweight overview first for fast first paint
+    // OPTIMIZED: Load only critical market data immediately
     fetchMarketData();
 
-    // Stagger heavier requests to reduce initial load burst
-    const t1 = setTimeout(() => fetchFullMovers(), 2500);
-    const t2 = setTimeout(() => fetchHighestVolumeStocks(), 4000);
-    const t3 = setTimeout(() => fetchVolatileStocks(), 5500);
-    const t4 = setTimeout(() => fetchFeaturedStocks(), 7000);
+    // HEAVILY STAGGERED: Spread out API calls to reduce initial load burst
+    const t1 = setTimeout(() => fetchFullMovers(), 3000);     // 3s delay
+    const t2 = setTimeout(() => fetchHighestVolumeStocks(), 6000);  // 6s delay
+    const t3 = setTimeout(() => fetchVolatileStocks(), 9000); // 9s delay
+    const t4 = setTimeout(() => fetchFeaturedStocks(), 12000); // 12s delay - most expensive last
 
-    // Refresh every 5 minutes (stagger inside the tick as well)
+    // Refresh every 10 minutes instead of 5 (less frequent auto-refresh)
     const interval = setInterval(() => {
       fetchMarketData();
-      setTimeout(() => fetchFullMovers(), 500);
-      setTimeout(() => fetchHighestVolumeStocks(), 1000);
-      setTimeout(() => fetchVolatileStocks(), 1500);
-      setTimeout(() => fetchFeaturedStocks(), 2000);
-    }, 300000); // 5 minutes
+      setTimeout(() => fetchFullMovers(), 1000);
+      setTimeout(() => fetchHighestVolumeStocks(), 2000);
+      setTimeout(() => fetchVolatileStocks(), 3000);
+      setTimeout(() => fetchFeaturedStocks(), 4000);
+    }, 600000); // 10 minutes instead of 5
 
     return () => {
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
@@ -103,13 +104,24 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   }, []);
 
   useEffect(() => {
+    // DISABLED: Morning brief loading for better performance
+    // Can be re-enabled later with background loading
     const fetchMB = async () => {
       try {
         setMbLoading(true);
-        const res = await fetch(`${API_BASE_URL}/api/morning/brief`);
-        if (res.ok) setMorning(await res.json());
+        // OPTIMIZED: Load morning brief sooner with TradingView charts
+        setTimeout(async () => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/api/morning/brief`);
+            if (res.ok) setMorning(await res.json());
+          } catch (e) {
+            console.log('Morning brief loading - showing fallback charts');
+          }
+          setMbLoading(false);
+        }, 1000); // 1 second delay for faster loading
       } catch (e) {
-      } finally { setMbLoading(false); }
+        setMbLoading(false);
+      }
     };
     fetchMB();
   }, []);
@@ -117,7 +129,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchMarketData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/market/overview`);
+      // Use instant endpoint for immediate loading
+      const response = await fetch(`${API_BASE_URL}/api/market/overview/instant`);
       const data = await response.json();
       setMarketData(data);
       setLastUpdated(new Date());
@@ -131,9 +144,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchFeaturedStocks = async () => {
     try {
       setLoadingFeatured(true);
-      const response = await fetch(`${API_BASE_URL}/api/stocks/scan`);
+      // Use instant endpoint for featured stocks (fastest)
+      const response = await fetch(`${API_BASE_URL}/api/stocks/scan/instant`);
       const data = await response.json();
-      // Reduced to top 2 performing stocks for featured section
+      // Take top 2 performing stocks for featured section
       setFeaturedStocks(data.stocks?.slice(0, 2) || []);
     } catch (error) {
       console.error('Error fetching featured stocks:', error);
@@ -345,7 +359,28 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
             <Info className="w-5 h-5 text-blue-600" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Morning Brief
+              <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
+                Live Charts
+              </span>
             </h2>
+            <button
+              onClick={() => {
+                setMbLoading(true);
+                setTimeout(async () => {
+                  try {
+                    const res = await fetch(`${API_BASE_URL}/api/morning/brief`);
+                    if (res.ok) setMorning(await res.json());
+                  } catch (e) {
+                    console.log('Morning brief manual refresh failed');
+                  }
+                  setMbLoading(false);
+                }, 500);
+              }}
+              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/20"
+              title="Refresh Morning Brief"
+            >
+              🔄 Refresh
+            </button>
           </div>
           <button
             onClick={() => setShowMorningBrief(!showMorningBrief)}
@@ -364,28 +399,195 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
           </button>
         </div>
         {showMorningBrief && (
-          <div id="morning-brief-content" className="pt-2 text-sm text-gray-300 space-y-4">
-            {mbLoading && <div className="text-gray-500">Loading...</div>}
-            {morning && (
+          <div id="morning-brief-content" className="pt-2 text-sm text-gray-300 space-y-6">
+            {mbLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+                <span className="text-gray-500">Loading market data...</span>
+              </div>
+            )}
+
+            {true && ( // FORCE TRADINGVIEW WIDGETS ALWAYS
+              <>
+                {/* DEBUG TEST WIDGET */}
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg">
+                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: TradingView Widget</h3>
+                  <div className="h-32 bg-gray-800 rounded">
+                    <TradingViewMiniChart
+                      symbol="AAPL"
+                      height={120}
+                      dateRange="1D"
+                      theme="dark"
+                      scale={1}
+                      key="debug-test-widget"
+                    />
+                  </div>
+                  <p className="text-xs text-red-300 mt-2">If you see a chart above, TradingView is working. If not, there's a script loading issue.</p>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-blue-400" />
+                    Key Market Indices - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {[
+                      { symbol: "^GSPC", name: "S&P 500" },
+                      { symbol: "^IXIC", name: "NASDAQ" },
+                      { symbol: "^DJI", name: "Dow" },
+                      { symbol: "^FTSE", name: "FTSE 100" },
+                      { symbol: "^GDAXI", name: "DAX" },
+                      { symbol: "^N225", name: "Nikkei 225" },
+                      { symbol: "^HSI", name: "Hang Seng" }
+                    ].map((ticker) => (
+                      <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-gray-300">{ticker.name}</div>
+                          <div className="text-xs text-gray-400">{ticker.symbol}</div>
+                        </div>
+                        <div className="h-20 mb-2">
+                          <TradingViewMiniChart
+                            symbol={ticker.symbol}
+                            height={80}
+                            dateRange="1D"
+                            theme="dark"
+                            scale={0.9}
+                            key={`fallback-${ticker.symbol}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-green-400" />
+                    Futures (Pre-Market) - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {[
+                      { symbol: "ES=F", name: "S&P 500 Futures" },
+                      { symbol: "NQ=F", name: "Nasdaq Futures" },
+                      { symbol: "YM=F", name: "Dow Futures" },
+                      { symbol: "CL=F", name: "Crude Oil" },
+                      { symbol: "GC=F", name: "Gold Futures" },
+                      { symbol: "BTC-USD", name: "Bitcoin" }
+                    ].map((ticker) => (
+                      <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-gray-300">{ticker.name}</div>
+                          <div className="text-xs text-gray-400">{ticker.symbol}</div>
+                        </div>
+                        <div className="h-20 mb-2">
+                          <TradingViewMiniChart
+                            symbol={ticker.symbol}
+                            height={80}
+                            dateRange="1D"
+                            theme="dark"
+                            scale={0.9}
+                            key={`futures-${ticker.symbol}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    Popular Stocks - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                    {[
+                      "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "NVDA", "META", "NFLX"
+                    ].map((ticker) => (
+                      <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm font-bold text-yellow-400">{ticker}</div>
+                        </div>
+                        <div className="h-16 mb-2">
+                          <TradingViewMiniChart
+                            symbol={ticker}
+                            height={64}
+                            dateRange="1D"
+                            theme="dark"
+                            scale={0.8}
+                            key={`popular-${ticker}`}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {false && morning && ( // DISABLE BACKEND MORNING BRIEF FOR NOW
               <>
                 <div>
-                  <h3 className="font-medium mb-2">Global Market Overview</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    {morning.global_indices?.map((i) => (
-                      <div key={i.symbol} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2">
-                        <div className="text-xs text-gray-400">{i.name}</div>
-                        <div className="text-sm">{i.price ?? '-'} <span className={i.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}>({i.changePercent}%)</span></div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-green-400" />
+                    Global Market Overview - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {morning.global_indices?.slice(0, 8).map((i, index) => (
+                      <div key={i.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-gray-300">{i.name}</div>
+                          <div className="text-xs text-gray-400">{i.symbol}</div>
+                        </div>
+                        <div className="h-20 mb-2">
+                          <TradingViewMiniChart
+                            symbol={i.symbol}
+                            height={80}
+                            dateRange="1D"
+                            theme="dark"
+                            scale={0.9}
+                            key={`global-${i.symbol}-${index}`}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-200">{i.price ?? '-'}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${i.changePercent >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            }`}>
+                            {i.changePercent >= 0 ? '+' : ''}{i.changePercent}%
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Futures (Pre-Market)</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                    {morning.futures?.map((f) => (
-                      <div key={f.symbol} className="bg-gray-800/40 border border-gray-700 rounded-md px-3 py-2">
-                        <div className="text-xs text-gray-400">{f.name}</div>
-                        <div className="text-sm">{f.price ?? '-'} <span className={f.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}>({f.changePercent}%)</span></div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-blue-400" />
+                    Futures (Pre-Market) - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {morning.futures?.slice(0, 8).map((f, index) => (
+                      <div key={f.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-gray-300">{f.name}</div>
+                          <div className="text-xs text-gray-400">{f.symbol}</div>
+                        </div>
+                        <div className="h-20 mb-2">
+                          <TradingViewMiniChart
+                            symbol={f.symbol}
+                            height={80}
+                            dateRange="1D"
+                            theme="dark"
+                            scale={0.9}
+                            key={`futures-${f.symbol}-${index}`}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-200">{f.price ?? '-'}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${f.changePercent >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            }`}>
+                            {f.changePercent >= 0 ? '+' : ''}{f.changePercent}%
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -438,17 +640,41 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">Most Talked About (From Headlines)</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {morning.trending?.map((t) => (
-                      <span key={t.ticker} className="px-2 py-1 text-xs rounded-md border border-gray-700">{t.ticker} · news {t.mentions}{typeof t.twitter === 'number' ? ` · tw ${t.twitter}` : ''}</span>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    Most Talked About - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                    {morning.trending?.slice(0, 6).map((t, index) => (
+                      <div key={t.ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm font-bold text-yellow-400">{t.ticker}</div>
+                          <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <span>📰 {t.mentions}</span>
+                            {typeof t.twitter === 'number' && <span>🐦 {t.twitter}</span>}
+                          </div>
+                        </div>
+                        <div className="h-16 mb-2">
+                          <TradingViewMiniChart
+                            symbol={t.ticker}
+                            height={64}
+                            dateRange="1D"
+                            theme="dark"
+                            scale={0.8}
+                            key={`trending-${t.ticker}-${index}`}
+                          />
+                        </div>
+                        <div className="text-xs text-center text-gray-400">
+                          {t.mentions} mentions
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">Market Score (1–100)</h3>
                   <div className="space-y-2">
-                    <div className="w-full h-3 rounded-full overflow-hidden" style={{background: 'linear-gradient(90deg, #16a34a 0%, #84cc16 20%, #facc15 50%, #f97316 80%, #dc2626 100%)'}}>
+                    <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: 'linear-gradient(90deg, #16a34a 0%, #84cc16 20%, #facc15 50%, #f97316 80%, #dc2626 100%)' }}>
                       <div className="h-full bg-white/80" style={{ width: `${Math.max(0, Math.min(100, morning.market_score))}%` }}></div>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-400">

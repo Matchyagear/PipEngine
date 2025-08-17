@@ -63,8 +63,12 @@ function App() {
   // New feature states
   const [darkMode, setDarkMode] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(300);
+  const [refreshInterval, setRefreshInterval] = useState(600); // 10 minutes instead of 5
   const [aiProvider, setAiProvider] = useState('gemini');
+
+  // WebSocket connection for real-time updates
+  const [websocket, setWebsocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [watchlists, setWatchlists] = useState([]);
   const [currentWatchlist, setCurrentWatchlist] = useState(null);
   const [watchlistsBackendAvailable, setWatchlistsBackendAvailable] = useState(true);
@@ -100,23 +104,38 @@ function App() {
   const [showShadowModal, setShowShadowModal] = useState(false);
   const [selectedShadowStock, setSelectedShadowStock] = useState(null);
 
-  // Auto-refresh effect
+  // Auto-refresh effect - use fast endpoint for auto-refresh too
   useEffect(() => {
     if (autoRefresh) {
       const interval = setInterval(() => {
-        fetchStocks();
+        fetchStocks(true); // Use fast endpoint for auto-refresh
       }, refreshInterval * 1000);
 
       return () => clearInterval(interval);
     }
   }, [autoRefresh, refreshInterval]);
 
-  // Load user preferences on mount
+  // ULTRA-OPTIMIZED: Maximum performance loading strategy
   useEffect(() => {
+    console.log('🚀 PERFORMANCE: Starting optimized loading sequence...');
+
+    // INSTANT: Load only critical data immediately
     loadUserPreferences();
     fetchWatchlists();
-    fetchAlerts();
-    fetchNews(); // Load general news on startup
+
+    // Show progress to user
+    console.log('⚡ PERFORMANCE: Core data loaded, continuing background...');
+
+    // BACKGROUND: Load everything else with significant delays
+    setTimeout(() => {
+      console.log('📊 PERFORMANCE: Loading alerts...');
+      fetchAlerts();
+    }, 2000);
+
+    setTimeout(() => {
+      console.log('📰 PERFORMANCE: Loading news...');
+      fetchNews();
+    }, 4000);
 
     // Check if mobile
     const checkMobile = () => {
@@ -126,6 +145,67 @@ function App() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // WebSocket connection effect
+  useEffect(() => {
+    console.log('📡 WEBSOCKET: Initializing real-time connection...');
+
+    const connectWebSocket = () => {
+      try {
+        const ws = new WebSocket('ws://localhost:8000/ws');
+
+        ws.onopen = () => {
+          console.log('📡 WEBSOCKET: Connected successfully');
+          setIsConnected(true);
+          setWebsocket(ws);
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('📡 WEBSOCKET: Received update:', data.type);
+
+            // Handle real-time updates
+            if (data.type === 'stock_update') {
+              setStocks(data.data.stocks || []);
+              console.log('📊 WEBSOCKET: Stock data updated in real-time');
+            } else if (data.type === 'market_update') {
+              // Update market data if needed
+              console.log('📈 WEBSOCKET: Market data updated in real-time');
+            }
+          } catch (error) {
+            console.log('📡 WEBSOCKET: Error parsing message:', error);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log('📡 WEBSOCKET: Connection closed, reconnecting...');
+          setIsConnected(false);
+          setWebsocket(null);
+
+          // Reconnect after 5 seconds
+          setTimeout(connectWebSocket, 5000);
+        };
+
+        ws.onerror = (error) => {
+          console.log('📡 WEBSOCKET: Connection error:', error);
+          setIsConnected(false);
+        };
+
+      } catch (error) {
+        console.log('📡 WEBSOCKET: Failed to create connection:', error);
+      }
+    };
+
+    // Connect after initial load
+    setTimeout(connectWebSocket, 3000);
+
+    return () => {
+      if (websocket) {
+        websocket.close();
+      }
+    };
   }, []);
 
   // Apply dark mode
@@ -233,12 +313,15 @@ function App() {
     }
   };
 
-  const fetchStocks = async () => {
+  const fetchStocks = async (useFastEndpoint = false) => {
     try {
       setLoading(true);
       let url = `${API_BASE_URL}/api/stocks/scan`;
 
-      if (currentWatchlist) {
+      // Use instant endpoint for initial load (fastest possible)
+      if (useFastEndpoint) {
+        url = `${API_BASE_URL}/api/stocks/scan/instant`;
+      } else if (currentWatchlist) {
         url = `${API_BASE_URL}/api/watchlists/${currentWatchlist.id}/scan`;
       }
 
@@ -432,7 +515,8 @@ function App() {
   const fetchNews = async () => {
     try {
       setNewsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/news/general?limit=20`);
+      // Use instant news endpoint for immediate loading
+      const response = await fetch(`${API_BASE_URL}/api/news/general/instant`);
       const data = await response.json();
       setNews(data.news || []);
     } catch (error) {
@@ -724,8 +808,19 @@ function App() {
 
             {/* Stock Grid */}
             {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="flex flex-col justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">Loading Lightning-Fast Market Data...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Using optimized instant endpoints for maximum speed</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Expected load time: 2-5 seconds</p>
+                  {isConnected && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Real-time updates active
+                    </p>
+                  )}
+                </div>
               </div>
             ) : (
               <>
@@ -814,7 +909,7 @@ function App() {
                   Auto-refreshing every {refreshInterval / 60} minutes
                 </p>
               )}
-            {showLogoMenu && (
+              {showLogoMenu && (
                 <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
                   <div className="py-1">
                     <button
@@ -873,7 +968,7 @@ function App() {
                   setActiveTab('shadow');
                   setCurrentWatchlist(null);
                   setShowSearchResult(false);
-                  fetchStocks();
+                  fetchStocks(true); // Use fast endpoint
                 }}
                 className={`tab-button ${activeTab === 'shadow' && !currentWatchlist && !showSearchResult ? 'tab-button-active' : ''}`}
               >

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingView Error Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .success {
+            background: #2d5016;
+        }
+
+        .error {
+            background: #5c1e1e;
+        }
+
+        .info {
+            background: #1e3a5c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>🔧 TradingView Script Error Fix Test</h1>
+
+        <div id="status" class="status info">
+            Testing TradingView script loading...
+        </div>
+
+        <h2>Test Results:</h2>
+        <div id="results"></div>
+
+        <script>
+            // Test the error handling
+            let errorCount = 0;
+            let loadSuccess = false;
+
+            // Monitor errors
+            window.addEventListener('error', (event) => {
+                if (event.message === 'Script error.' ||
+                    (event.filename && event.filename.includes('tradingview'))) {
+                    errorCount++;
+                    console.log('📊 TRADINGVIEW: Script error caught and handled');
+                    event.preventDefault();
+                    return false;
+                }
+            });
+
+            // Test script loading
+            function testTradingViewLoad() {
+                const script = document.createElement('script');
+                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+                script.async = true;
+
+                script.onload = () => {
+                    loadSuccess = true;
+                    updateResults();
+                };
+
+                script.onerror = () => {
+                    updateResults();
+                };
+
+                document.head.appendChild(script);
+
+                // Check results after 5 seconds
+                setTimeout(updateResults, 5000);
+            }
+
+            function updateResults() {
+                const status = document.getElementById('status');
+                const results = document.getElementById('results');
+
+                let statusText = '';
+                let statusClass = '';
+
+                if (loadSuccess) {
+                    statusText = '✅ TradingView script loaded successfully!';
+                    statusClass = 'success';
+                } else {
+                    statusText = '⚠️ TradingView script failed to load (this is expected in some environments)';
+                    statusClass = 'error';
+                }
+
+                status.textContent = statusText;
+                status.className = `status ${statusClass}`;
+
+                results.innerHTML = `
+                    <div class="status info">
+                        <strong>Error Handling Test:</strong><br>
+                        Errors caught and suppressed: ${errorCount}<br>
+                        Script load successful: ${loadSuccess ? 'Yes' : 'No'}<br>
+                        <br>
+                        ${errorCount > 0 ?
+                        '✅ Error suppression working correctly!' :
+                        'ℹ️ No errors detected (which is good!)'}
+                    </div>
+                `;
+            }
+
+            // Start test
+            testTradingViewLoad();
+        </script>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,80 @@
+[33m44a174e[m feat(shadowbot): open in same tab; add clear labels and helper text across sections for better UX
+[1mdiff --git a/frontend/src/App.js b/frontend/src/App.js[m
+[1mindex 2cccca1..285b081 100644[m
+[1m--- a/frontend/src/App.js[m
+[1m+++ b/frontend/src/App.js[m
+[36m@@ -814,11 +814,11 @@[m [mfunction App() {[m
+                   Auto-refreshing every {refreshInterval / 60} minutes[m
+                 </p>[m
+               )}[m
+[31m-              {showLogoMenu && ([m
+[32m+[m[32m            {showLogoMenu && ([m
+                 <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">[m
+                   <div className="py-1">[m
+                     <button[m
+[31m-                      onClick={() => { setShowLogoMenu(false); window.open('/shadowbot', '_blank', 'noopener'); }}[m
+[32m+[m[32m                      onClick={() => { setShowLogoMenu(false); window.location.href = '/shadowbot'; }}[m
+                       className="w-full text-left px-3 py-2 hover:bg-gray-800"[m
+                     >[m
+                       Shadowbot[m
+[1mdiff --git a/frontend/src/ShadowbotPage.js b/frontend/src/ShadowbotPage.js[m
+[1mindex 7b1494e..d0bdbc9 100644[m
+[1m--- a/frontend/src/ShadowbotPage.js[m
+[1m+++ b/frontend/src/ShadowbotPage.js[m
+[36m@@ -132,8 +132,8 @@[m [mexport default function ShadowbotPage() {[m
+ [m
+     return ([m
+         <div className="max-w-6xl mx-auto px-4 py-6">[m
+[31m-            <h1 className="text-2xl font-semibold mb-2">Shadowbot</h1>[m
+[31m-            <p className="text-sm text-gray-400 mb-6">Automated trading bot (Alpaca {account?.paper ? 'Paper' : 'Live'})</p>[m
+[32m+[m[32m            <h1 className="text-2xl font-semibold mb-1">Shadowbot</h1>[m
+[32m+[m[32m            <p className="text-sm text-gray-400 mb-4">Automated trading bot. Below are clearly labeled sections for account status, manual orders, strategies, and live events.</p>[m
+ [m
+             {error && ([m
+                 <div className="mb-4 p-3 border border-red-700 bg-red-900/20 rounded-lg text-red-300">{error}</div>[m
+[36m@@ -141,13 +141,13 @@[m [mexport default function ShadowbotPage() {[m
+ [m
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">[m
+                 <div className="panel p-4 lg:col-span-1">[m
+[31m-                    <h2 className="font-medium mb-3">Account</h2>[m
+[32m+[m[32m                    <h2 className="font-medium mb-3">Account Overview</h2>[m
+                     {account ? ([m
+                         <ul className="text-sm space-y-1">[m
+                             <li><span className="text-gray-400">Status:</span> {account.status}</li>[m
+[31m-                            <li><span className="text-gray-400">Buying Power:</span> ${account.buying_power}</li>[m
+[31m-                            <li><span className="text-gray-400">Equity:</span> ${account.equity}</li>[m
+[31m-                            <li><span className="text-gray-400">Mode:</span> {account.paper ? 'Paper' : 'Live'}</li>[m
+[32m+[m[32m                            <li><span className="text-gray-400">Buying Power (USD):</span> ${account.buying_power}</li>[m
+[32m+[m[32m                            <li><span className="text-gray-400">Total Equity (USD):</span> ${account.equity}</li>[m
+[32m+[m[32m                            <li><span className="text-gray-400">Trading Mode:</span> {account.paper ? 'Paper (simulated)' : 'Live (real)'} </li>[m
+                         </ul>[m
+                     ) : ([m
+                         <p className="text-sm text-gray-500">Connect Alpaca in server env to view account.</p>[m
+[36m@@ -155,7 +155,8 @@[m [mexport default function ShadowbotPage() {[m
+                 </div>[m
+ [m
+                 <div className="panel p-4 lg:col-span-1">[m
+[31m-                    <h2 className="font-medium mb-3">Place Market Order</h2>[m
+[32m+[m[32m                    <h2 className="font-medium mb-3">Quick Trade (Market Order)</h2>[m
+[32m+[m[32m                    <p className="text-xs text-gray-500 mb-2">Submit a simple market order to test connectivity. Use Paper mode until confident.</p>[m
+                     <div className="space-y-3">[m
+                         <input className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Symbol" value={form.symbol} onChange={e => setForm({ ...form, symbol: e.target.value })} />[m
+                         <input className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Quantity" type="number" min="1" value={form.qty} onChange={e => setForm({ ...form, qty: e.target.value })} />[m
+[36m@@ -196,15 +197,16 @@[m [mexport default function ShadowbotPage() {[m
+ [m
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">[m
+                 <div className="panel p-4">[m
+[31m-                    <h2 className="font-medium mb-3">Strategy Editor</h2>[m
+[32m+[m[32m                    <h2 className="font-medium mb-1">Strategy Editor</h2>[m
+[32m+[m[32m                    <p className="text-xs text-gray-500 mb-3">Configure basic risk and entry rules. Columns labeled for clarity.</p>[m
+                     <div className="grid grid-cols-2 gap-3">[m
+[31m-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Name" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} />[m
+[32m+[m[32m                        <label className="text-xs text-gray-400">Name<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" placeholder="Name" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} /></label>[m
+                         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={strategyForm.enabled} onChange={e => setStrategyForm({ ...strategyForm, enabled: e.target.checked })} /> Enabled</label>[m
+[31m-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Positions" value={strategyForm.max_positions} onChange={e => setStrategyForm({ ...strategyForm, max_positions: Number(e.target.value) })} />[m
+[31m-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Max Notional" value={strategyForm.max_notional_per_trade} onChange={e => setStrategyForm({ ...strategyForm, max_notional_per_trade: Number(e.target.value) })} />[m
+[31m-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Stop %" value={strategyForm.stop_loss_pct} onChange={e => setStrategyForm({ ...strategyForm, stop_loss_pct: Number(e.target.value) })} />[m
+[31m-                        <input className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" placeholder="Target %" value={strategyForm.take_profit_pct} onChange={e => setStrategyForm({ ...strategyForm, take_profit_pct: Number(e.target.value) })} />[m
+[31m-                        <textarea className="col-span-2 bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-sm" rows={2} value={strategyForm.symbols.join(',')} onChange={e => setStrategyForm({ ...strategyForm, symbols: e.target.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean) })} />[m
+[32m+[m[32m                        <label className="text-xs text-gray-400">Max Positions<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" value={strategyForm.max_positions} onChange={e => setStrategyForm({ ...strategyForm, max_positions: Number(e.target.value) })} /></label>[m
+[32m+[m[32m                        <label className="text-xs text-gray-400">Max Notional per Trade (USD)<input className="mt-1 w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2" type="number" value={strategyForm.max_notional_per_trade} onChange={e => setStrategyForm({ ...strategyForm, max_no
