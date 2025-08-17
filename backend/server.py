@@ -296,195 +296,80 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # CORS already configured above - removing duplicate
 
-# Initialize MongoDB connection (optional)
-# Try both case variations since Render might use different casing
-MONGO_URL = os.environ.get('MONGO_URL') or os.environ.get('Mongo_URL')
-MONGODB_DISABLED_ENV = os.environ.get('MONGODB_DISABLED', 'false').lower() in ['true', '1', 'yes', 'on']
+# MongoDB Connection - Complete Rebuild from Scratch
+import os
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
-# Debug ALL environment variables to see what's available
-print("🔍 ALL ENVIRONMENT VARIABLES:")
-for key, value in sorted(os.environ.items()):
-    if any(word in key.upper() for word in ['MONGO', 'DB', 'DATABASE']):
-        if 'URL' in key.upper() or 'PASSWORD' in key.upper():
-            # Mask sensitive info but show structure
-            masked_value = value[:10] + "***" + value[-10:] if len(value) > 20 else "***"
-            print(f"  {key} = {masked_value}")
-        else:
-            print(f"  {key} = {value}")
+# Simple MongoDB setup
+def setup_mongodb():
+    """Simple MongoDB connection setup"""
+    print("🔄 Setting up MongoDB connection...")
 
-print(f"🔍 Debug: MONGO_URL = {MONGO_URL}")
-print(f"🔍 Debug: MONGODB_DISABLED_ENV = {MONGODB_DISABLED_ENV}")
-print(f"🔍 Debug: Raw MONGODB_DISABLED env = '{os.environ.get('MONGODB_DISABLED', 'not_set')}'")
+    # Get connection string from environment
+    mongo_url = os.environ.get('MONGO_URL') or os.environ.get('Mongo_URL')
 
-# If MongoDB is explicitly disabled, respect that
-if MONGODB_DISABLED_ENV:
-    print("⚠️  MongoDB explicitly disabled via MONGODB_DISABLED environment variable.")
-    MONGODB_DISABLED = True
-elif not MONGO_URL:
-    print("❌ MongoDB enabled but no MONGO_URL found! Please check environment variables.")
-    MONGODB_DISABLED = True
-else:
-    print(f"✅ MongoDB enabled. Will attempt connection to: {MONGO_URL[:50]}...")
-    MONGODB_DISABLED = False
+    if not mongo_url:
+        print("❌ No MongoDB URL found in environment variables")
+        print("💡 Set MONGO_URL environment variable")
+        return None, None, None, None, None, None, None, None
 
-if MONGODB_DISABLED:
-    print("✅ MongoDB DISABLED - App will run without user features (watchlists, alerts, etc.)")
-    client = None
-    db = None
-    watchlists_collection = None
-    alerts_collection = None
-    user_preferences_collection = None
-    strategies_collection = None
-else:
+    print(f"🔗 Connecting to MongoDB: {mongo_url[:50]}...")
+
     try:
-        # Fix URL encoding for special characters in password
-        connection_url = MONGO_URL
+        # Basic connection with minimal options
+        client = MongoClient(
+            mongo_url,
+            serverSelectionTimeoutMS=10000,  # 10 second timeout
+            connectTimeoutMS=10000,
+            socketTimeoutMS=10000
+        )
 
-        # Check if password has unencoded special characters or angle brackets
-        if '://' in connection_url and '@' in connection_url:
-            # Extract parts: mongodb+srv://username:password@host/db?params
-            protocol_part = connection_url.split('://')[0] + '://'
-            rest_part = connection_url.split('://')[1]
-
-            if '@' in rest_part:
-                # Split at the last @ to separate credentials from host
-                credentials_part = rest_part.rsplit('@', 1)[0]
-                host_part = rest_part.rsplit('@', 1)[1]
-
-                if ':' in credentials_part:
-                    username, password = credentials_part.split(':', 1)
-
-                    # Remove angle brackets if present (common in Atlas connection strings)
-                    if password.startswith('<') and password.endswith('>'):
-                        password = password[1:-1]
-                        print(f"🔧 Removed angle brackets from password")
-
-                    # URL encode the password to handle special characters
-                    encoded_password = quote_plus(password)
-                    connection_url = f"{protocol_part}{username}:{encoded_password}@{host_part}"
-                    print(f"🔧 Fixed URL encoding for special characters in password")
-
-        # Add database name to URL if not present
-        if '?' in connection_url and '/?' in connection_url:
-            # URL like: mongodb+srv://user:pass@cluster.net/?params
-            # Insert database name: mongodb+srv://user:pass@cluster.net/dbname?params
-            connection_url = connection_url.replace('/?', '/shadowbeta?')
-        elif not any(db_name in connection_url for db_name in ['/shadowbeta', '/test', '/admin']):
-            # Add default database name if none specified
-            if '?' in connection_url:
-                connection_url = connection_url.replace('?', '/shadowbeta?')
-            else:
-                connection_url = connection_url + '/shadowbeta'
-
-        print(f"🔌 Attempting MongoDB connection to: {connection_url[:50]}...")
-
-        # MongoDB Atlas connection with multiple SSL/TLS attempts
-        connection_successful = False
-        client = None
-        
-        # Try multiple connection methods with proper SSL imports
-        import ssl
-        
-        connection_methods = [
-            {
-                "name": "Modern TLS (Recommended)",
-                "params": {
-                    "serverSelectionTimeoutMS": 15000,
-                    "tls": True,
-                    "retryWrites": True,
-                    "w": "majority"
-                }
-            },
-            {
-                "name": "TLS with insecure context", 
-                "params": {
-                    "serverSelectionTimeoutMS": 15000,
-                    "tls": True,
-                    "tlsInsecure": True,
-                    "retryWrites": True,
-                    "w": "majority"
-                }
-            },
-            {
-                "name": "Legacy SSL with CERT_NONE",
-                "params": {
-                    "serverSelectionTimeoutMS": 15000,
-                    "ssl": True,
-                    "ssl_cert_reqs": ssl.CERT_NONE,
-                    "retryWrites": True,
-                    "w": "majority"
-                }
-            },
-            {
-                "name": "No SSL verification",
-                "params": {
-                    "serverSelectionTimeoutMS": 15000,
-                    "ssl": True,
-                    "ssl_cert_reqs": ssl.CERT_NONE,
-                    "ssl_check_hostname": False,
-                    "ssl_match_hostname": False,
-                    "retryWrites": True
-                }
-            },
-            {
-                "name": "TLS all disabled",
-                "params": {
-                    "serverSelectionTimeoutMS": 15000,
-                    "tls": True,
-                    "tlsAllowInvalidCertificates": True,
-                    "tlsAllowInvalidHostnames": True,
-                    "retryWrites": True
-                }
-            }
-        ]
-
-        for method in connection_methods:
-            try:
-                print(f"🔄 Trying connection method: {method['name']}")
-                client = MongoClient(connection_url, **method['params'])
-                # Test connection immediately
-                client.admin.command('ping')
-                print(f"✅ Connection successful with: {method['name']}")
-                connection_successful = True
-                break
-            except Exception as e:
-                print(f"❌ {method['name']} failed: {str(e)[:100]}...")
-                continue
-
-        if not connection_successful:
-            raise Exception("All connection methods failed")
-
-        # Test the connection
-        print("🔄 Testing MongoDB connection...")
+        # Test connection
         client.admin.command('ping')
-        print("✅ MongoDB ping successful")
+        print("✅ MongoDB connection successful!")
 
-        db = client[os.environ.get('DB_NAME', 'shadowbeta')]
-        print(f"✅ Using database: {db.name}")
+        # Get database
+        db_name = os.environ.get('DB_NAME', 'shadowbeta')
+        db = client[db_name]
+        print(f"📊 Using database: {db_name}")
 
-        # Collections
-        watchlists_collection = db.watchlists
-        alerts_collection = db.alerts
-        user_preferences_collection = db.user_preferences
-        users_collection = db.users
-        portfolios_collection = db.portfolios
-        strategies_collection = db.shadowbot_strategies
-        print("✅ MongoDB connected successfully - All collections initialized")
+        # Initialize collections
+        collections = {
+            'watchlists': db.watchlists,
+            'alerts': db.alerts,
+            'user_preferences': db.user_preferences,
+            'users': db.users,
+            'portfolios': db.portfolios,
+            'strategies': db.shadowbot_strategies
+        }
+
+        print("✅ All collections initialized successfully")
+        return client, db, *collections.values()
+
     except Exception as e:
         print(f"❌ MongoDB connection failed: {e}")
-        print(f"❌ Connection URL format: {MONGO_URL[:30]}...")
-        print("🔄 AUTOMATICALLY DISABLING MongoDB - App will run without user features")
-        print("💡 Check: 1) MongoDB Atlas cluster is running 2) IP whitelist includes 0.0.0.0/0 3) Credentials are correct")
+        print("💡 Check your connection string and network access")
+        return None, None, None, None, None, None, None, None
 
-        # Automatically disable MongoDB and continue
-        client = None
-        db = None
-        watchlists_collection = None
-        alerts_collection = None
-        user_preferences_collection = None
-        users_collection = None
-        portfolios_collection = None
-        strategies_collection = None
+# Initialize MongoDB
+client, db, watchlists_collection, alerts_collection, user_preferences_collection, users_collection, portfolios_collection, strategies_collection = setup_mongodb()
+
+# MongoDB helper functions
+def is_mongodb_available():
+    """Check if MongoDB is available"""
+    return client is not None and db is not None
+
+def safe_mongodb_operation(operation, default_return=None):
+    """Safely execute MongoDB operations with error handling"""
+    if not is_mongodb_available():
+        return default_return
+
+    try:
+        return operation()
+    except Exception as e:
+        print(f"⚠️ MongoDB operation failed: {e}")
+        return default_return
 
 # Initialize API clients
 FINNHUB_API_KEY = os.environ.get('FINNHUB_API_KEY')
@@ -2367,111 +2252,134 @@ print("📊 Cache warming system initialized for optimal performance")
 @app.get("/api/watchlists")
 async def get_watchlists(authorization: Optional[str] = None):
     """Get all user watchlists for current user (JWT)"""
-    if watchlists_collection is None:
-        return {"watchlists": [], "message": "MongoDB not available - watchlists disabled"}
+    def get_watchlists_operation():
+        user_id = None
+        if authorization and authorization.lower().startswith('bearer '):
+            token = authorization.split(' ',1)[1]
+            try:
+                payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                user_id = payload.get('sub')
+            except JWTError:
+                pass
 
-    user_id = None
-    if authorization and authorization.lower().startswith('bearer '):
-        token = authorization.split(' ',1)[1]
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            user_id = payload.get('sub')
-        except JWTError:
-            pass
+        query = {"user_id": user_id} if user_id else {}
 
-    query = {"user_id": user_id} if user_id else {}
+        watchlists = []
+        for doc in watchlists_collection.find(query):
+            doc['_id'] = str(doc['_id'])
+            watchlists.append(doc)
+        return {"watchlists": watchlists}
 
-    watchlists = []
-    for doc in watchlists_collection.find(query):
-        doc['_id'] = str(doc['_id'])
-        watchlists.append(doc)
-    return {"watchlists": watchlists}
+    return safe_mongodb_operation(get_watchlists_operation, {"watchlists": [], "message": "MongoDB not available - watchlists disabled"})
 
 @app.post("/api/watchlists")
 async def create_watchlist(watchlist: CreateWatchlist, authorization: Optional[str] = None):
     """Create a new watchlist"""
-    if watchlists_collection is None:
+    def create_watchlist_operation():
+        user_id = None
+        if authorization and authorization.lower().startswith('bearer '):
+            try:
+                payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                user_id = payload.get('sub')
+            except JWTError:
+                pass
+
+        watchlist_doc = {
+            "id": str(uuid.uuid4()),
+            "name": watchlist.name,
+            "tickers": watchlist.tickers,
+            "user_id": user_id,
+            "created_at": datetime.now(),
+            "updated_at": datetime.now()
+        }
+
+        result = watchlists_collection.insert_one(watchlist_doc)
+        watchlist_doc['_id'] = str(result.inserted_id)
+        return watchlist_doc
+
+    result = safe_mongodb_operation(create_watchlist_operation)
+    if result is None:
         raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
-
-    user_id = None
-    if authorization and authorization.lower().startswith('bearer '):
-        try:
-            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            user_id = payload.get('sub')
-        except JWTError:
-            pass
-
-    watchlist_doc = {
-        "id": str(uuid.uuid4()),
-        "name": watchlist.name,
-        "tickers": watchlist.tickers,
-        "user_id": user_id,
-        "created_at": datetime.now(),
-        "updated_at": datetime.now()
-    }
-
-    result = watchlists_collection.insert_one(watchlist_doc)
-    watchlist_doc['_id'] = str(result.inserted_id)
-    return watchlist_doc
+    return result
 
 @app.put("/api/watchlists/{watchlist_id}")
 async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist, authorization: Optional[str] = None):
     """Update an existing watchlist"""
-    update_doc = {
-        "name": watchlist.name,
-        "tickers": watchlist.tickers,
-        "updated_at": datetime.now()
-    }
+    def update_watchlist_operation():
+        update_doc = {
+            "name": watchlist.name,
+            "tickers": watchlist.tickers,
+            "updated_at": datetime.now()
+        }
 
-    query = {"id": watchlist_id}
-    if authorization and authorization.lower().startswith('bearer '):
-        try:
-            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            query["user_id"] = payload.get('sub')
-        except JWTError:
-            pass
+        query = {"id": watchlist_id}
+        if authorization and authorization.lower().startswith('bearer '):
+            try:
+                payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                query["user_id"] = payload.get('sub')
+            except JWTError:
+                pass
 
-    result = watchlists_collection.update_one(
-        query,
-        {"$set": update_doc}
-    )
+        result = watchlists_collection.update_one(
+            query,
+            {"$set": update_doc}
+        )
 
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Watchlist not found")
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Watchlist not found")
 
-    return {"message": "Watchlist updated successfully"}
+        return {"message": "Watchlist updated successfully"}
+
+    result = safe_mongodb_operation(update_watchlist_operation)
+    if result is None:
+        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+    return result
 
 @app.delete("/api/watchlists/{watchlist_id}")
 async def delete_watchlist(watchlist_id: str, authorization: Optional[str] = None):
     """Delete a watchlist"""
-    query = {"id": watchlist_id}
-    if authorization and authorization.lower().startswith('bearer '):
-        try:
-            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            query["user_id"] = payload.get('sub')
-        except JWTError:
-            pass
-    result = watchlists_collection.delete_one(query)
+    def delete_watchlist_operation():
+        query = {"id": watchlist_id}
+        if authorization and authorization.lower().startswith('bearer '):
+            try:
+                payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                query["user_id"] = payload.get('sub')
+            except JWTError:
+                pass
+        result = watchlists_collection.delete_one(query)
 
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Watchlist not found")
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Watchlist not found")
 
-    return {"message": "Watchlist deleted successfully"}
+        return {"message": "Watchlist deleted successfully"}
+
+    result = safe_mongodb_operation(delete_watchlist_operation)
+    if result is None:
+        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+    return result
 
 @app.post("/api/watchlists/{watchlist_id}/scan")
 async def scan_watchlist(watchlist_id: str, authorization: Optional[str] = None):
     """Scan stocks in a specific watchlist (fast, cached)."""
-    query = {"id": watchlist_id}
-    if authorization and authorization.lower().startswith('bearer '):
-        try:
-            payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            query["user_id"] = payload.get('sub')
-        except JWTError:
-            pass
-    watchlist = watchlists_collection.find_one(query)
+    # First get the watchlist
+    def get_watchlist_operation():
+        query = {"id": watchlist_id}
+        if authorization and authorization.lower().startswith('bearer '):
+            try:
+                payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                query["user_id"] = payload.get('sub')
+            except JWTError:
+                pass
+        return watchlists_collection.find_one(query)
+
+    watchlist = safe_mongodb_operation(get_watchlist_operation)
+    if watchlist is None:
+        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+
     if not watchlist:
         raise HTTPException(status_code=404, detail="Watchlist not found")
 
+    # Then get the stock data
     batch = await get_stocks_batch(BatchTickers(tickers=watchlist.get('tickers', [])))
     return {"stocks": batch["stocks"], "watchlist_name": watchlist.get('name', '')}
 
@@ -2479,47 +2387,54 @@ async def scan_watchlist(watchlist_id: str, authorization: Optional[str] = None)
 @app.get("/api/preferences")
 async def get_user_preferences():
     """Get user preferences"""
-    if user_preferences_collection is None:
-        # Return default preferences when MongoDB is not available
-        return {
-            "user_id": "default",
-            "dark_mode": False,
-            "auto_refresh": True,
-            "refresh_interval": 300,
-            "ai_provider": "gemini",
-            "notifications_enabled": True,
-            "message": "Using default preferences (MongoDB not available)"
-        }
+    def get_preferences_operation():
+        prefs = user_preferences_collection.find_one({"user_id": "default"})
+        if not prefs:
+            # Create default preferences
+            default_prefs = {
+                "user_id": "default",
+                "dark_mode": False,
+                "auto_refresh": True,
+                "refresh_interval": 300,
+                "ai_provider": "gemini",
+                "notifications_enabled": True
+            }
+            user_preferences_collection.insert_one(default_prefs)
+            return default_prefs
 
-    prefs = user_preferences_collection.find_one({"user_id": "default"})
-    if not prefs:
-        # Create default preferences
-        default_prefs = {
-            "user_id": "default",
-            "dark_mode": False,
-            "auto_refresh": True,
-            "refresh_interval": 300,
-            "ai_provider": "gemini",
-            "notifications_enabled": True
-        }
-        user_preferences_collection.insert_one(default_prefs)
-        return default_prefs
+        prefs['_id'] = str(prefs['_id'])
+        return prefs
 
-    prefs['_id'] = str(prefs['_id'])
-    return prefs
+    default_prefs = {
+        "user_id": "default",
+        "dark_mode": False,
+        "auto_refresh": True,
+        "refresh_interval": 300,
+        "ai_provider": "gemini",
+        "notifications_enabled": True,
+        "message": "Using default preferences (MongoDB not available)"
+    }
+
+    return safe_mongodb_operation(get_preferences_operation, default_prefs)
 
 @app.put("/api/preferences")
 async def update_user_preferences(preferences: UserPreferences):
     """Update user preferences"""
-    prefs_dict = preferences.dict()
+    def update_preferences_operation():
+        prefs_dict = preferences.dict()
 
-    result = user_preferences_collection.update_one(
-        {"user_id": "default"},
-        {"$set": prefs_dict},
-        upsert=True
-    )
+        result = user_preferences_collection.update_one(
+            {"user_id": "default"},
+            {"$set": prefs_dict},
+            upsert=True
+        )
 
-    return {"message": "Preferences updated successfully"}
+        return {"message": "Preferences updated successfully"}
+
+    result = safe_mongodb_operation(update_preferences_operation)
+    if result is None:
+        raise HTTPException(status_code=503, detail="MongoDB not available - preferences disabled")
+    return result
 
 # Export functionality
 @app.get("/api/export/stocks")
