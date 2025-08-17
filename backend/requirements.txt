@@ -40,3 +40,7 @@ alpaca-py>=0.21.0
 
 # Background job scheduling for cache warming
 schedule>=1.2.0
+
+# PostgreSQL/Supabase support
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.0

@@ -296,79 +296,133 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # CORS already configured above - removing duplicate
 
-# MongoDB Connection - Complete Rebuild from Scratch
+# Supabase/PostgreSQL Database Setup
 import os
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2.pool import SimpleConnectionPool
+from contextlib import contextmanager
 
-# Simple MongoDB setup
-def setup_mongodb():
-    """Simple MongoDB connection setup"""
-    print("🔄 Setting up MongoDB connection...")
+# Database connection pool
+db_pool = None
 
+def setup_supabase():
+    """Setup Supabase PostgreSQL connection"""
+    print("🔄 Setting up Supabase PostgreSQL connection...")
+    
     # Get connection string from environment
-    mongo_url = os.environ.get('MONGO_URL') or os.environ.get('Mongo_URL')
-
-    if not mongo_url:
-        print("❌ No MongoDB URL found in environment variables")
-        print("💡 Set MONGO_URL environment variable")
-        return None, None, None, None, None, None, None, None
-
-    print(f"🔗 Connecting to MongoDB: {mongo_url[:50]}...")
-
+    database_url = os.environ.get('DATABASE_URL')
+    
+    if not database_url:
+        print("❌ No DATABASE_URL found in environment variables")
+        print("💡 Set DATABASE_URL environment variable with your Supabase connection string")
+        return None
+    
+    print(f"🔗 Connecting to Supabase: {database_url[:50]}...")
+    
     try:
-        # Basic connection with minimal options
-        client = MongoClient(
-            mongo_url,
-            serverSelectionTimeoutMS=10000,  # 10 second timeout
-            connectTimeoutMS=10000,
-            socketTimeoutMS=10000
+        # Create connection pool
+        global db_pool
+        db_pool = SimpleConnectionPool(
+            minconn=1,
+            maxconn=10,
+            dsn=database_url
         )
-
+        
         # Test connection
-        client.admin.command('ping')
-        print("✅ MongoDB connection successful!")
-
-        # Get database
-        db_name = os.environ.get('DB_NAME', 'shadowbeta')
-        db = client[db_name]
-        print(f"📊 Using database: {db_name}")
-
-        # Initialize collections
-        collections = {
-            'watchlists': db.watchlists,
-            'alerts': db.alerts,
-            'user_preferences': db.user_preferences,
-            'users': db.users,
-            'portfolios': db.portfolios,
-            'strategies': db.shadowbot_strategies
-        }
-
-        print("✅ All collections initialized successfully")
-        return client, db, *collections.values()
-
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT version();")
+                version = cur.fetchone()
+                print(f"✅ Supabase connection successful! PostgreSQL version: {version[0]}")
+        
+        # Create tables if they don't exist
+        create_tables()
+        print("✅ All tables initialized successfully")
+        return True
+        
     except Exception as e:
-        print(f"❌ MongoDB connection failed: {e}")
-        print("💡 Check your connection string and network access")
-        return None, None, None, None, None, None, None, None
+        print(f"❌ Supabase connection failed: {e}")
+        print("💡 Check your DATABASE_URL and network access")
+        return None
 
-# Initialize MongoDB
-client, db, watchlists_collection, alerts_collection, user_preferences_collection, users_collection, portfolios_collection, strategies_collection = setup_mongodb()
+@contextmanager
+def get_db_connection():
+    """Get database connection from pool"""
+    if not db_pool:
+        raise Exception("Database not initialized")
+    
+    conn = db_pool.getconn()
+    try:
+        yield conn
+    finally:
+        db_pool.putconn(conn)
 
-# MongoDB helper functions
-def is_mongodb_available():
-    """Check if MongoDB is available"""
-    return client is not None and db is not None
+def create_tables():
+    """Create database tables if they don't exist"""
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            # Create watchlists table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS watchlists (
+                    id SERIAL PRIMARY KEY,
+                    watchlist_id VARCHAR(255) UNIQUE NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    tickers TEXT[] NOT NULL,
+                    user_id VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
+            # Create user_preferences table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_preferences (
+                    id SERIAL PRIMARY KEY,
+                    user_id VARCHAR(255) UNIQUE NOT NULL,
+                    dark_mode BOOLEAN DEFAULT FALSE,
+                    auto_refresh BOOLEAN DEFAULT TRUE,
+                    refresh_interval INTEGER DEFAULT 300,
+                    ai_provider VARCHAR(50) DEFAULT 'gemini',
+                    notifications_enabled BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
+            # Create alerts table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS alerts (
+                    id SERIAL PRIMARY KEY,
+                    alert_id VARCHAR(255) UNIQUE NOT NULL,
+                    user_id VARCHAR(255) NOT NULL,
+                    symbol VARCHAR(20) NOT NULL,
+                    condition_type VARCHAR(50) NOT NULL,
+                    target_price DECIMAL(10,2),
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
+            conn.commit()
 
-def safe_mongodb_operation(operation, default_return=None):
-    """Safely execute MongoDB operations with error handling"""
-    if not is_mongodb_available():
+# Initialize Supabase
+db_available = setup_supabase()
+
+# Database helper functions
+def is_database_available():
+    """Check if database is available"""
+    return db_available is not None and db_pool is not None
+
+def safe_db_operation(operation, default_return=None):
+    """Safely execute database operations with error handling"""
+    if not is_database_available():
         return default_return
-
+    
     try:
         return operation()
     except Exception as e:
-        print(f"⚠️ MongoDB operation failed: {e}")
+        print(f"⚠️ Database operation failed: {e}")
         return default_return
 
 # Initialize API clients
@@ -2262,15 +2316,21 @@ async def get_watchlists(authorization: Optional[str] = None):
             except JWTError:
                 pass
 
-        query = {"user_id": user_id} if user_id else {}
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if user_id:
+                    cur.execute("SELECT * FROM watchlists WHERE user_id = %s", (user_id,))
+                else:
+                    cur.execute("SELECT * FROM watchlists")
+                
+                watchlists = []
+                for row in cur.fetchall():
+                    watchlist = dict(row)
+                    watchlist['id'] = str(watchlist['id'])
+                    watchlists.append(watchlist)
+                return {"watchlists": watchlists}
 
-        watchlists = []
-        for doc in watchlists_collection.find(query):
-            doc['_id'] = str(doc['_id'])
-            watchlists.append(doc)
-        return {"watchlists": watchlists}
-
-    return safe_mongodb_operation(get_watchlists_operation, {"watchlists": [], "message": "MongoDB not available - watchlists disabled"})
+    return safe_db_operation(get_watchlists_operation, {"watchlists": [], "message": "Database not available - watchlists disabled"})
 
 @app.post("/api/watchlists")
 async def create_watchlist(watchlist: CreateWatchlist, authorization: Optional[str] = None):
@@ -2284,78 +2344,96 @@ async def create_watchlist(watchlist: CreateWatchlist, authorization: Optional[s
             except JWTError:
                 pass
 
-        watchlist_doc = {
-            "id": str(uuid.uuid4()),
-            "name": watchlist.name,
-            "tickers": watchlist.tickers,
-            "user_id": user_id,
-            "created_at": datetime.now(),
-            "updated_at": datetime.now()
-        }
+        watchlist_id = str(uuid.uuid4())
+        
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    INSERT INTO watchlists (watchlist_id, name, tickers, user_id)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING *
+                """, (watchlist_id, watchlist.name, watchlist.tickers, user_id))
+                
+                result = cur.fetchone()
+                conn.commit()
+                
+                watchlist_doc = dict(result)
+                watchlist_doc['id'] = str(watchlist_doc['id'])
+                return watchlist_doc
 
-        result = watchlists_collection.insert_one(watchlist_doc)
-        watchlist_doc['_id'] = str(result.inserted_id)
-        return watchlist_doc
-
-    result = safe_mongodb_operation(create_watchlist_operation)
+    result = safe_db_operation(create_watchlist_operation)
     if result is None:
-        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+        raise HTTPException(status_code=503, detail="Database not available - watchlists disabled")
     return result
 
 @app.put("/api/watchlists/{watchlist_id}")
 async def update_watchlist(watchlist_id: str, watchlist: CreateWatchlist, authorization: Optional[str] = None):
     """Update an existing watchlist"""
     def update_watchlist_operation():
-        update_doc = {
-            "name": watchlist.name,
-            "tickers": watchlist.tickers,
-            "updated_at": datetime.now()
-        }
-
-        query = {"id": watchlist_id}
+        user_id = None
         if authorization and authorization.lower().startswith('bearer '):
             try:
                 payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-                query["user_id"] = payload.get('sub')
+                user_id = payload.get('sub')
             except JWTError:
                 pass
 
-        result = watchlists_collection.update_one(
-            query,
-            {"$set": update_doc}
-        )
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                if user_id:
+                    cur.execute("""
+                        UPDATE watchlists 
+                        SET name = %s, tickers = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE watchlist_id = %s AND user_id = %s
+                    """, (watchlist.name, watchlist.tickers, watchlist_id, user_id))
+                else:
+                    cur.execute("""
+                        UPDATE watchlists 
+                        SET name = %s, tickers = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE watchlist_id = %s
+                    """, (watchlist.name, watchlist.tickers, watchlist_id))
+                
+                conn.commit()
+                
+                if cur.rowcount == 0:
+                    raise HTTPException(status_code=404, detail="Watchlist not found")
 
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Watchlist not found")
+                return {"message": "Watchlist updated successfully"}
 
-        return {"message": "Watchlist updated successfully"}
-
-    result = safe_mongodb_operation(update_watchlist_operation)
+    result = safe_db_operation(update_watchlist_operation)
     if result is None:
-        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+        raise HTTPException(status_code=503, detail="Database not available - watchlists disabled")
     return result
 
 @app.delete("/api/watchlists/{watchlist_id}")
 async def delete_watchlist(watchlist_id: str, authorization: Optional[str] = None):
     """Delete a watchlist"""
     def delete_watchlist_operation():
-        query = {"id": watchlist_id}
+        user_id = None
         if authorization and authorization.lower().startswith('bearer '):
             try:
                 payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-                query["user_id"] = payload.get('sub')
+                user_id = payload.get('sub')
             except JWTError:
                 pass
-        result = watchlists_collection.delete_one(query)
 
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Watchlist not found")
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                if user_id:
+                    cur.execute("DELETE FROM watchlists WHERE watchlist_id = %s AND user_id = %s", (watchlist_id, user_id))
+                else:
+                    cur.execute("DELETE FROM watchlists WHERE watchlist_id = %s", (watchlist_id,))
+                
+                conn.commit()
+                
+                if cur.rowcount == 0:
+                    raise HTTPException(status_code=404, detail="Watchlist not found")
 
-        return {"message": "Watchlist deleted successfully"}
+                return {"message": "Watchlist deleted successfully"}
 
-    result = safe_mongodb_operation(delete_watchlist_operation)
+    result = safe_db_operation(delete_watchlist_operation)
     if result is None:
-        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+        raise HTTPException(status_code=503, detail="Database not available - watchlists disabled")
     return result
 
 @app.post("/api/watchlists/{watchlist_id}/scan")
@@ -2363,18 +2441,29 @@ async def scan_watchlist(watchlist_id: str, authorization: Optional[str] = None)
     """Scan stocks in a specific watchlist (fast, cached)."""
     # First get the watchlist
     def get_watchlist_operation():
-        query = {"id": watchlist_id}
+        user_id = None
         if authorization and authorization.lower().startswith('bearer '):
             try:
                 payload = jwt.decode(authorization.split(' ',1)[1], JWT_SECRET, algorithms=[JWT_ALGORITHM])
-                query["user_id"] = payload.get('sub')
+                user_id = payload.get('sub')
             except JWTError:
                 pass
-        return watchlists_collection.find_one(query)
 
-    watchlist = safe_mongodb_operation(get_watchlist_operation)
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                if user_id:
+                    cur.execute("SELECT * FROM watchlists WHERE watchlist_id = %s AND user_id = %s", (watchlist_id, user_id))
+                else:
+                    cur.execute("SELECT * FROM watchlists WHERE watchlist_id = %s", (watchlist_id,))
+                
+                result = cur.fetchone()
+                if result:
+                    return dict(result)
+                return None
+
+    watchlist = safe_db_operation(get_watchlist_operation)
     if watchlist is None:
-        raise HTTPException(status_code=503, detail="MongoDB not available - watchlists disabled")
+        raise HTTPException(status_code=503, detail="Database not available - watchlists disabled")
 
     if not watchlist:
         raise HTTPException(status_code=404, detail="Watchlist not found")
@@ -2388,22 +2477,23 @@ async def scan_watchlist(watchlist_id: str, authorization: Optional[str] = None)
 async def get_user_preferences():
     """Get user preferences"""
     def get_preferences_operation():
-        prefs = user_preferences_collection.find_one({"user_id": "default"})
-        if not prefs:
-            # Create default preferences
-            default_prefs = {
-                "user_id": "default",
-                "dark_mode": False,
-                "auto_refresh": True,
-                "refresh_interval": 300,
-                "ai_provider": "gemini",
-                "notifications_enabled": True
-            }
-            user_preferences_collection.insert_one(default_prefs)
-            return default_prefs
-
-        prefs['_id'] = str(prefs['_id'])
-        return prefs
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM user_preferences WHERE user_id = %s", ("default",))
+                prefs = cur.fetchone()
+                
+                if not prefs:
+                    # Create default preferences
+                    cur.execute("""
+                        INSERT INTO user_preferences (user_id, dark_mode, auto_refresh, refresh_interval, ai_provider, notifications_enabled)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        RETURNING *
+                    """, ("default", False, True, 300, "gemini", True))
+                    
+                    prefs = cur.fetchone()
+                    conn.commit()
+                
+                return dict(prefs)
 
     default_prefs = {
         "user_id": "default",
@@ -2412,10 +2502,10 @@ async def get_user_preferences():
         "refresh_interval": 300,
         "ai_provider": "gemini",
         "notifications_enabled": True,
-        "message": "Using default preferences (MongoDB not available)"
+        "message": "Using default preferences (Database not available)"
     }
 
-    return safe_mongodb_operation(get_preferences_operation, default_prefs)
+    return safe_db_operation(get_preferences_operation, default_prefs)
 
 @app.put("/api/preferences")
 async def update_user_preferences(preferences: UserPreferences):
@@ -2423,17 +2513,33 @@ async def update_user_preferences(preferences: UserPreferences):
     def update_preferences_operation():
         prefs_dict = preferences.dict()
 
-        result = user_preferences_collection.update_one(
-            {"user_id": "default"},
-            {"$set": prefs_dict},
-            upsert=True
-        )
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO user_preferences (user_id, dark_mode, auto_refresh, refresh_interval, ai_provider, notifications_enabled)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (user_id) DO UPDATE SET
+                        dark_mode = EXCLUDED.dark_mode,
+                        auto_refresh = EXCLUDED.auto_refresh,
+                        refresh_interval = EXCLUDED.refresh_interval,
+                        ai_provider = EXCLUDED.ai_provider,
+                        notifications_enabled = EXCLUDED.notifications_enabled,
+                        updated_at = CURRENT_TIMESTAMP
+                """, (
+                    "default",
+                    prefs_dict.get('dark_mode', False),
+                    prefs_dict.get('auto_refresh', True),
+                    prefs_dict.get('refresh_interval', 300),
+                    prefs_dict.get('ai_provider', 'gemini'),
+                    prefs_dict.get('notifications_enabled', True)
+                ))
+                
+                conn.commit()
+                return {"message": "Preferences updated successfully"}
 
-        return {"message": "Preferences updated successfully"}
-
-    result = safe_mongodb_operation(update_preferences_operation)
+    result = safe_db_operation(update_preferences_operation)
     if result is None:
-        raise HTTPException(status_code=503, detail="MongoDB not available - preferences disabled")
+        raise HTTPException(status_code=503, detail="Database not available - preferences disabled")
     return result
 
 # Export functionality
