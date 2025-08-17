@@ -103,6 +103,9 @@ function App() {
   const [showStockDetail, setShowStockDetail] = useState(false);
   const [selectedMiniStock, setSelectedMiniStock] = useState(null);
   const [showStockModal, setShowStockModal] = useState(false);
+  const [shadowPicksStocks, setShadowPicksStocks] = useState([]);
+  const [shadowPicksLoading, setShadowPicksLoading] = useState(false);
+  const [shadowPicksError, setShadowPicksError] = useState(null);
 
 
   // Auto-refresh effect - use fast endpoint for auto-refresh too
@@ -115,6 +118,13 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [autoRefresh, refreshInterval]);
+
+  // Fetch Shadow's Picks when tab is activated
+  useEffect(() => {
+    if (activeTab === 'shadows-picks') {
+      fetchShadowPicks();
+    }
+  }, [activeTab]);
 
   // ULTRA-OPTIMIZED: Maximum performance loading strategy
   useEffect(() => {
@@ -526,6 +536,30 @@ function App() {
     }
   };
 
+  const fetchShadowPicks = async () => {
+    try {
+      setShadowPicksLoading(true);
+      setShadowPicksError(null);
+
+      // Fetch 4/4 swing scan results - get top 10 best matches
+      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=4&max_results=10`);
+      const data = await response.json();
+
+      if (data.stocks && data.stocks.length > 0) {
+        // Take the top 5-10 stocks (prioritize 4/4 scores)
+        const topStocks = data.stocks.slice(0, 10);
+        setShadowPicksStocks(topStocks);
+      } else {
+        setShadowPicksStocks([]);
+      }
+    } catch (error) {
+      console.error('Error fetching Shadow\'s Picks:', error);
+      setShadowPicksError('Failed to load Shadow\'s Picks');
+    } finally {
+      setShadowPicksLoading(false);
+    }
+  };
+
   const searchNews = async () => {
     if (!newsSearchQuery.trim()) return;
 
@@ -761,143 +795,62 @@ function App() {
       case 'shadows-picks':
         return (
           <div className="space-y-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Eye className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Shadow's Picks
-              </h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Eye className="w-5 h-5 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Shadow's Picks
+                </h2>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Top 4/4 Swing Scan Results
+                </span>
+              </div>
+              <button
+                onClick={fetchShadowPicks}
+                disabled={shadowPicksLoading}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${shadowPicksLoading ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* AAPL */}
-              <MiniStockCard
-                stock={{
-                  ticker: 'AAPL',
-                  companyName: 'Apple Inc.',
-                  currentPrice: 175.43,
-                  priceChangePercent: 2.15,
-                  priceChange: 3.63,
-                  score: 4,
-                  rank: 1,
-                  passes: {
-                    trend: true,
-                    momentum: true,
-                    volume: true,
-                    priceAction: true
-                  },
-                  RSI: 65.2,
-                  MACD: 2.34,
-                  Stochastic: 78.5,
-                  stochastic: 78.5,
-                  averageVolume: 45000000,
-                  relativeVolume: 1.8,
-                  fiftyDayMA: 170.25,
-                  twoHundredDayMA: 165.80,
-                  fiftyMA: 170.25,
-                  twoHundredMA: 165.80,
-                  bollingerUpper: 180.50,
-                  bollingerLower: 160.20,
-                  previousClose: 171.80,
-                  open: 172.10,
-                  high: 176.20,
-                  low: 171.50,
-                  volume: 81000000,
-                  marketCap: 2750000000000,
-                  pe: 28.5,
-                  eps: 6.15,
-                  dividend: 0.92,
-                  dividendYield: 0.53
-                }}
-                onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
-                onOpenChart={() => openChartForStock({ ticker: 'AAPL' })}
-              />
-
-              {/* CAKE */}
-              <MiniStockCard
-                stock={{
-                  ticker: 'CAKE',
-                  companyName: 'Cheesecake Factory Inc.',
-                  currentPrice: 34.67,
-                  priceChangePercent: -1.23,
-                  priceChange: -0.43,
-                  score: 3,
-                  rank: 2,
-                  passes: {
-                    trend: true,
-                    momentum: false,
-                    volume: true,
-                    priceAction: true
-                  },
-                  RSI: 45.8,
-                  MACD: -0.12,
-                  Stochastic: 35.2,
-                  stochastic: 35.2,
-                  averageVolume: 1200000,
-                  relativeVolume: 1.6,
-                  fiftyDayMA: 33.45,
-                  twoHundredDayMA: 32.10,
-                  fiftyMA: 33.45,
-                  twoHundredMA: 32.10,
-                  bollingerUpper: 36.80,
-                  bollingerLower: 30.20,
-                  previousClose: 35.10,
-                  open: 35.20,
-                  high: 35.80,
-                  low: 34.20,
-                  volume: 1900000,
-                  marketCap: 1800000000,
-                  pe: 18.2,
-                  eps: 1.90,
-                  dividend: 0.00,
-                  dividendYield: 0.00
-                }}
-                onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
-                onOpenChart={() => openChartForStock({ ticker: 'CAKE' })}
-              />
-
-              {/* NNE */}
-              <MiniStockCard
-                stock={{
-                  ticker: 'NNE',
-                  companyName: 'Nano Nuclear Energy Inc.',
-                  currentPrice: 12.89,
-                  priceChangePercent: 5.67,
-                  priceChange: 0.69,
-                  score: 4,
-                  rank: 3,
-                  passes: {
-                    trend: true,
-                    momentum: true,
-                    volume: true,
-                    priceAction: true
-                  },
-                  RSI: 72.1,
-                  MACD: 1.85,
-                  Stochastic: 82.3,
-                  stochastic: 82.3,
-                  averageVolume: 850000,
-                  relativeVolume: 2.1,
-                  fiftyDayMA: 11.20,
-                  twoHundredDayMA: 10.80,
-                  fiftyMA: 11.20,
-                  twoHundredMA: 10.80,
-                  bollingerUpper: 14.50,
-                  bollingerLower: 9.80,
-                  previousClose: 12.20,
-                  open: 12.30,
-                  high: 13.10,
-                  low: 12.15,
-                  volume: 1800000,
-                  marketCap: 850000000,
-                  pe: 0,
-                  eps: -0.15,
-                  dividend: 0.00,
-                  dividendYield: 0.00
-                }}
-                onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
-                onOpenChart={() => openChartForStock({ ticker: 'NNE' })}
-              />
-            </div>
+            {shadowPicksLoading ? (
+              <div className="flex flex-col justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">Loading Shadow's Picks...</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Scanning for top 4/4 swing opportunities</p>
+                </div>
+              </div>
+            ) : shadowPicksError ? (
+              <div className="text-center py-12">
+                <p className="text-red-600 dark:text-red-400 text-lg mb-4">{shadowPicksError}</p>
+                <button
+                  onClick={fetchShadowPicks}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : shadowPicksStocks.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {shadowPicksStocks.map((stock) => (
+                  <MiniStockCard
+                    key={stock.ticker}
+                    stock={stock}
+                    onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
+                    onOpenChart={() => openChartForStock(stock)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                  No 4/4 swing scan results found. Try refreshing or check back later.
+                </p>
+              </div>
+            )}
           </div>
         );
       default:
