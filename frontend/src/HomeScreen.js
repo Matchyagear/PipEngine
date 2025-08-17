@@ -285,6 +285,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
 
   // Handle mini stock card clicks
   const handleMiniStockClick = (stock) => {
+    console.log('MiniStockCard clicked:', stock);
     setSelectedMiniStock(stock);
     setShowStockModal(true);
   };
@@ -862,8 +863,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {featuredStocks.map((stock) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {featuredStocks.slice(0, 2).map((stock, index) => (
                   <MiniStockCard
                     key={stock.ticker}
                     stock={stock}

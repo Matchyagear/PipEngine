@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import StockCard from './StockCard';
 
 const StockCardModal = ({ isOpen, onClose, stock, aiProvider = 'gemini', onOpenChart }) => {
+  console.log('StockCardModal render:', { isOpen, stock: stock?.ticker });
   if (!isOpen || !stock) return null;
 
   return (
