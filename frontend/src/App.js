@@ -1013,11 +1013,7 @@ function App() {
               >
                 <Logo size="md" showText={false} src="/pipengine_logo.png" />
               </button>
-              {autoRefresh && (
-                <p className="text-xs text-green-600 dark:text-green-400 hidden sm:block">
-                  Auto-refreshing every {refreshInterval / 60} minutes
-                </p>
-              )}
+
               {showLogoMenu && (
                 <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50">
                   <div className="py-1">
@@ -1033,7 +1029,7 @@ function App() {
             </div>
 
             {/* Center - Global Search */}
-            <div className="flex-1 max-w-2xl mx-2">
+            <div className="flex-1 mx-2">
               <div className="relative">
                 <input
                   type="text"
