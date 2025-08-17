@@ -377,11 +377,11 @@ else:
                 connection_url = connection_url + '/shadowbeta'
 
         print(f"🔌 Attempting MongoDB connection to: {connection_url[:50]}...")
-        
+
         # MongoDB Atlas connection with multiple SSL/TLS attempts
         connection_successful = False
         client = None
-        
+
         # Try multiple connection methods
         connection_methods = [
             {
@@ -394,7 +394,7 @@ else:
                 }
             },
             {
-                "name": "Legacy SSL with CERT_NONE", 
+                "name": "Legacy SSL with CERT_NONE",
                 "params": {
                     "serverSelectionTimeoutMS": 15000,
                     "ssl": True,
@@ -422,7 +422,7 @@ else:
                 }
             }
         ]
-        
+
         for method in connection_methods:
             try:
                 print(f"🔄 Trying connection method: {method['name']}")
@@ -435,7 +435,7 @@ else:
             except Exception as e:
                 print(f"❌ {method['name']} failed: {str(e)[:100]}...")
                 continue
-        
+
         if not connection_successful:
             raise Exception("All connection methods failed")
 
