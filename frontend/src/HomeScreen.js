@@ -23,6 +23,7 @@ import IndexCard from './IndexCard';
 import { NewsSidebar } from './NewsComponents';
 import TradingViewHeatmap from './components/TradingViewHeatmap';
 import TradingViewMiniChart from './components/TradingViewMiniChart';
+import SimpleTradingViewWidget from './components/SimpleTradingViewWidget';
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -411,15 +412,12 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
               <>
                 {/* DEBUG TEST WIDGET */}
                 <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg">
-                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: TradingView Widget</h3>
-                  <div className="h-32 bg-gray-800 rounded">
-                    <TradingViewMiniChart
+                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: Simple TradingView Widget</h3>
+                  <div className="h-32 bg-gray-800 rounded p-2">
+                    <SimpleTradingViewWidget
                       symbol="AAPL"
+                      width="100%"
                       height={120}
-                      dateRange="1D"
-                      theme="dark"
-                      scale={1}
-                      key="debug-test-widget"
                     />
                   </div>
                   <p className="text-xs text-red-300 mt-2">If you see a chart above, TradingView is working. If not, there's a script loading issue.</p>
@@ -446,13 +444,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
                         <div className="h-20 mb-2">
-                          <TradingViewMiniChart
+                          <SimpleTradingViewWidget
                             symbol={ticker.symbol}
+                            width="100%"
                             height={80}
-                            dateRange="1D"
-                            theme="dark"
-                            scale={0.9}
-                            key={`fallback-${ticker.symbol}`}
                           />
                         </div>
                       </div>
