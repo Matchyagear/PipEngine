@@ -90,7 +90,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
     const t1 = setTimeout(() => fetchFullMovers(), 3000);     // 3s delay
     const t2 = setTimeout(() => fetchHighestVolumeStocks(), 6000);  // 6s delay
     const t3 = setTimeout(() => fetchVolatileStocks(), 9000); // 9s delay
-    const t4 = setTimeout(() => fetchFeaturedStocks(), 12000); // 12s delay - most expensive last
+    const t4 = setTimeout(() => fetchFeaturedStocks(), 4000); // 4s delay - after fullMovers loads
 
     // Refresh every 10 minutes instead of 5 (less frequent auto-refresh)
     const interval = setInterval(() => {
@@ -98,7 +98,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setTimeout(() => fetchFullMovers(), 1000);
       setTimeout(() => fetchHighestVolumeStocks(), 2000);
       setTimeout(() => fetchVolatileStocks(), 3000);
-      setTimeout(() => fetchFeaturedStocks(), 4000);
+      setTimeout(() => fetchFeaturedStocks(), 1500); // Load after fullMovers
     }, 600000); // 10 minutes instead of 5
 
     return () => {
@@ -150,19 +150,22 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setLoadingFeatured(true);
       setFeaturedError(null);
 
-      // Use the same endpoint as other sections that work correctly
-      const response = await fetch(`${API_BASE_URL}/api/market/full-movers?_t=${Date.now()}&cache_bust=${Math.random()}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.gainers && data.gainers.length > 0) {
-          // Take top 5-10 performing stocks from gainers (same as other sections)
-          setFeaturedStocks(data.gainers.slice(0, 10));
-        } else {
-          throw new Error('No stocks returned from market movers');
-        }
+      // Use the same data as Top Gainers section
+      if (fullMovers && fullMovers.gainers && fullMovers.gainers.length > 0) {
+        setFeaturedStocks(fullMovers.gainers.slice(0, 10));
       } else {
-        throw new Error(`Failed to fetch market movers data: ${response.status} ${response.statusText}`);
+        // Fallback to direct API call if fullMovers not loaded yet
+        const response = await fetch(`${API_BASE_URL}/api/market/full-movers?_t=${Date.now()}&cache_bust=${Math.random()}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.gainers && data.gainers.length > 0) {
+            setFeaturedStocks(data.gainers.slice(0, 10));
+          } else {
+            throw new Error('No stocks returned from market movers');
+          }
+        } else {
+          throw new Error(`Failed to fetch market movers data: ${response.status} ${response.statusText}`);
+        }
       }
     } catch (error) {
       console.error('Error fetching featured stocks:', error);
