@@ -297,23 +297,33 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # Initialize MongoDB connection (optional)
 MONGO_URL = os.environ.get('MONGO_URL')
-MONGODB_DISABLED_ENV = os.environ.get('MONGODB_DISABLED', 'true').lower() in ['true', '1', 'yes', 'on']
+MONGODB_DISABLED_ENV = os.environ.get('MONGODB_DISABLED', 'false').lower() in ['true', '1', 'yes', 'on']
+
+# Debug ALL environment variables to see what's available
+print("🔍 ALL ENVIRONMENT VARIABLES:")
+for key, value in sorted(os.environ.items()):
+    if any(word in key.upper() for word in ['MONGO', 'DB', 'DATABASE']):
+        if 'URL' in key.upper() or 'PASSWORD' in key.upper():
+            # Mask sensitive info but show structure
+            masked_value = value[:10] + "***" + value[-10:] if len(value) > 20 else "***"
+            print(f"  {key} = {masked_value}")
+        else:
+            print(f"  {key} = {value}")
 
 print(f"🔍 Debug: MONGO_URL = {MONGO_URL}")
 print(f"🔍 Debug: MONGODB_DISABLED_ENV = {MONGODB_DISABLED_ENV}")
-print(f"🔍 Debug: Raw MONGODB_DISABLED env = '{os.environ.get('MONGODB_DISABLED', 'true')}'")
+print(f"🔍 Debug: Raw MONGODB_DISABLED env = '{os.environ.get('MONGODB_DISABLED', 'not_set')}'")
 
-# FORCE disable MongoDB if no URL provided (production safety)
-# This takes priority over environment variable to prevent connection attempts
-if not MONGO_URL:
-    print("⚠️  No MONGO_URL found. MongoDB FORCE DISABLED to prevent connection delays.")
+# If MongoDB is explicitly disabled, respect that
+if MONGODB_DISABLED_ENV:
+    print("⚠️  MongoDB explicitly disabled via MONGODB_DISABLED environment variable.")
+    MONGODB_DISABLED = True
+elif not MONGO_URL:
+    print("❌ MongoDB enabled but no MONGO_URL found! Please check environment variables.")
     MONGODB_DISABLED = True
 else:
-    MONGODB_DISABLED = MONGODB_DISABLED_ENV
-    if MONGODB_DISABLED:
-        print("⚠️  MongoDB explicitly disabled via MONGODB_DISABLED environment variable.")
-    else:
-        print(f"✅ MongoDB enabled. Will attempt connection to: {MONGO_URL}")
+    print(f"✅ MongoDB enabled. Will attempt connection to: {MONGO_URL[:50]}...")
+    MONGODB_DISABLED = False
 
 if MONGODB_DISABLED:
     print("✅ MongoDB DISABLED - App will run without user features (watchlists, alerts, etc.)")
@@ -325,13 +335,30 @@ if MONGODB_DISABLED:
     strategies_collection = None
 else:
     try:
-        print(f"🔌 Attempting MongoDB connection to: {MONGO_URL}")
-        client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=2000)  # 2 second timeout
+        # Add database name to URL if not present
+        connection_url = MONGO_URL
+        if '?' in connection_url and '/?' in connection_url:
+            # URL like: mongodb+srv://user:pass@cluster.net/?params
+            # Insert database name: mongodb+srv://user:pass@cluster.net/dbname?params
+            connection_url = connection_url.replace('/?', '/shadowbeta?')
+        elif not any(db_name in connection_url for db_name in ['/shadowbeta', '/test', '/admin']):
+            # Add default database name if none specified
+            if '?' in connection_url:
+                connection_url = connection_url.replace('?', '/shadowbeta?')
+            else:
+                connection_url = connection_url + '/shadowbeta'
+        
+        print(f"🔌 Attempting MongoDB connection to: {connection_url[:50]}...")
+        client = MongoClient(connection_url, serverSelectionTimeoutMS=10000)  # 10 second timeout for network
 
         # Test the connection
+        print("🔄 Testing MongoDB connection...")
         client.admin.command('ping')
+        print("✅ MongoDB ping successful")
 
         db = client[os.environ.get('DB_NAME', 'shadowbeta')]
+        print(f"✅ Using database: {db.name}")
+        
         # Collections
         watchlists_collection = db.watchlists
         alerts_collection = db.alerts
@@ -339,11 +366,12 @@ else:
         users_collection = db.users
         portfolios_collection = db.portfolios
         strategies_collection = db.shadowbot_strategies
-        print("✅ MongoDB connected successfully")
+        print("✅ MongoDB connected successfully - All collections initialized")
     except Exception as e:
         print(f"❌ MongoDB connection failed: {e}")
+        print(f"❌ Connection URL format: {MONGO_URL[:30]}...")
         print("🔄 AUTOMATICALLY DISABLING MongoDB - App will run without user features")
-        print("💡 To re-enable: Start MongoDB or set MONGODB_DISABLED=false")
+        print("💡 Check: 1) MongoDB Atlas cluster is running 2) IP whitelist includes 0.0.0.0/0 3) Credentials are correct")
 
         # Automatically disable MongoDB and continue
         client = None
