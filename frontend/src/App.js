@@ -153,7 +153,7 @@ function App() {
 
     const connectWebSocket = () => {
       try {
-        const ws = new WebSocket('ws://localhost:8000/ws');
+                    const ws = new WebSocket(`${API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws`);
 
         ws.onopen = () => {
           console.log('📡 WEBSOCKET: Connected successfully');
