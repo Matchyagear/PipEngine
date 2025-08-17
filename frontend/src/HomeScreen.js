@@ -24,6 +24,7 @@ import { NewsSidebar } from './NewsComponents';
 import TradingViewHeatmap from './components/TradingViewHeatmap';
 import TradingViewMiniChart from './components/TradingViewMiniChart';
 import SimpleTradingViewWidget from './components/SimpleTradingViewWidget';
+import DirectTradingViewChart from './components/DirectTradingViewChart';
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -411,16 +412,16 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
             {true && ( // FORCE TRADINGVIEW WIDGETS ALWAYS
               <>
                 {/* DEBUG TEST WIDGET */}
-                <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg">
-                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: Simple TradingView Widget</h3>
+                <div className="mb-6 p-4 bg-green-500/20 border border-green-500 rounded-lg">
+                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: Direct TradingView Chart (iframe)</h3>
                   <div className="h-32 bg-gray-800 rounded p-2">
-                    <SimpleTradingViewWidget
+                    <DirectTradingViewChart
                       symbol="AAPL"
                       width="100%"
                       height={120}
                     />
                   </div>
-                  <p className="text-xs text-red-300 mt-2">If you see a chart above, TradingView is working. If not, there's a script loading issue.</p>
+                  <p className="text-xs text-green-300 mt-2">Direct iframe embed - should work immediately!</p>
                 </div>
 
                 <div>
@@ -441,7 +442,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
                         <div className="h-20 mb-2">
-                          <SimpleTradingViewWidget
+                          <DirectTradingViewChart
                             symbol={ticker.symbol}
                             width="100%"
                             height={80}
@@ -500,13 +501,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-sm font-bold text-yellow-400">{ticker}</div>
                         </div>
                         <div className="h-16 mb-2">
-                          <TradingViewMiniChart
+                          <DirectTradingViewChart
                             symbol={ticker}
+                            width="100%"
                             height={64}
-                            dateRange="1D"
-                            theme="dark"
-                            scale={0.8}
-                            key={`popular-${ticker}`}
                           />
                         </div>
                       </div>

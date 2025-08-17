@@ -8,7 +8,7 @@ const SimpleTradingViewWidget = ({ symbol = 'AAPL', width = '100%', height = 80 
 
         // Add a small delay to prevent TradingView rate limiting
         const randomDelay = Math.random() * 1000; // 0-1 second random delay
-        
+
         const timer = setTimeout(() => {
             if (!containerRef.current) return;
 
@@ -17,36 +17,36 @@ const SimpleTradingViewWidget = ({ symbol = 'AAPL', width = '100%', height = 80 
 
             // Create the widget script directly
             const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
-        script.async = true;
+            script.type = 'text/javascript';
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+            script.async = true;
 
-        // Widget configuration as text content
-        script.text = JSON.stringify({
-            "symbol": symbol,
-            "width": width,
-            "height": height,
-            "locale": "en",
-            "dateRange": "12M",
-            "colorTheme": "dark",
-            "isTransparent": true,
-            "autosize": false,
-            "largeChartUrl": ""
-        });
+            // Widget configuration as text content
+            script.text = JSON.stringify({
+                "symbol": symbol,
+                "width": width,
+                "height": height,
+                "locale": "en",
+                "dateRange": "12M",
+                "colorTheme": "dark",
+                "isTransparent": true,
+                "autosize": false,
+                "largeChartUrl": ""
+            });
 
-        // Create container div
-        const widgetContainer = document.createElement('div');
-        widgetContainer.className = 'tradingview-widget-container';
-        widgetContainer.style.height = height + 'px';
-        widgetContainer.style.width = width;
+            // Create container div
+            const widgetContainer = document.createElement('div');
+            widgetContainer.className = 'tradingview-widget-container';
+            widgetContainer.style.height = height + 'px';
+            widgetContainer.style.width = width;
 
-        // Append script to container
-        widgetContainer.appendChild(script);
+            // Append script to container
+            widgetContainer.appendChild(script);
 
-        // Append to DOM
-        containerRef.current.appendChild(widgetContainer);
+            // Append to DOM
+            containerRef.current.appendChild(widgetContainer);
 
-        console.log('🧪 SIMPLE WIDGET: Created for', symbol);
+            console.log('🧪 SIMPLE WIDGET: Created for', symbol);
 
         }, randomDelay);
 
