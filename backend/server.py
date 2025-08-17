@@ -381,8 +381,10 @@ else:
         # MongoDB Atlas connection with multiple SSL/TLS attempts
         connection_successful = False
         client = None
-
-        # Try multiple connection methods
+        
+        # Try multiple connection methods with proper SSL imports
+        import ssl
+        
         connection_methods = [
             {
                 "name": "Modern TLS (Recommended)",
@@ -394,11 +396,21 @@ else:
                 }
             },
             {
+                "name": "TLS with insecure context", 
+                "params": {
+                    "serverSelectionTimeoutMS": 15000,
+                    "tls": True,
+                    "tlsInsecure": True,
+                    "retryWrites": True,
+                    "w": "majority"
+                }
+            },
+            {
                 "name": "Legacy SSL with CERT_NONE",
                 "params": {
                     "serverSelectionTimeoutMS": 15000,
                     "ssl": True,
-                    "ssl_cert_reqs": "CERT_NONE",
+                    "ssl_cert_reqs": ssl.CERT_NONE,
                     "retryWrites": True,
                     "w": "majority"
                 }
@@ -408,16 +420,19 @@ else:
                 "params": {
                     "serverSelectionTimeoutMS": 15000,
                     "ssl": True,
-                    "ssl_cert_reqs": "CERT_NONE",
+                    "ssl_cert_reqs": ssl.CERT_NONE,
                     "ssl_check_hostname": False,
                     "ssl_match_hostname": False,
                     "retryWrites": True
                 }
             },
             {
-                "name": "Basic connection (no SSL params)",
+                "name": "TLS all disabled",
                 "params": {
                     "serverSelectionTimeoutMS": 15000,
+                    "tls": True,
+                    "tlsAllowInvalidCertificates": True,
+                    "tlsAllowInvalidHostnames": True,
                     "retryWrites": True
                 }
             }
