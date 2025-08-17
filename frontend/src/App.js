@@ -789,7 +789,17 @@ function App() {
                   fiftyDayMA: 170.25,
                   twoHundredDayMA: 165.80,
                   bollingerUpper: 180.50,
-                  bollingerLower: 160.20
+                  bollingerLower: 160.20,
+                  previousClose: 171.80,
+                  open: 172.10,
+                  high: 176.20,
+                  low: 171.50,
+                  volume: 81000000,
+                  marketCap: 2750000000000,
+                  pe: 28.5,
+                  eps: 6.15,
+                  dividend: 0.92,
+                  dividendYield: 0.53
                 }}
                 onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'AAPL' })}
@@ -817,7 +827,17 @@ function App() {
                   fiftyDayMA: 33.45,
                   twoHundredDayMA: 32.10,
                   bollingerUpper: 36.80,
-                  bollingerLower: 30.20
+                  bollingerLower: 30.20,
+                  previousClose: 35.10,
+                  open: 35.20,
+                  high: 35.80,
+                  low: 34.20,
+                  volume: 1900000,
+                  marketCap: 1800000000,
+                  pe: 18.2,
+                  eps: 1.90,
+                  dividend: 0.00,
+                  dividendYield: 0.00
                 }}
                 onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'CAKE' })}
@@ -845,7 +865,17 @@ function App() {
                   fiftyDayMA: 11.20,
                   twoHundredDayMA: 10.80,
                   bollingerUpper: 14.50,
-                  bollingerLower: 9.80
+                  bollingerLower: 9.80,
+                  previousClose: 12.20,
+                  open: 12.30,
+                  high: 13.10,
+                  low: 12.15,
+                  volume: 1800000,
+                  marketCap: 850000000,
+                  pe: 0,
+                  eps: -0.15,
+                  dividend: 0.00,
+                  dividendYield: 0.00
                 }}
                 onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                 onOpenChart={() => openChartForStock({ ticker: 'NNE' })}
