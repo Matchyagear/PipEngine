@@ -101,8 +101,7 @@ function App() {
   const [isSearchingNews, setIsSearchingNews] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
   const [showStockDetail, setShowStockDetail] = useState(false);
-  const [showShadowModal, setShowShadowModal] = useState(false);
-  const [selectedShadowStock, setSelectedShadowStock] = useState(null);
+
 
   // Auto-refresh effect - use fast endpoint for auto-refresh too
   useEffect(() => {
@@ -153,7 +152,7 @@ function App() {
 
     const connectWebSocket = () => {
       try {
-                    const ws = new WebSocket(`${API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws`);
+        const ws = new WebSocket(`${API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws`);
 
         ws.onopen = () => {
           console.log('📡 WEBSOCKET: Connected successfully');
@@ -854,7 +853,7 @@ function App() {
                       <MiniStockCard
                         key={stock.ticker}
                         stock={stock}
-                        onClick={(s) => { setSelectedShadowStock(s); setShowShadowModal(true); }}
+                        onClick={(s) => { setSelectedStock(s); setShowStockDetail(true); }}
                         onOpenChart={() => openChartForStock(stock)}
                       />
                     ))
@@ -962,18 +961,7 @@ function App() {
                 <span>Home</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setActiveTab('shadow');
-                  setCurrentWatchlist(null);
-                  setShowSearchResult(false);
-                  fetchStocks(true); // Use fast endpoint
-                }}
-                className={`tab-button ${activeTab === 'shadow' && !currentWatchlist && !showSearchResult ? 'tab-button-active' : ''}`}
-              >
-                <Eye className="w-4 h-4" />
-                <span>Shadow's Picks</span>
-              </button>
+
 
               <button
                 onClick={() => {
@@ -1279,14 +1267,7 @@ function App() {
         API_BASE_URL={API_BASE_URL}
       />
 
-      {/* Shadow's Picks Stock Card Modal (universal StockCard) */}
-      <StockCardModal
-        isOpen={showShadowModal}
-        onClose={() => { setShowShadowModal(false); setSelectedShadowStock(null); }}
-        stock={selectedShadowStock}
-        aiProvider={aiProvider}
-        onOpenChart={openChartForStock}
-      />
+
 
       {/* AI Chat Component - Controlled by Header Button */}
       <AIChat isOpen={showAIChat} setIsOpen={setShowAIChat} />
