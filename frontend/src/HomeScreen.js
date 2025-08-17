@@ -147,15 +147,93 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
   const fetchFeaturedStocks = async () => {
     try {
       setLoadingFeatured(true);
-      // Use instant endpoint for featured stocks (fastest)
-      const response = await fetch(`${API_BASE_URL}/api/stocks/scan/instant`);
+      // Use fast endpoint for live featured stocks (not static)
+      const response = await fetch(`${API_BASE_URL}/api/stocks/scan/fast`);
 
       if (response.ok) {
         const data = await response.json();
         // Take top 2 performing stocks for featured section
         setFeaturedStocks(data.stocks?.slice(0, 2) || []);
       } else {
-        // Fallback to static featured stocks when API fails
+        // Fallback to regular scan if fast endpoint fails
+        const fallbackResponse = await fetch(`${API_BASE_URL}/api/stocks/scan`);
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          setFeaturedStocks(fallbackData.stocks?.slice(0, 2) || []);
+        } else {
+          // Final fallback to static data only if both live endpoints fail
+          setFeaturedStocks([
+            {
+              symbol: 'AAPL',
+              company_name: 'Apple Inc.',
+              current_price: 227.52,
+              change_percent: 2.1,
+              volume: 45678901,
+              score: 4,
+              analysis: {
+                recommendation: 'Strong Buy',
+                price_target: 250,
+                risk_level: 'Low'
+              }
+            },
+            {
+              symbol: 'NVDA',
+              company_name: 'NVIDIA Corporation',
+              current_price: 140.76,
+              change_percent: 3.4,
+              volume: 67890123,
+              score: 4,
+              analysis: {
+                recommendation: 'Buy',
+                price_target: 160,
+                risk_level: 'Medium'
+              }
+            }
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching featured stocks:', error);
+      // Try regular scan as fallback for network errors
+      try {
+        const fallbackResponse = await fetch(`${API_BASE_URL}/api/stocks/scan`);
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          setFeaturedStocks(fallbackData.stocks?.slice(0, 2) || []);
+        } else {
+          // Final fallback to static data
+          setFeaturedStocks([
+            {
+              symbol: 'AAPL',
+              company_name: 'Apple Inc.',
+              current_price: 227.52,
+              change_percent: 2.1,
+              volume: 45678901,
+              score: 4,
+              analysis: {
+                recommendation: 'Strong Buy',
+                price_target: 250,
+                risk_level: 'Low'
+              }
+            },
+            {
+              symbol: 'MSFT',
+              company_name: 'Microsoft Corporation',
+              current_price: 422.54,
+              change_percent: 1.8,
+              volume: 23456789,
+              score: 4,
+              analysis: {
+                recommendation: 'Buy',
+                price_target: 450,
+                risk_level: 'Low'
+              }
+            }
+          ]);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback fetch also failed:', fallbackError);
+        // Final static fallback
         setFeaturedStocks([
           {
             symbol: 'AAPL',
@@ -171,51 +249,20 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
             }
           },
           {
-            symbol: 'NVDA',
-            company_name: 'NVIDIA Corporation',
-            current_price: 140.76,
-            change_percent: 3.4,
-            volume: 67890123,
+            symbol: 'MSFT',
+            company_name: 'Microsoft Corporation',
+            current_price: 422.54,
+            change_percent: 1.8,
+            volume: 23456789,
             score: 4,
             analysis: {
               recommendation: 'Buy',
-              price_target: 160,
-              risk_level: 'Medium'
+              price_target: 450,
+              risk_level: 'Low'
             }
           }
         ]);
       }
-    } catch (error) {
-      console.error('Error fetching featured stocks:', error);
-      // Same fallback for network errors
-      setFeaturedStocks([
-        {
-          symbol: 'AAPL',
-          company_name: 'Apple Inc.',
-          current_price: 227.52,
-          change_percent: 2.1,
-          volume: 45678901,
-          score: 4,
-          analysis: {
-            recommendation: 'Strong Buy',
-            price_target: 250,
-            risk_level: 'Low'
-          }
-        },
-        {
-          symbol: 'MSFT',
-          company_name: 'Microsoft Corporation',
-          current_price: 422.54,
-          change_percent: 1.8,
-          volume: 23456789,
-          score: 4,
-          analysis: {
-            recommendation: 'Buy',
-            price_target: 450,
-            risk_level: 'Low'
-          }
-        }
-      ]);
     } finally {
       setLoadingFeatured(false);
     }

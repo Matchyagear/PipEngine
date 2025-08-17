@@ -366,13 +366,13 @@ def _create_connection_with_ipv4(database_url):
         # Parse the URL and modify to force IPv4
         from urllib.parse import urlparse
         parsed = urlparse(database_url)
-        
+
         # Force IPv4 by adding connection parameters
         if '?' in database_url:
             database_url += '&preferQueryMode=simple'
         else:
             database_url += '?preferQueryMode=simple'
-        
+
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_url)
     except Exception as e:
         print(f"⚠️ IPv4 connection setup failed: {e}")
@@ -385,7 +385,7 @@ def _create_connection_with_pooler(database_url):
         # Replace port 5432 with 6543 for connection pooler
         pooler_url = database_url.replace(':5432/', ':6543/')
         print(f"🔄 Using connection pooler: {pooler_url[:50]}...")
-        
+
         return SimpleConnectionPool(minconn=1, maxconn=10, dsn=pooler_url)
     except Exception as e:
         print(f"⚠️ Connection pooler setup failed: {e}")
