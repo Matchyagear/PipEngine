@@ -538,11 +538,11 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
-                        <div className="h-32">
+                        <div className="h-48">
                           <TradingViewMiniWidget
                             symbol={ticker.symbol}
                             width="100%"
-                            height={128}
+                            height={192}
                           />
                         </div>
                       </div>
@@ -569,11 +569,11 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
-                        <div className="h-32">
+                        <div className="h-48">
                           <TradingViewMiniWidget
                             symbol={ticker.symbol}
                             width="100%"
-                            height={128}
+                            height={192}
                           />
                         </div>
                       </div>
