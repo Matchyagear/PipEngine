@@ -339,26 +339,26 @@ else:
     try:
         # Fix URL encoding for special characters in password
         connection_url = MONGO_URL
-        
+
         # Check if password has unencoded special characters or angle brackets
         if '://' in connection_url and '@' in connection_url:
             # Extract parts: mongodb+srv://username:password@host/db?params
             protocol_part = connection_url.split('://')[0] + '://'
             rest_part = connection_url.split('://')[1]
-            
+
             if '@' in rest_part:
                 # Split at the last @ to separate credentials from host
                 credentials_part = rest_part.rsplit('@', 1)[0]
                 host_part = rest_part.rsplit('@', 1)[1]
-                
+
                 if ':' in credentials_part:
                     username, password = credentials_part.split(':', 1)
-                    
+
                     # Remove angle brackets if present (common in Atlas connection strings)
                     if password.startswith('<') and password.endswith('>'):
                         password = password[1:-1]
                         print(f"🔧 Removed angle brackets from password")
-                    
+
                     # URL encode the password to handle special characters
                     encoded_password = quote_plus(password)
                     connection_url = f"{protocol_part}{username}:{encoded_password}@{host_part}"
@@ -377,30 +377,67 @@ else:
                 connection_url = connection_url + '/shadowbeta'
 
         print(f"🔌 Attempting MongoDB connection to: {connection_url[:50]}...")
-
-        # MongoDB Atlas connection with proper SSL/TLS handling
-        try:
-            # First try with modern TLS settings
-            client = MongoClient(
-                connection_url,
-                serverSelectionTimeoutMS=10000,
-                tls=True,  # Use TLS instead of deprecated ssl
-                tlsCAFile=None,  # Use system CA certificates
-                retryWrites=True,
-                w='majority'
-            )
-        except Exception as tls_error:
-            print(f"⚠️  Modern TLS failed: {tls_error}")
-            print("🔄 Trying with legacy SSL settings...")
-            # Fallback to legacy SSL settings for compatibility
-            client = MongoClient(
-                connection_url,
-                serverSelectionTimeoutMS=10000,
-                ssl=True,
-                ssl_cert_reqs='CERT_NONE',
-                retryWrites=True,
-                w='majority'
-            )
+        
+        # MongoDB Atlas connection with multiple SSL/TLS attempts
+        connection_successful = False
+        client = None
+        
+        # Try multiple connection methods
+        connection_methods = [
+            {
+                "name": "Modern TLS (Recommended)",
+                "params": {
+                    "serverSelectionTimeoutMS": 15000,
+                    "tls": True,
+                    "retryWrites": True,
+                    "w": "majority"
+                }
+            },
+            {
+                "name": "Legacy SSL with CERT_NONE", 
+                "params": {
+                    "serverSelectionTimeoutMS": 15000,
+                    "ssl": True,
+                    "ssl_cert_reqs": "CERT_NONE",
+                    "retryWrites": True,
+                    "w": "majority"
+                }
+            },
+            {
+                "name": "No SSL verification",
+                "params": {
+                    "serverSelectionTimeoutMS": 15000,
+                    "ssl": True,
+                    "ssl_cert_reqs": "CERT_NONE",
+                    "ssl_check_hostname": False,
+                    "ssl_match_hostname": False,
+                    "retryWrites": True
+                }
+            },
+            {
+                "name": "Basic connection (no SSL params)",
+                "params": {
+                    "serverSelectionTimeoutMS": 15000,
+                    "retryWrites": True
+                }
+            }
+        ]
+        
+        for method in connection_methods:
+            try:
+                print(f"🔄 Trying connection method: {method['name']}")
+                client = MongoClient(connection_url, **method['params'])
+                # Test connection immediately
+                client.admin.command('ping')
+                print(f"✅ Connection successful with: {method['name']}")
+                connection_successful = True
+                break
+            except Exception as e:
+                print(f"❌ {method['name']} failed: {str(e)[:100]}...")
+                continue
+        
+        if not connection_successful:
+            raise Exception("All connection methods failed")
 
         # Test the connection
         print("🔄 Testing MongoDB connection...")
