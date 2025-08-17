@@ -525,7 +525,9 @@ const StockCard = ({
         {/* Main Criteria Grid */}
         {stock.passes && (
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {Object.entries(stock.passes).slice(0, 4).map(([criteria, passed]) => (
+            {Object.entries(stock.passes)
+              .filter(([criteria]) => ['trend', 'momentum', 'volume', 'priceAction'].includes(criteria))
+              .map(([criteria, passed]) => (
               <div
                 key={criteria}
                 className={`p-3 rounded-lg border-2 ${passed
