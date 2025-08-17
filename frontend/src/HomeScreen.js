@@ -25,6 +25,7 @@ import TradingViewHeatmap from './components/TradingViewHeatmap';
 import TradingViewMiniChart from './components/TradingViewMiniChart';
 import SimpleTradingViewWidget from './components/SimpleTradingViewWidget';
 import DirectTradingViewChart from './components/DirectTradingViewChart';
+import TradingViewMiniWidget from './components/TradingViewMiniWidget';
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -412,16 +413,16 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
             {true && ( // FORCE TRADINGVIEW WIDGETS ALWAYS
               <>
                 {/* DEBUG TEST WIDGET */}
-                <div className="mb-6 p-4 bg-green-500/20 border border-green-500 rounded-lg">
-                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: Direct TradingView Chart (iframe)</h3>
+                <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500 rounded-lg">
+                  <h3 className="text-white font-bold mb-2">🧪 DEBUG TEST: Official TradingView Mini Widget (1D)</h3>
                   <div className="h-32 bg-gray-800 rounded p-2">
-                    <DirectTradingViewChart
-                      symbol="AAPL"
-                      width="100%"
+                    <TradingViewMiniWidget
+                      symbol="NASDAQ:AAPL"
                       height={120}
+                      width="100%"
                     />
                   </div>
-                  <p className="text-xs text-green-300 mt-2">Direct iframe embed - should work immediately!</p>
+                  <p className="text-xs text-blue-300 mt-2">Official TradingView mini widget with 1D timeframe!</p>
                 </div>
 
                 <div>
@@ -431,10 +432,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {[
-                      { symbol: "^GSPC", name: "S&P 500" },
-                      { symbol: "^IXIC", name: "NASDAQ" },
-                      { symbol: "^DJI", name: "Dow" },
-                      { symbol: "^FTSE", name: "FTSE 100" }
+                      { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
+                      { symbol: "NASDAQ:QQQ", name: "NASDAQ ETF" },
+                      { symbol: "FOREXCOM:DJI", name: "Dow Jones" },
+                      { symbol: "LSE:FTSE", name: "FTSE 100" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
@@ -442,7 +443,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
                         <div className="h-20 mb-2">
-                          <DirectTradingViewChart
+                          <TradingViewMiniWidget
                             symbol={ticker.symbol}
                             width="100%"
                             height={80}
@@ -494,14 +495,14 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                     {[
-                      "AAPL", "MSFT", "GOOGL", "AMZN"
+                      "NASDAQ:AAPL", "NASDAQ:MSFT", "NASDAQ:GOOGL", "NASDAQ:AMZN"
                     ].map((ticker) => (
                       <div key={ticker} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-sm font-bold text-yellow-400">{ticker}</div>
                         </div>
                         <div className="h-16 mb-2">
-                          <DirectTradingViewChart
+                          <TradingViewMiniWidget
                             symbol={ticker}
                             width="100%"
                             height={64}
