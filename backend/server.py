@@ -1489,7 +1489,7 @@ async def health_check():
         "mongodb_connected": db is not None,
         "mongodb_disabled": MONGODB_DISABLED,
         "endpoints": {
-            "scan_instant": "/api/stocks/scan/instant",
+
             "market_instant": "/api/market/overview/instant",
             "news_instant": "/api/news/general/instant"
         },
@@ -2077,99 +2077,6 @@ async def scan_stocks(
                 "scan_time": (datetime.now() - start_time).total_seconds()
             }
         }
-
-@app.get("/api/stocks/scan/instant")
-async def scan_stocks_instant():
-    """INSTANT LOADING: Return pre-computed static data for immediate page load"""
-
-    # Static high-quality stock data for instant loading (updated daily via background job)
-    instant_stocks = [
-        {
-            "ticker": "AAPL", "companyName": "Apple Inc.", "currentPrice": 189.25, "priceChange": 2.15,
-            "priceChangePercent": 1.15, "averageVolume": 58000000, "relativeVolume": 1.2, "RSI": 45.2,
-            "MACD": 1.2, "fiftyMA": 185.50, "twoHundredMA": 175.20, "score": 4, "rank": 1,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "MSFT", "companyName": "Microsoft Corporation", "currentPrice": 378.85, "priceChange": 3.25,
-            "priceChangePercent": 0.86, "averageVolume": 35000000, "relativeVolume": 1.1, "RSI": 52.1,
-            "MACD": 2.1, "fiftyMA": 375.10, "twoHundredMA": 365.80, "score": 4, "rank": 2,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "NVDA", "companyName": "NVIDIA Corporation", "currentPrice": 875.25, "priceChange": 15.60,
-            "priceChangePercent": 1.82, "averageVolume": 42000000, "relativeVolume": 1.8, "RSI": 38.5,
-            "MACD": 8.5, "fiftyMA": 850.20, "twoHundredMA": 720.50, "score": 4, "rank": 3,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "GOOGL", "companyName": "Alphabet Inc.", "currentPrice": 142.85, "priceChange": 1.85,
-            "priceChangePercent": 1.31, "averageVolume": 28000000, "relativeVolume": 1.3, "RSI": 48.2,
-            "MACD": 1.8, "fiftyMA": 140.15, "twoHundredMA": 135.90, "score": 4, "rank": 4,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "AMZN", "companyName": "Amazon.com Inc.", "currentPrice": 155.25, "priceChange": 2.10,
-            "priceChangePercent": 1.37, "averageVolume": 45000000, "relativeVolume": 1.1, "RSI": 44.8,
-            "MACD": 1.5, "fiftyMA": 152.80, "twoHundredMA": 148.30, "score": 4, "rank": 5,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "TSLA", "companyName": "Tesla Inc.", "currentPrice": 245.60, "priceChange": 8.40,
-            "priceChangePercent": 3.54, "averageVolume": 95000000, "relativeVolume": 2.1, "RSI": 35.2,
-            "MACD": 5.2, "fiftyMA": 235.10, "twoHundredMA": 220.80, "score": 4, "rank": 6,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "META", "companyName": "Meta Platforms Inc.", "currentPrice": 485.20, "priceChange": 6.80,
-            "priceChangePercent": 1.42, "averageVolume": 18000000, "relativeVolume": 1.4, "RSI": 41.5,
-            "MACD": 3.1, "fiftyMA": 475.30, "twoHundredMA": 450.60, "score": 3, "rank": 7,
-            "passes": {"trend": True, "momentum": True, "volume": True, "priceAction": False}
-        },
-        {
-            "ticker": "AMD", "companyName": "Advanced Micro Devices", "currentPrice": 142.85, "priceChange": 4.25,
-            "priceChangePercent": 3.07, "averageVolume": 68000000, "relativeVolume": 1.9, "RSI": 32.8,
-            "MACD": 2.8, "fiftyMA": 138.50, "twoHundredMA": 125.40, "score": 3, "rank": 8,
-            "passes": {"trend": True, "momentum": False, "volume": True, "priceAction": True}
-        },
-        {
-            "ticker": "NFLX", "companyName": "Netflix Inc.", "currentPrice": 625.40, "priceChange": 12.20,
-            "priceChangePercent": 1.99, "averageVolume": 4500000, "relativeVolume": 1.6, "RSI": 46.2,
-            "MACD": 4.5, "fiftyMA": 615.80, "twoHundredMA": 580.20, "score": 3, "rank": 9,
-            "passes": {"trend": True, "momentum": True, "volume": False, "priceAction": True}
-        },
-        {
-            "ticker": "SPY", "companyName": "SPDR S&P 500 ETF", "currentPrice": 512.85, "priceChange": 1.45,
-            "priceChangePercent": 0.28, "averageVolume": 85000000, "relativeVolume": 1.0, "RSI": 50.5,
-            "MACD": 0.8, "fiftyMA": 510.20, "twoHundredMA": 495.60, "score": 3, "rank": 10,
-            "passes": {"trend": True, "momentum": False, "volume": True, "priceAction": False}
-        },
-        {
-            "ticker": "QQQ", "companyName": "Invesco QQQ Trust", "currentPrice": 425.60, "priceChange": 2.80,
-            "priceChangePercent": 0.66, "averageVolume": 45000000, "relativeVolume": 1.1, "RSI": 48.8,
-            "MACD": 1.2, "fiftyMA": 420.50, "twoHundredMA": 405.80, "score": 2, "rank": 11,
-            "passes": {"trend": True, "momentum": False, "volume": False, "priceAction": True}
-        },
-        {
-            "ticker": "IWM", "companyName": "iShares Russell 2000 ETF", "currentPrice": 198.45, "priceChange": 0.85,
-            "priceChangePercent": 0.43, "averageVolume": 28000000, "relativeVolume": 0.9, "RSI": 52.2,
-            "MACD": 0.5, "fiftyMA": 196.80, "twoHundredMA": 190.20, "score": 2, "rank": 12,
-            "passes": {"trend": False, "momentum": True, "volume": False, "priceAction": False}
-        }
-    ]
-
-    return {
-        "stocks": instant_stocks,
-        "metadata": {
-            "scan_time": 0.001,  # Instant
-            "scan_type": "instant",
-            "scanned": len(instant_stocks),
-            "results": len(instant_stocks),
-            "is_static_data": True,
-            "last_updated": "2024-01-15T10:00:00Z",
-            "note": "Static data for instant loading. Real-time data loads in background."
-        }
-    }
 
 @app.get("/api/stocks/scan/fast")
 async def scan_stocks_fast():

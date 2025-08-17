@@ -319,7 +319,7 @@ function App() {
 
       // Use instant endpoint for initial load (fastest possible)
       if (useFastEndpoint) {
-        url = `${API_BASE_URL}/api/stocks/scan/instant`;
+        url = `${API_BASE_URL}/api/stocks/scan/fast`;
       } else if (currentWatchlist) {
         url = `${API_BASE_URL}/api/watchlists/${currentWatchlist.id}/scan`;
       }

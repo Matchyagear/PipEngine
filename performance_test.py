@@ -96,7 +96,7 @@ class PerformanceTester:
 
         # Test endpoints in order of importance
         test_endpoints = [
-            ("/api/stocks/scan/instant", "Stock Scanner (Instant)", 10),
+    
             ("/api/market/overview/instant", "Market Overview (Instant)", 10),
             ("/api/news/general/instant", "News Feed (Instant)", 5),
             ("/api/stocks/scan/fast", "Stock Scanner (Fast)", 5),
