@@ -150,8 +150,8 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
       setLoadingFeatured(true);
       setFeaturedError(null);
 
-      // Use the same endpoint as home screen stocks that work correctly
-      const response = await fetch(`${API_BASE_URL}/api/market/full-movers?_t=${Date.now()}`);
+      // Use the same endpoint as home screen stocks that work correctly with cache busting
+      const response = await fetch(`${API_BASE_URL}/api/market/full-movers?_t=${Date.now()}&cache_bust=${Math.random()}`);
 
       if (response.ok) {
         const data = await response.json();
