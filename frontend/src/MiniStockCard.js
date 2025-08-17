@@ -264,20 +264,7 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
           </div>
         </div>
 
-        {/* Individual Criteria Display */}
-        {stock.passes && (
-          <div className="grid grid-cols-2 gap-1 mb-2">
-            {Object.entries(stock.passes).filter(([key]) => ['trend', 'momentum', 'volume', 'priceAction'].includes(key)).map(([key, value]) => (
-              <div key={key} className={`px-1 py-0.5 rounded text-xs font-medium text-center ${
-                value 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-              }`}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </div>
-            ))}
-          </div>
-        )}
+
 
         {/* Price and Change */}
         <div className="mb-2">
@@ -294,9 +281,9 @@ const MiniStockCard = ({ stock, onClick, onOpenChart }) => {
         </div>
 
         {/* Sparkline */}
-      <div className="mt-2">
-        <Sparkline data={(stock.intraday || stock.spark || stock.history || []).slice(-40)} width={200} height={14} stroke={stock.priceChangePercent >= 0 ? '#22c55e' : '#ef4444'} strokeWidth={1.75} />
-      </div>
+        <div className="mt-2">
+          <Sparkline data={(stock.intraday || stock.spark || stock.history || []).slice(-40)} width={200} height={14} stroke={stock.priceChangePercent >= 0 ? '#22c55e' : '#ef4444'} strokeWidth={1.75} />
+        </div>
 
         {/* Click indicator */}
         <div className="mt-2 text-center">
