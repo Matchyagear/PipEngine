@@ -71,7 +71,7 @@ for _p in _env_candidates:
 # As a final safety net, ensure sane defaults for local development
 os.environ.setdefault('DB_NAME', 'shadowbeta')
 os.environ.setdefault('MONGODB_DISABLED', 'true')  # Default to disabled for better performance
-os.environ.setdefault('MONGO_URL', 'mongodb://127.0.0.1:27017')
+# Note: Do NOT set MONGO_URL default to prevent unwanted connection attempts
 
 # Initialize FastAPI app
 app = FastAPI(title="ShadowBeta Financial Dashboard API")
@@ -297,21 +297,18 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # Initialize MongoDB connection (optional)
 MONGO_URL = os.environ.get('MONGO_URL')
-MONGODB_DISABLED = os.environ.get('MONGODB_DISABLED', 'false').lower() in ['true', '1', 'yes', 'on']
+MONGODB_DISABLED = os.environ.get('MONGODB_DISABLED', 'true').lower() in ['true', '1', 'yes', 'on']
 
 print(f"🔍 Debug: MONGO_URL = {MONGO_URL}")
 print(f"🔍 Debug: MONGODB_DISABLED = {MONGODB_DISABLED}")
-print(f"🔍 Debug: Raw MONGODB_DISABLED env = '{os.environ.get('MONGODB_DISABLED', 'not_set')}'")
+print(f"🔍 Debug: Raw MONGODB_DISABLED env = '{os.environ.get('MONGODB_DISABLED', 'true')}'")
 
-# Force disable MongoDB if no URL and not explicitly configured
-if not MONGO_URL and not MONGODB_DISABLED:
-    print("⚠️  No MONGO_URL found and MongoDB not explicitly enabled. Auto-disabling to prevent connection delays.")
+# Force disable MongoDB if no URL provided (production environment like Render)
+if not MONGO_URL:
+    print("⚠️  No MONGO_URL found. MongoDB automatically disabled to prevent connection delays.")
     MONGODB_DISABLED = True
-
-# If URL missing but Mongo not explicitly disabled, default to local instance
-if not MONGODB_DISABLED and not MONGO_URL:
-    MONGO_URL = 'mongodb://127.0.0.1:27017'
-    print("ℹ️  No MONGO_URL provided. Defaulting to local MongoDB at mongodb://127.0.0.1:27017")
+elif MONGODB_DISABLED:
+    print("⚠️  MongoDB explicitly disabled via MONGODB_DISABLED environment variable.")
 
 if MONGODB_DISABLED:
     print("⚠️  MongoDB explicitly disabled via env")
