@@ -296,7 +296,8 @@ async def websocket_endpoint(websocket: WebSocket):
 # CORS already configured above - removing duplicate
 
 # Initialize MongoDB connection (optional)
-MONGO_URL = os.environ.get('MONGO_URL')
+# Try both case variations since Render might use different casing
+MONGO_URL = os.environ.get('MONGO_URL') or os.environ.get('Mongo_URL')
 MONGODB_DISABLED_ENV = os.environ.get('MONGODB_DISABLED', 'false').lower() in ['true', '1', 'yes', 'on']
 
 # Debug ALL environment variables to see what's available
@@ -347,7 +348,7 @@ else:
                 connection_url = connection_url.replace('?', '/shadowbeta?')
             else:
                 connection_url = connection_url + '/shadowbeta'
-        
+
         print(f"🔌 Attempting MongoDB connection to: {connection_url[:50]}...")
         client = MongoClient(connection_url, serverSelectionTimeoutMS=10000)  # 10 second timeout for network
 
@@ -358,7 +359,7 @@ else:
 
         db = client[os.environ.get('DB_NAME', 'shadowbeta')]
         print(f"✅ Using database: {db.name}")
-        
+
         # Collections
         watchlists_collection = db.watchlists
         alerts_collection = db.alerts
