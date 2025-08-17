@@ -541,14 +541,28 @@ function App() {
       setShadowPicksLoading(true);
       setShadowPicksError(null);
 
-      // Fetch 4/4 swing scan results - get top 10 best matches
-      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=4&max_results=10`);
+      // Fetch 3/4 and 4/4 swing scan results to ensure we get 5-10 stocks
+      const response = await fetch(`${API_BASE_URL}/api/stocks/scan?min_score=3&max_results=15`);
       const data = await response.json();
 
       if (data.stocks && data.stocks.length > 0) {
-        // Take the top 5-10 stocks (prioritize 4/4 scores)
-        const topStocks = data.stocks.slice(0, 10);
-        setShadowPicksStocks(topStocks);
+        // Prioritize 4/4 stocks first, then add 3/4 stocks to reach 5-10 total
+        const fourScoreStocks = data.stocks.filter(stock => stock.score === 4);
+        const threeScoreStocks = data.stocks.filter(stock => stock.score === 3);
+
+        // Combine and limit to 10 stocks max, prioritizing 4/4 scores
+        let topStocks = [...fourScoreStocks];
+        if (topStocks.length < 10) {
+          const remainingSlots = 10 - topStocks.length;
+          topStocks = [...topStocks, ...threeScoreStocks.slice(0, remainingSlots)];
+        }
+
+        // Ensure we have at least 5 stocks if available
+        if (topStocks.length >= 5) {
+          setShadowPicksStocks(topStocks);
+        } else {
+          setShadowPicksStocks(topStocks);
+        }
       } else {
         setShadowPicksStocks([]);
       }
@@ -802,7 +816,7 @@ function App() {
                   Shadow's Picks
                 </h2>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Top 4/4 Swing Scan Results
+                  Top 3/4 & 4/4 Swing Scan Results
                 </span>
               </div>
               <button
