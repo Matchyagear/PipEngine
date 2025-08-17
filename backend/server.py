@@ -27,6 +27,7 @@ import concurrent.futures
 from functools import lru_cache
 import threading
 import time
+from urllib.parse import quote_plus
 # Optional background scheduling (for cache warming)
 try:
     import schedule
@@ -336,8 +337,28 @@ if MONGODB_DISABLED:
     strategies_collection = None
 else:
     try:
-        # Add database name to URL if not present
+        # Fix URL encoding for special characters in password
         connection_url = MONGO_URL
+        
+        # Check if password has unencoded special characters
+        if '://' in connection_url and '@' in connection_url:
+            # Extract parts: mongodb+srv://username:password@host/db?params
+            protocol_part = connection_url.split('://')[0] + '://'
+            rest_part = connection_url.split('://')[1]
+            
+            if '@' in rest_part:
+                # Split at the last @ to separate credentials from host
+                credentials_part = rest_part.rsplit('@', 1)[0]
+                host_part = rest_part.rsplit('@', 1)[1]
+                
+                if ':' in credentials_part:
+                    username, password = credentials_part.split(':', 1)
+                    # URL encode the password to handle special characters
+                    encoded_password = quote_plus(password)
+                    connection_url = f"{protocol_part}{username}:{encoded_password}@{host_part}"
+                    print(f"🔧 Fixed URL encoding for special characters in password")
+        
+        # Add database name to URL if not present
         if '?' in connection_url and '/?' in connection_url:
             # URL like: mongodb+srv://user:pass@cluster.net/?params
             # Insert database name: mongodb+srv://user:pass@cluster.net/dbname?params
