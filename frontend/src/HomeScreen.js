@@ -577,6 +577,37 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                 </div>
 
                 <div>
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-green-400" />
+                    Futures & Commodities - Live Charts
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {[
+                      { symbol: "FOREXCOM:SPXUSD", name: "S&P 500 Futures" },
+                      { symbol: "FOREXCOM:NDX", name: "NASDAQ Futures" },
+                      { symbol: "FOREXCOM:DJI", name: "Dow Futures" },
+                      { symbol: "FOREXCOM:USOIL", name: "Crude Oil" },
+                      { symbol: "FOREXCOM:XAUUSD", name: "Gold" },
+                      { symbol: "CRYPTOCAP:BTC", name: "Bitcoin" }
+                    ].map((ticker) => (
+                      <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
+                          <div className="text-xs text-gray-400">{ticker.symbol}</div>
+                        </div>
+                        <div className="h-48">
+                          <TradingViewMiniWidget
+                            symbol={ticker.symbol}
+                            width="100%"
+                            height={192}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
                   <h3 className="font-medium mb-2">Overnight/Early Headlines</h3>
                   <ul className="space-y-1 list-disc list-inside">
                     {morning?.early_news?.map((n, idx) => (
