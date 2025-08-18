@@ -26,6 +26,7 @@ import TradingViewMiniChart from './components/TradingViewMiniChart';
 import SimpleTradingViewWidget from './components/SimpleTradingViewWidget';
 import DirectTradingViewChart from './components/DirectTradingViewChart';
 import TradingViewMiniWidget from './components/TradingViewMiniWidget';
+import CustomTradingViewChart from './components/CustomTradingViewChart';
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -430,24 +431,36 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     Popular ETFs - Live Charts
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    {[
-                      { symbol: "$QQQ", name: "Invesco QQQ Trust" },
-                      { symbol: "$SPY", name: "SPDR S&P 500 ETF" }
-                    ].map((ticker) => (
-                      <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-sm font-medium text-gray-300">{ticker.name}</div>
-                          <div className="text-xs text-gray-400">{ticker.symbol}</div>
-                        </div>
-                        <div className="h-48">
-                          <TradingViewMiniWidget
-                            symbol={ticker.symbol}
-                            width="100%"
-                            height={192}
-                          />
-                        </div>
+                    {/* QQQ Chart */}
+                    <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-gray-300">Invesco QQQ Trust</div>
+                        <div className="text-xs text-gray-400">$QQQ</div>
                       </div>
-                    ))}
+                      <div className="h-48">
+                        <TradingViewMiniWidget
+                          symbol="$QQQ"
+                          width="100%"
+                          height={192}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Custom SPY Chart */}
+                    <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-gray-300">SPDR S&P 500 ETF</div>
+                        <div className="text-xs text-gray-400">$SPY</div>
+                      </div>
+                      <div className="h-48">
+                        <CustomTradingViewChart
+                          chartUrl="https://www.tradingview.com/chart/3jbtspFr/?symbol=AMEX%3ASPY"
+                          width="100%"
+                          height={192}
+                          symbol="SPY"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
