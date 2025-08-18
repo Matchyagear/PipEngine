@@ -26,7 +26,7 @@ import TradingViewMiniChart from './components/TradingViewMiniChart';
 import SimpleTradingViewWidget from './components/SimpleTradingViewWidget';
 import DirectTradingViewChart from './components/DirectTradingViewChart';
 import TradingViewMiniWidget from './components/TradingViewMiniWidget';
-import CustomTradingViewChart from './components/CustomTradingViewChart';
+
 import MiniStockCard from './MiniStockCard';
 import StockCardModal from './StockCardModal';
 
@@ -453,11 +453,20 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                         <div className="text-xs text-gray-400">$SPY</div>
                       </div>
                       <div className="h-48">
-                        <CustomTradingViewChart
-                          chartUrl="https://www.tradingview.com/chart/3jbtspFr/?symbol=AMEX%3ASPY"
+                        <iframe
+                          src="https://www.tradingview.com/chart/3jbtspFr/?symbol=AMEX%3ASPY"
                           width="100%"
                           height={192}
-                          symbol="SPY"
+                          style={{
+                            border: 'none',
+                            borderRadius: '8px',
+                            backgroundColor: '#1f2937'
+                          }}
+                          frameBorder="0"
+                          allowTransparency="true"
+                          scrolling="no"
+                          allowFullScreen={true}
+                          title="SPY Custom Chart"
                         />
                       </div>
                     </div>
