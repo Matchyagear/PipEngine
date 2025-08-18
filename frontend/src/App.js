@@ -493,21 +493,62 @@ function App() {
     try {
       setIsSearching(true);
 
-      const response = await fetch(`${API_BASE_URL}/api/stocks/${symbol}`);
-      const data = await response.json();
+      // Create a basic stock object immediately for instant feedback
+      const basicStock = {
+        ticker: symbol,
+        companyName: 'Loading...',
+        currentPrice: 0,
+        priceChangePercent: 0,
+        score: 0,
+        passes: { trend: false, momentum: false, volume: false, priceAction: false },
+        RSI: 0,
+        MACD: 0,
+        Stochastic: 0,
+        averageVolume: 0,
+        relativeVolume: 0,
+        fiftyDayMA: 0,
+        twoHundredDayMA: 0,
+        bollingerUpper: 0,
+        bollingerLower: 0,
+        previousClose: 0,
+        open: 0,
+        high: 0,
+        low: 0,
+        volume: 0,
+        marketCap: 0,
+        pe: 0,
+        eps: 0,
+        dividend: 0,
+        dividendYield: 0,
+        priceChange: 0,
+        rank: 1,
+        fiftyMA: 0,
+        twoHundredMA: 0,
+        stochastic: 0
+      };
 
-      if (response.ok) {
-        // Directly open the StockCard modal with the searched stock
-        setSelectedMiniStock(data);
-        setShowStockModal(true);
-        setSearchTicker(''); // Clear the search input
-      } else {
-        alert(`Stock ${symbol} not found or error occurred`);
+      // Open modal immediately with basic data
+      setSelectedMiniStock(basicStock);
+      setShowStockModal(true);
+      setSearchTicker(''); // Clear the search input
+      setIsSearching(false);
+
+      // Fetch full data in background and update modal
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/stocks/${symbol}`);
+        const fullData = await response.json();
+
+        if (response.ok) {
+          // Update the modal with full data
+          setSelectedMiniStock(fullData);
+        }
+      } catch (backgroundError) {
+        console.error('Background data fetch failed:', backgroundError);
+        // Modal stays open with basic data
       }
     } catch (error) {
-      console.error('Error searching stock:', error);
+      console.error('Error in search:', error);
       alert('Error searching for stock. Please try again.');
-    } finally {
       setIsSearching(false);
     }
   };
