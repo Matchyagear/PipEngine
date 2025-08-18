@@ -446,27 +446,17 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                       </div>
                     </div>
 
-                    {/* Custom SPY Chart */}
+                    {/* SPY Chart */}
                     <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-sm font-medium text-gray-300">SPDR S&P 500 ETF</div>
                         <div className="text-xs text-gray-400">$SPY</div>
                       </div>
                       <div className="h-48">
-                        <iframe
-                          src="https://www.tradingview.com/chart/3jbtspFr/?symbol=AMEX%3ASPY"
+                        <TradingViewMiniWidget
+                          symbol="SPY"
                           width="100%"
                           height={192}
-                          style={{
-                            border: 'none',
-                            borderRadius: '8px',
-                            backgroundColor: '#1f2937'
-                          }}
-                          frameBorder="0"
-                          allowTransparency="true"
-                          scrolling="no"
-                          allowFullScreen={true}
-                          title="SPY Custom Chart"
                         />
                       </div>
                     </div>
