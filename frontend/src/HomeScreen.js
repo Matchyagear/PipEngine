@@ -470,12 +470,12 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {[
-                      { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
-                      { symbol: "CME_MINI:NQ1!", name: "NASDAQ Futures" },
-                      { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
-                      { symbol: "NYMEX:CL1!", name: "Crude Oil" },
-                      { symbol: "COMEX:GC1!", name: "Gold Futures" },
-                      { symbol: "CRYPTOCAP:BTC.D", name: "Bitcoin" }
+                      { symbol: "ES", name: "S&P 500 Futures" },
+                      { symbol: "NQ", name: "NASDAQ Futures" },
+                      { symbol: "YM", name: "Dow Futures" },
+                      { symbol: "CL", name: "Crude Oil" },
+                      { symbol: "GC", name: "Gold Futures" },
+                      { symbol: "BTCUSD", name: "Bitcoin" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
