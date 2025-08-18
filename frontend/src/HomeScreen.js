@@ -470,12 +470,12 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {[
-                      { symbol: "ES", name: "S&P 500 Futures" },
-                      { symbol: "NQ", name: "NASDAQ Futures" },
-                      { symbol: "YM", name: "Dow Futures" },
-                      { symbol: "CL", name: "Crude Oil" },
-                      { symbol: "GC", name: "Gold Futures" },
-                      { symbol: "BTCUSD", name: "Bitcoin" }
+                      { symbol: "CME_MINI:ES1!", name: "S&P 500 Futures" },
+                      { symbol: "CME_MINI:NQ1!", name: "NASDAQ Futures" },
+                      { symbol: "CBOT_MINI:YM1!", name: "Dow Futures" },
+                      { symbol: "NYMEX:CL1!", name: "Crude Oil" },
+                      { symbol: "COMEX:GC1!", name: "Gold Futures" },
+                      { symbol: "CRYPTOCAP:BTC.D", name: "Bitcoin" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                         <div className="flex items-center justify-between mb-2">
@@ -483,14 +483,10 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                           <div className="text-xs text-gray-400">{ticker.symbol}</div>
                         </div>
                         <div className="h-48">
-                          <img
-                            src={`https://finviz.com/chart.ashx?t=${ticker.symbol}&ty=c&ta=1&p=d&s=l`}
-                            alt={`${ticker.symbol} futures chart`}
-                            className="w-full h-full object-cover rounded"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-400 text-sm">Chart unavailable</div>';
-                            }}
+                          <TradingViewMiniWidget
+                            symbol={ticker.symbol}
+                            width="100%"
+                            height={192}
                           />
                         </div>
                       </div>
