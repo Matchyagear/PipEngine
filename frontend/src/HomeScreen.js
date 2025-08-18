@@ -405,7 +405,7 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {[
                       { symbol: "FOREXCOM:SPXUSD", name: "S&P 500" },
-                      { symbol: "$NDQ", name: "NASDAQ" },
+                      { symbol: "FOREXCOM:NAS100", name: "NASDAQ" },
                       { symbol: "FOREXCOM:DJI", name: "Dow Jones" }
                     ].map((ticker) => (
                       <div key={ticker.symbol} className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
@@ -435,11 +435,11 @@ const HomeScreen = ({ onNewWatchlist, watchlists, onDeleteWatchlist, news, newsL
                     <div className="bg-gray-800/40 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/60 transition-colors">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-sm font-medium text-gray-300">Invesco QQQ Trust</div>
-                        <div className="text-xs text-gray-400">$QQQ</div>
+                        <div className="text-xs text-gray-400">QQQ</div>
                       </div>
                       <div className="h-48">
                         <TradingViewMiniWidget
-                          symbol="$QQQ"
+                          symbol="QQQ"
                           width="100%"
                           height={192}
                         />
