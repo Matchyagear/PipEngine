@@ -90,9 +90,7 @@ function App() {
 
   // Search functionality
   const [searchTicker, setSearchTicker] = useState('');
-  const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [showSearchResult, setShowSearchResult] = useState(false);
 
   // News functionality
   const [news, setNews] = useState([]);
@@ -493,18 +491,16 @@ function App() {
     if (!symbol) return;
 
     try {
-      // Instant feedback: show a stub result while fetching full details
       setIsSearching(true);
-      setSearchResult({ ticker: symbol, companyName: 'Loading…', rank: 1 });
-      setShowSearchResult(true);
-      setActiveTab('search');
 
       const response = await fetch(`${API_BASE_URL}/api/stocks/${symbol}`);
       const data = await response.json();
 
       if (response.ok) {
-        data.rank = 1;
-        setSearchResult(data);
+        // Directly open the StockCard modal with the searched stock
+        setSelectedMiniStock(data);
+        setShowStockModal(true);
+        setSearchTicker(''); // Clear the search input
       } else {
         alert(`Stock ${symbol} not found or error occurred`);
       }
@@ -607,11 +603,6 @@ function App() {
   };
 
   const getFilteredAndSortedStocks = () => {
-    // If showing search result, return only the search result
-    if (showSearchResult && searchResult) {
-      return [searchResult];
-    }
-
     let filtered = stocks;
 
     // Apply filters
@@ -932,51 +923,24 @@ function App() {
                 </div>
               </div>
             ) : (
-              <>
-                {/* Search Result Header */}
-                {showSearchResult && searchResult && (
-                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300">
-                          Search Result for "{searchResult.ticker}"
-                        </h3>
-                        <p className="text-sm text-blue-600 dark:text-blue-400">{searchResult.companyName}</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setShowSearchResult(false);
-                          setSearchResult(null);
-                          setSearchTicker('');
-                          setActiveTab('shadow');
-                        }}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
+              <div className={showMobileView ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
+                {filteredStocks.length > 0 ? (
+                  filteredStocks.map((stock) => (
+                    <MiniStockCard
+                      key={stock.ticker}
+                      stock={stock}
+                      onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
+                      onOpenChart={() => openChartForStock(stock)}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">
+                      No stocks match your current filters.
+                    </p>
                   </div>
                 )}
-
-                <div className={showMobileView ? 'space-y-4' : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'}>
-                  {filteredStocks.length > 0 ? (
-                    filteredStocks.map((stock) => (
-                      <MiniStockCard
-                        key={stock.ticker}
-                        stock={stock}
-                        onClick={(s) => { setSelectedMiniStock(s); setShowStockModal(true); }}
-                        onOpenChart={() => openChartForStock(stock)}
-                      />
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-12">
-                      <p className="text-gray-500 dark:text-gray-400 text-lg">
-                        {showSearchResult ? 'Stock not found or error occurred.' : 'No stocks match your current filters.'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </>
+              </div>
             )}
           </>
         );
@@ -1060,7 +1024,6 @@ function App() {
                 onClick={() => {
                   setActiveTab('home');
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                 }}
                 className={`tab-button text-xs ${activeTab === 'home' ? 'tab-button-active' : ''}`}
               >
@@ -1074,7 +1037,6 @@ function App() {
                 onClick={() => {
                   setActiveTab('portfolio');
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                 }}
                 className={`tab-button text-xs ${activeTab === 'portfolio' ? 'tab-button-active' : ''}`}
               >
@@ -1086,7 +1048,6 @@ function App() {
                 onClick={() => {
                   setActiveTab('watchlist');
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                 }}
                 className={`tab-button text-xs ${activeTab === 'watchlist' ? 'tab-button-active' : ''}`}
               >
@@ -1098,7 +1059,6 @@ function App() {
                 onClick={() => {
                   setActiveTab('news');
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                   fetchNews();
                 }}
                 className={`tab-button text-xs ${activeTab === 'news' ? 'tab-button-active' : ''}`}
@@ -1111,7 +1071,6 @@ function App() {
                 onClick={() => {
                   setActiveTab('chart');
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                 }}
                 className={`tab-button text-xs ${activeTab === 'chart' ? 'tab-button-active' : ''}`}
               >
@@ -1123,7 +1082,6 @@ function App() {
                 onClick={() => {
                   setActiveTab("screener");
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                 }}
                 className={`tab-button text-xs ${activeTab === 'screener' ? 'tab-button-active' : ''}`}
               >
@@ -1135,7 +1093,6 @@ function App() {
                 onClick={() => {
                   setActiveTab('shadows-picks');
                   setCurrentWatchlist(null);
-                  setShowSearchResult(false);
                 }}
                 className={`tab-button text-xs ${activeTab === 'shadows-picks' ? 'tab-button-active' : ''}`}
               >
@@ -1323,7 +1280,6 @@ function App() {
                 onClick={() => {
                   setCurrentWatchlist(watchlist);
                   setActiveTab('watchlist');
-                  setShowSearchResult(false);
                   fetchStocks();
                 }}
                 className={`flex items-center space-x-2 py-2 px-3 rounded-lg transition-colors ${currentWatchlist?.id === watchlist.id
